@@ -327,11 +327,17 @@ let lambda_as_module
            output_chan  stdout);
         if not @@ !Clflags.dont_write_files then 
           Ext_pervasives.with_file_as_chan
+#if BS_NATIVE then
+            (if Filename.is_relative _path then Lazy.force Ext_filename.package_dir // _path // basename
+             (* #913 only generate little-case js file *)
+            else _path // basename) output_chan
+#else
             (Lazy.force Ext_filename.package_dir //
              _path //
               basename
              (* #913 only generate little-case js file *)
             ) output_chan
+#end
 
       end
     end 
