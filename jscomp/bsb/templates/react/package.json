@@ -20,7 +20,7 @@
     "reason-react": ">=0.4.0"
   },
   "devDependencies": {
-    "bs-platform": "^${bsb:bs-version}",
+    "bsb-native": "^${bsb:bs-version}",
     "webpack": "^4.0.1",
     "webpack-cli": "^3.1.1"
   }
