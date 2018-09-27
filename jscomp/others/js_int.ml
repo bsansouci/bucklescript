@@ -160,6 +160,6 @@ external toFloat : int -> float = "%floatofint"
 
 let equal (x: int) y = x = y
 
-let max : int = 2147483647
+let max : int = [%bs.raw "2147483647"]
 
-let min : int = -2147483648
+let min : int = [%bs.raw "-2147483647"]
