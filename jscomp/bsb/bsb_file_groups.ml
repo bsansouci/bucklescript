@@ -35,7 +35,7 @@ type build_generator =
     command : string}  
 
 #if BS_NATIVE then
-type compilation_kind_t = Js | Bytecode | Native
+type compilation_kind_t = Js | Bytecode | Native | NativeIos
 #end
 
 type  file_group = 

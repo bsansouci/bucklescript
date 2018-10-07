@@ -59,12 +59,14 @@ let get_backend () =
       | Bsb_config_types.JsTarget       -> Bsb_config_types.Js
       | Bsb_config_types.NativeTarget   -> Bsb_config_types.Native
       | Bsb_config_types.BytecodeTarget -> Bsb_config_types.Bytecode
+      | Bsb_config_types.NativeIosTarget -> Bsb_config_types.NativeIos
     end 
 
 let get_string_backend = function
   | Bsb_config_types.Js       -> "js"
   | Bsb_config_types.Native   -> "native"
   | Bsb_config_types.Bytecode -> "bytecode"
+  | Bsb_config_types.NativeIos -> "ios"
 #end
 
 let print_version_string () = 
@@ -108,7 +110,8 @@ let bsb_main_flags : (string * Arg.spec * string) list=
         | "js"       -> cmdline_backend := Bsb_config_types.Js
         | "native"   -> cmdline_backend := Bsb_config_types.Native
         | "bytecode" -> cmdline_backend := Bsb_config_types.Bytecode
-        | _ -> failwith "-backend should be one of: 'js', 'bytecode' or 'native'."
+        | "ios"      -> cmdline_backend := Bsb_config_types.NativeIos
+        | _ -> failwith "-backend should be one of: 'js', 'bytecode', 'native' or 'ios'."
       ),
     " Builds the entries in the bsconfig which match the given backend.";
     
@@ -195,9 +198,6 @@ let watch_exit () =
 let () =
 
   let vendor_ninja = bsc_dir // "ninja.exe" in  
-#if BS_NATIVE then
-  let ocaml_dir = Bsb_build_util.get_ocaml_dir cwd in
-#end
   try begin 
     match Sys.argv with 
 #if BS_NATIVE then
@@ -211,8 +211,12 @@ let () =
           | "js"       -> Bsb_config_types.Js
           | "native"   -> Bsb_config_types.Native
           | "bytecode" -> Bsb_config_types.Bytecode
-          | _ -> failwith "-backend should be one of: 'js', 'bytecode' or 'native'."
+          | "ios"      -> Bsb_config_types.NativeIos
+          | _ -> failwith "-backend should be one of: 'js', 'bytecode', 'native' or 'ios'."
         end else get_backend () in
+        let ocaml_dir = if backend = Bsb_config_types.NativeIos then 
+          Bsb_build_util.get_mobile_ocaml_dir ~for_device:true cwd 
+        else Bsb_build_util.get_ocaml_dir cwd in
         
         let main_config = 
           Bsb_config_parse.interpret_json  ~override_package_specs:None ~bsc_dir ~generate_watch_metadata:true ~not_dev:false cwd in
@@ -225,6 +229,7 @@ let () =
             ~backend
             ~main_config
             ~ocaml_dir
+            ~ocaml_dir_host:(Bsb_build_util.get_ocaml_dir cwd)
             cwd bsc_dir 
         in
         let nested = get_string_backend backend in
@@ -287,6 +292,11 @@ let () =
                   let dependency_info = if make_world then
                     Some (Bsb_world.make_world_deps cwd ~root_project_dir:cwd ~backend ~main_config)
                   else None in
+                  
+                  let ocaml_dir = if backend = Bsb_config_types.NativeIos then 
+                    Bsb_build_util.get_mobile_ocaml_dir ~for_device:true cwd 
+                  else Bsb_build_util.get_ocaml_dir cwd in
+                  
                   (* don't regenerate files when we only run [bsb -clean-world] *)
                   let _did_regen = Bsb_ninja_regen.regenerate_ninja 
                     ?dependency_info 
@@ -298,6 +308,7 @@ let () =
                     ~backend
                     ~main_config
                     ~ocaml_dir
+                    ~ocaml_dir_host:(Bsb_build_util.get_ocaml_dir cwd)
                     cwd bsc_dir in
 #else
                 | make_world, force_regenerate ->
@@ -342,6 +353,11 @@ let () =
             let dependency_info = if !make_world then 
               Some (Bsb_world.make_world_deps cwd ~root_project_dir:cwd ~backend ~main_config)
             else None in
+            
+            let ocaml_dir = if backend = Bsb_config_types.NativeIos then 
+              Bsb_build_util.get_mobile_ocaml_dir ~for_device:true cwd 
+            else Bsb_build_util.get_ocaml_dir cwd in
+            
             let _did_regen = Bsb_ninja_regen.regenerate_ninja 
               ?dependency_info
               ~is_top_level:true
@@ -352,6 +368,7 @@ let () =
               ~backend
               ~main_config
               ~ocaml_dir
+              ~ocaml_dir_host:(Bsb_build_util.get_ocaml_dir cwd)
               cwd bsc_dir in
             if !watch_mode then watch_exit ()
             else begin 

@@ -41,8 +41,8 @@ native:
 	make BS_NATIVE=true ../lib/bsb_helper.exe 
 	make BS_NATIVE=true ../lib/bsc.exe 
 	make libs
-	make BS_NATIVE=true -C belt_byte
-	make BS_NATIVE=true -C belt_native
+	# make BS_NATIVE=true -C belt_byte
+	# make BS_NATIVE=true -C belt_native
 
 install:
 	make -C ../ install

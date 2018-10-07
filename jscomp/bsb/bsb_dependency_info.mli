@@ -10,6 +10,9 @@ type t = {
   mutable all_toplevel_ppxes: (Bsb_config_types.entries_t list) String_map.t;
 }
 
+(* Returns the executable name of the given entry if it were compiled by bsb-native. *)
+val get_exec_name : Bsb_config_types.entries_t -> string
+
 (* Checks if a ppx is from a dependency, of the form "MyDep/PpxModuleName". 
    This form is analogous to how ppx-flags works on the top level.
    If yes, it'll change the path to be an absolute path to the PPX.

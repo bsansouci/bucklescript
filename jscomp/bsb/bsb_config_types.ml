@@ -36,6 +36,7 @@ type backend_t =
     | JsTarget
     | NativeTarget
     | BytecodeTarget
+    | NativeIosTarget
 
 
 type entries_t = {
@@ -46,7 +47,7 @@ type entries_t = {
 }
 
 #if BS_NATIVE then
-type compilation_kind_t = Js | Bytecode | Native
+type compilation_kind_t = Js | Bytecode | Native | NativeIos
 #end
 
 type reason_react_jsx = string option 

@@ -66,6 +66,8 @@ let ocamlfind_packages = ref []
 let bs_super_errors = ref false
 
 let build_library = ref None
+
+let root_project_dir = ref ""
 #end
 
 let anonymous filename =
@@ -92,6 +94,7 @@ let link link_byte_or_native =
       ~warnings:!warnings
       ~warn_error:!warn_error
       ~verbose:!verbose
+      ~root_project_dir:!root_project_dir
       (Sys.getcwd ())
   end
 let pack link_byte_or_native =
@@ -108,6 +111,7 @@ let pack link_byte_or_native =
     ~warn_error:!warn_error
     ~verbose:!verbose
     ~build_library:!build_library
+    ~root_project_dir:!root_project_dir
     (Sys.getcwd ())
 #end
 
@@ -179,13 +183,15 @@ let () =
 
     "-link-native", (Arg.String (fun x -> link (Bsb_helper_linker.LinkNative x))),
     " link native files into an executable";
+    
+    "-link-native-ios", (Arg.String (fun x -> link (Bsb_helper_linker.LinkNativeIos x))),
+    " pack objects files (cmx) into a C object file, akin to linking but missing ios runtime";
 
     "-package", (Arg.String (fun x -> ocamlfind_packages := "-package" :: x :: !ocamlfind_packages)),
     " add an ocamlfind pacakge to be packed/linked";
     
     "-pack-native-library", (Arg.Unit (fun () -> 
       pack Bsb_helper_packer.PackNative
-        
     )),
     " pack native files (cmx) into a library file (cmxa)";
 
@@ -193,6 +199,11 @@ let () =
       pack Bsb_helper_packer.PackBytecode
     )),
     " pack bytecode files (cmo) into a library file (cma)";
+    
+    "-pack-native-ios-library", (Arg.Unit (fun () -> 
+      pack Bsb_helper_packer.PackNativeIos
+    )),
+    " pack native files (cmx) into a library file (cmxa) for use on ios";
 
     "-bs-super-errors", (Arg.Unit (fun () -> bs_super_errors := true)),
     " Better error message combined with other tools ";
@@ -216,6 +227,9 @@ let () =
     " Turn on verbose Maude.";
     
     "-build-library", (Arg.String (fun v -> build_library := Some v)),
-    " Create a library file with all the object files from the given entry point."
+    " Create a library file with all the object files from the given entry point.";
+    
+    "-root-project-dir", (Arg.String (fun v -> root_project_dir := v)),
+    " Tells bsb_helper.exe about where the root project is."
 #end
   ] anonymous usage

@@ -39,6 +39,7 @@ val regenerate_ninja :
   backend: Bsb_config_types.compilation_kind_t ->
   main_config : Bsb_config_types.t ->
   ocaml_dir:string ->
+  ocaml_dir_host:string ->
 #else
   override_package_specs:Bsb_package_specs.t option ->
   generate_watch_metadata: bool -> 

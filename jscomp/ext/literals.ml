@@ -132,6 +132,8 @@ let ppx = "ppx"
 #if BS_NATIVE then
 let library = "library"
 let dot_static_libraries = ".static_libraries"
+let suffix_ios_o = ".o"
+let ios = "ios"
 #end
 
 (** Used when produce node compatible paths *)

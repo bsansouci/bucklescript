@@ -90,8 +90,13 @@ let parse_entries name (field : Ext_json_types.t array) =
               Bsb_exception.config_error entry "Ppx can't be compiled to JS for now. Please set the backend to `native`.";
               
             JsTarget
-          | "bytecode" -> BytecodeTarget
+          | "bytecode" -> 
+            if !kind = Ppx then
+              Bsb_exception.config_error entry "Ppx can't be compiled to bytecode for now. Please set the backend to `native`.";
+            
+            BytecodeTarget
           | "native" -> NativeTarget
+          | "ios" -> NativeIosTarget
           | _ -> Bsb_exception.config_error entry "Missing field 'backend'. That field is required and its value be 'js', 'native' or 'bytecode'"
         ) backend in
         
@@ -129,12 +134,14 @@ let parse_allowed_build_kinds map =
       | "js"       -> Bsb_config_types.Js
       | "native"   -> Bsb_config_types.Native
       | "bytecode" -> Bsb_config_types.Bytecode
-      | str -> Bsb_exception.errorf ~loc:loc_start "'allowed-build-kinds' field expects one of, or an array of: 'js', 'bytecode' or 'native'. Found '%s'" str
+      | "ios"      -> Bsb_config_types.NativeIos
+      | str -> Bsb_exception.errorf ~loc:loc_start "'allowed-build-kinds' field expects one of, or an array of: 'js', 'bytecode', 'native' or 'ios'. Found '%s'" str
     ) (Bsb_build_util.get_list_string s) 
   | Some (Str {str = "js"} )       -> [Bsb_config_types.Js]
   | Some (Str {str = "native"} )   -> [Bsb_config_types.Native]
   | Some (Str {str = "bytecode"} ) -> [Bsb_config_types.Bytecode]
-  | Some (Str {str; loc} ) -> Bsb_exception.errorf ~loc:loc "'allowed-build-kinds' field expects one of, or an array of: 'js', 'bytecode' or 'native'. Found '%s'" str
+  | Some (Str {str = "ios"} ) -> [Bsb_config_types.NativeIos]
+  | Some (Str {str; loc} ) -> Bsb_exception.errorf ~loc:loc "'allowed-build-kinds' field expects one of, or an array of: 'js', 'bytecode', 'native' or 'ios'. Found '%s'" str
   | Some x -> Bsb_exception.config_error x "'allowed-build-kinds' field expects one of, or an array of: 'js', 'bytecode' or 'native'"
   | None -> Bsb_default.allowed_build_kinds
 

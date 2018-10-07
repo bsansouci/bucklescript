@@ -59,7 +59,8 @@ let output_ninja_and_namespace_map
     ~not_dev           
 #if BS_NATIVE then
     ~dependency_info
-    ~ocaml_dir         
+    ~ocaml_dir
+    ~ocaml_dir_host
     ~root_project_dir
     ~is_top_level
     ~backend
@@ -106,29 +107,42 @@ let output_ninja_and_namespace_map
       List.exists (fun b -> match b with 
     | Bsb_config_types.JsTarget       -> backend = Bsb_config_types.Js
     | Bsb_config_types.NativeTarget   -> backend = Bsb_config_types.Native
+    | Bsb_config_types.NativeIosTarget -> backend = Bsb_config_types.NativeIos
     | Bsb_config_types.BytecodeTarget -> backend = Bsb_config_types.Bytecode) e.Bsb_config_types.backend
   ) entries in
   let nested = begin match backend with
-    | Bsb_config_types.Js       -> "js"
-    | Bsb_config_types.Native   -> "native"
-    | Bsb_config_types.Bytecode -> "bytecode"
+    | Bsb_config_types.Js       ->  "js"
+    | Bsb_config_types.Native   ->  "native"
+    | Bsb_config_types.Bytecode ->  "bytecode"
+    | Bsb_config_types.NativeIos -> "ios"
   end in
+  let is_mobile = backend = Bsb_config_types.NativeIos in
+  
+  (* Check if the ios compiler is available! *)
+  if is_mobile && not (Sys.file_exists (ocaml_dir)) then
+    Bsb_exception.ios_compiler_missing ocaml_dir;
+    
   if not has_any_entry && is_top_level then
     Bsb_exception.missing_entry nested;
   
-  let use_ocamlfind = ocamlfind_dependencies <> [] || dependency_info.Bsb_dependency_info.all_ocamlfind_dependencies <> [] in
+  let use_ocamlfind = not is_mobile && (ocamlfind_dependencies <> [] || dependency_info.Bsb_dependency_info.all_ocamlfind_dependencies <> []) in
   
   let all_ocaml_dependencies = List.fold_left (fun acc v -> Depend.StringSet.add v acc) dependency_info.all_ocaml_dependencies ocaml_dependencies in
   let all_ocaml_dependencies = Depend.StringSet.elements all_ocaml_dependencies in
 
-  let ocaml_flags =
+  let ocaml_flags = if is_mobile then
+    Bsb_build_util.flag_concat Ext_string.single_space ("-nostdlib" :: ocaml_flags)
+  else
     Bsb_build_util.flag_concat
       (if use_ocamlfind then "-passopt" else Ext_string.single_space)
       (ocaml_flags @ ["-color"; "always"])  in
 
-
-  let ocaml_lib = Bsb_build_util.get_ocaml_lib_dir ~is_js:(backend = Bsb_config_types.Js) root_project_dir in
-  let native_ocaml_lib = Bsb_build_util.get_ocaml_lib_dir ~is_js:false root_project_dir in
+    
+  let (ocaml_lib, native_ocaml_lib) = if is_mobile then
+    (ocaml_dir // "lib" // "ocaml", ocaml_dir // "lib" // "ocaml")
+  else (Bsb_build_util.get_ocaml_lib_dir ~is_js:(backend = Bsb_config_types.Js) root_project_dir,
+        Bsb_build_util.get_ocaml_lib_dir ~is_js:false root_project_dir)
+  in
 
   let ocaml_flags = (List.fold_left (fun acc v ->
     match v with
@@ -140,15 +154,24 @@ let output_ninja_and_namespace_map
     | _ -> acc
   ) ocaml_flags ocaml_dependencies) in
   let ocaml_linker_flags = Bsb_build_util.flag_concat "-add-flag" ocaml_linker_flags in
-  let bs_super_errors = if main_bs_super_errors && not use_ocamlfind then "-bs-super-errors" else "" in
+  let bs_super_errors = if not is_mobile && main_bs_super_errors && not use_ocamlfind then "-bs-super-errors" else "" in
   let build_artifacts_dir = Bsb_build_util.get_build_artifacts_location cwd in
   let ocamlc = "ocamlc" in
   let ocamlopt = "ocamlopt" in
+  let xcodebuild = "xcodebuild" in
+  let workspace = root_project_dir // "App.xcworkspace" in
+  let configuration = "Debug" in
+  let arch = "arm64" in 
+  let sdk = "iphoneos" in
+  let scheme = "App" in
+  let xcodebuild_flags = [ if !Bsb_log.log_level <> Bsb_log.Debug then "-quiet" else "-showBuildTimingSummary"; "-IDEBuildOperationMaxNumberOfConcurrentCompileTasks=`sysctl -n hw.ncpu`"] in
 #end
   let bsc = bsc_dir // bsc_exe in   (* The path to [bsc.exe] independent of config  *)
   let bsdep = bsc_dir // bsb_helper_exe in (* The path to [bsb_heler.exe] *)
 #if BS_NATIVE then
   let cwd_lib_bs = build_artifacts_dir // Bsb_config.lib_bs // nested in
+  let xcodebuild_envvars = 
+    Printf.sprintf "SYMROOT=%s/xcode_build_artifacts TARGET_BUILD_DIR=%s DEBUG_INFORMATION_FORMAT=dwarf-with-dsym" cwd_lib_bs cwd_lib_bs in
   let (ppx_flags_external, ppx_flags_internal) = List.fold_left (fun (ppx_flags_external, ppx_flags_internal) ppx_flag -> 
     try
       let _ppx_entry = List.find (fun {Bsb_config_types.main_module_name} -> main_module_name = ppx_flag) entries in
@@ -237,7 +260,8 @@ let output_ninja_and_namespace_map
       (match backend with
       | Bsb_config_types.Js -> "js"
       | Bsb_config_types.Bytecode -> "bytecode"
-      | Bsb_config_types.Native -> "native")
+      | Bsb_config_types.Native -> "native"
+      | Bsb_config_types.NativeIos -> "ios")
       (match Bsb_stubs.uname () with
       | None -> ""
       | Some os -> os)
@@ -297,9 +321,15 @@ let output_ninja_and_namespace_map
         Bsb_ninja_global_vars.bs_super_errors, bs_super_errors;
         
         Bsb_ninja_global_vars.external_deps_for_linking, Bsb_build_util.flag_concat dash_i dependency_info.Bsb_dependency_info.all_external_deps;
-        Bsb_ninja_global_vars.ocamlc, if use_ocamlfind then ocamlc
+
+        (* For mobile compilation, we build build-scripts using the host's ocamlc. This means we're using the normal x86 ocamlc to compile because 
+           the resulting executable needs to run on the current machine and not the iphone (obviously).
+            
+                      Ben — October 2018
+        *)
+        Bsb_ninja_global_vars.ocamlc, if is_mobile then ocaml_dir_host // ocamlc ^ ".opt" else if use_ocamlfind then ocamlc
           else (ocaml_dir // ocamlc ^ ".opt");
-        Bsb_ninja_global_vars.ocamlopt, if use_ocamlfind then ocamlopt
+        Bsb_ninja_global_vars.ocamlopt, if is_mobile then ocaml_dir // "bin" // ocamlopt else if use_ocamlfind then ocamlopt
           else (ocaml_dir // ocamlopt ^ ".opt");
           
         (* Add a space after "ocamlfind" so that when we're _not_ using ocamlfind there is no leading space to the command being executed. 
@@ -307,7 +337,7 @@ let output_ninja_and_namespace_map
            
                       Ben - January 20th 2018
          *)
-        Bsb_ninja_global_vars.ocamlfind, if use_ocamlfind then ocamlfind ^ " " else "";
+        Bsb_ninja_global_vars.ocamlfind, if is_mobile then (ocaml_dir // "bin" // "ocamlrun") ^ " " else if use_ocamlfind then ocamlfind ^ " " else "";
         Bsb_ninja_global_vars.ocamlfind_dependencies,  Bsb_build_util.flag_concat "-package" (dependency_info.all_ocamlfind_dependencies @ ocamlfind_dependencies);
         Bsb_ninja_global_vars.ocaml_dependencies, Bsb_build_util.flag_concat "-add-ocaml-dependency" all_ocaml_dependencies;
         
@@ -319,6 +349,18 @@ let output_ninja_and_namespace_map
         Bsb_ninja_global_vars.open_flag, open_flag;
         
         Bsb_ninja_global_vars.bsb_helper_verbose, if !Bsb_log.log_level = Bsb_log.Debug then "-verbose" else "";
+        Bsb_ninja_global_vars.root_project_dir, "-root-project-dir " ^ root_project_dir;
+        
+        (* IOS specific fields *)
+        Bsb_ninja_global_vars.xcodebuild, xcodebuild;
+        Bsb_ninja_global_vars.workspace, "-workspace " ^ workspace;
+        Bsb_ninja_global_vars.scheme, "-scheme " ^ scheme;
+        Bsb_ninja_global_vars.configuration, "-configuration " ^ configuration;
+        Bsb_ninja_global_vars.arch, "-arch " ^ arch;
+        Bsb_ninja_global_vars.sdk, "-sdk " ^ sdk;
+        Bsb_ninja_global_vars.xcodebuild_flags, String.concat Ext_string.single_space xcodebuild_flags;
+        Bsb_ninja_global_vars.xcodebuild_envvars, xcodebuild_envvars;
+        
 #end
         Bsb_build_schemas.bsb_dir_group, "0"  (*TODO: avoid name conflict in the future *)
       |] oc in
@@ -481,6 +523,24 @@ let output_ninja_and_namespace_map
         Bsb_ninja_file_groups.zero,
       true)
     else (Bsb_ninja_file_groups.zero, false)
+  | Bsb_config_types.NativeIos ->
+    if List.mem Bsb_config_types.NativeIos allowed_build_kinds then begin
+      (Bsb_ninja_native.handle_file_groups oc
+        ~custom_rules
+        ~is_top_level
+        ~build_library
+        ~compile_target:Bsb_ninja_native.NativeIos
+        ~backend
+        ~dependency_info
+        ~ocaml_lib:native_ocaml_lib
+        ~root_project_dir
+        ~config
+        ~ppx_flags_internal
+        bs_file_groups
+        namespace
+        Bsb_ninja_file_groups.zero,
+      true)
+    end else (Bsb_ninja_file_groups.zero, false)
     in
 #else
   (** Generate build statement for each file *)        
@@ -512,6 +572,7 @@ let output_ninja_and_namespace_map
       | Bsb_config_types.Js       -> (Bsb_rule.build_package, ns ^ Literals.suffix_cmi)
       | Bsb_config_types.Native
       | Bsb_config_types.Bytecode -> (Bsb_rule.build_package_gen_mlast_simple, ns ^ Literals.suffix_mlast_simple)
+      | Bsb_config_types.NativeIos -> failwith "namespacing not implemented"
       end in 
       Bsb_ninja_util.output_build oc 
         (* This is what is actually needed 
@@ -570,15 +631,16 @@ let output_ninja_and_namespace_map
       }; {
         key = "impl";
         op = Bsb_ninja_util.Overwrite impl 
-      }]
+      };]
       ~rule;
     let build_artifacts_dir = Ext_bytes.ninja_escaped build_artifacts_dir in
-    let command = Printf.sprintf "%s %s %s %s %s %s %s" output
+    let command = Printf.sprintf "%s %s %s %s %s %s %s %s" output
       (Ext_bytes.ninja_escaped (Filename.dirname ocaml_dir))
       (Ext_bytes.ninja_escaped ocaml_lib)
       (Ext_bytes.ninja_escaped cwd)
       (Ext_bytes.ninja_escaped root_project_dir)
       build_artifacts_dir 
+      nested
       (if !Bsb_log.log_level = Bsb_log.Debug then " -verbose" else "") in
     let rule = Bsb_rule.define ~command "run_build_script" ~description:"\027[32mRunning\027[39m \027[2mbuild_script\027[22m" (* blue, dim *) in
     Bsb_ninja_util.output_build oc

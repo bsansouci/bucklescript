@@ -387,6 +387,7 @@ let separate_ppx_entries_and_filter entries backend =
       | JsTarget -> separate_for_backend acc Js
       | NativeTarget -> separate_for_backend acc Native
       | BytecodeTarget -> separate_for_backend acc Bytecode
+      | NativeIosTarget -> separate_for_backend acc NativeIos
     ) acc project_entry.backend;
 ) ([], []) entries
 
@@ -435,6 +436,7 @@ let handle_file_groups
       not group.is_ppx && List.mem Bsb_file_groups.Js group.Bsb_file_groups.backend
     | Bsb_config_types.Native   -> List.mem Bsb_file_groups.Native group.Bsb_file_groups.backend
     | Bsb_config_types.Bytecode -> List.mem Bsb_file_groups.Bytecode group.Bsb_file_groups.backend
+    | Bsb_config_types.NativeIos -> List.mem Bsb_file_groups.NativeIos group.Bsb_file_groups.backend
   ) file_groups in 
   (* Separate entries into two set, the ppx ones and the non-ppx ones *)
   let (entries, ppx_entries) = separate_ppx_entries_and_filter entries backend in

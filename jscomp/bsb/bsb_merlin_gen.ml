@@ -179,6 +179,7 @@ let merlin_file_gen ~cwd
       | Bsb_config_types.Js       -> "js"
       | Bsb_config_types.Native   -> "native"
       | Bsb_config_types.Bytecode -> "bytecode" 
+      | Bsb_config_types.NativeIos -> "ios"
     in
 #end
     (match built_in_dependency with

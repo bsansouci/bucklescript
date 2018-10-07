@@ -23,7 +23,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *)
 
 #if BS_NATIVE then
-type link_t = LinkBytecode of string | LinkNative of string
+type link_t = LinkBytecode of string | LinkNative of string | LinkNativeIos of string
 
 let (//) = Ext_path.combine
 
@@ -40,12 +40,14 @@ let link link_byte_or_native
   ~warnings 
   ~warn_error
   ~verbose
+  ~root_project_dir
   cwd =
-  let ocaml_dir = Bsb_build_util.get_ocaml_dir cwd in
-  let suffix_object_files, suffix_library_files, compiler, add_custom, output_file, nested = begin match link_byte_or_native with
-  | LinkBytecode output_file -> Literals.suffix_cmo, Literals.suffix_cma , "ocamlc"  , true, output_file, "bytecode"
-  | LinkNative output_file   -> Literals.suffix_cmx, Literals.suffix_cmxa, "ocamlopt", false, output_file, "native"
+  let suffix_object_files, suffix_library_files, compiler, add_custom, output_file, nested, is_mobile = begin match link_byte_or_native with
+  | LinkBytecode output_file  -> Literals.suffix_cmo, Literals.suffix_cma , "ocamlc"  , true, output_file, "bytecode", false
+  | LinkNative output_file    -> Literals.suffix_cmx, Literals.suffix_cmxa, "ocamlopt", false, output_file, "native", false
+  | LinkNativeIos output_file -> Literals.suffix_cmx, Literals.suffix_cmxa, "ocamlopt", false, output_file, "ios", true
   end in
+  let ocaml_dir = if is_mobile then Bsb_build_util.get_mobile_ocaml_dir ~for_device:true root_project_dir else Bsb_build_util.get_ocaml_dir cwd in
   (* Map used to track the path to the files as the dependency_graph that we're going to read from the mlast file only contains module names *)
   let module_to_filepath = List.fold_left
     (fun m v ->
@@ -83,23 +85,20 @@ let link link_byte_or_native
       (* We pass is_js:true here because that'll lead us to `bsb-native/lib/ocaml` which contains the JS artifacts, 
          and for belt the artifacts are under `native` or `byte` there.  *)
     let artifacts_dir = Bsb_build_util.get_ocaml_lib_dir ~is_js:true cwd // nested in
-    let library_files = (artifacts_dir // (Literals.library_file ^ suffix_library_files)) :: library_files in
-    let clibs = artifacts_dir // "stubs.o" :: clibs in
+    let (library_files, clibs) = if is_mobile 
+      then library_files, clibs else 
+      (artifacts_dir // (Literals.library_file ^ suffix_library_files)) :: library_files, artifacts_dir // "stubs.o" :: clibs in
     (* This list will be reversed so we append the otherlibs object files at the end, and they'll end at the beginning. *)
-    
-    let suffix = begin match link_byte_or_native with
-      | LinkBytecode _ -> Literals.suffix_cma
-      | LinkNative _   -> Literals.suffix_cmxa
-    end in
 
+    
     let ocaml_dependencies = if ocamlfind_packages = [] then 
       List.fold_left (fun acc v -> 
         match v with
         | "compiler-libs" -> 
-          ((ocaml_dir // "lib" // "ocaml" // "compiler-libs" // "ocamlcommon") ^ suffix) :: acc
+          ((ocaml_dir // "lib" // "ocaml" // "compiler-libs" // "ocamlcommon") ^ suffix_library_files) :: acc
         | "threads" -> 
-          "-thread" :: (ocaml_dir // "lib" // "ocaml" // "threads" // "threads" ^ suffix) :: acc
-        | v -> (ocaml_dir // "lib" // "ocaml" // v ^ suffix) :: acc
+          "-thread" :: (ocaml_dir // "lib" // "ocaml" // "threads" // "threads" ^ suffix_library_files) :: acc
+        | v -> (ocaml_dir // "lib" // "ocaml" // v ^ suffix_library_files) :: acc
       ) [] ocaml_dependencies 
     else begin 
       List.fold_left (fun acc v -> 
@@ -127,45 +126,67 @@ let link link_byte_or_native
     else warning_command in 
     
     let all_object_files = ocaml_dependencies @ library_files @ List.rev (list_of_object_files) @ clibs in
-    (* If there are no ocamlfind packages then let's not use ocamlfind, let's use the opt compiler instead.
-       This is for mainly because we'd like to offer a "sandboxed" experience for those who want it.
-       So if you don't care about opam dependencies you can solely rely on Bucklescript and npm, no need 
-       to install ocamlfind. 
-     *)
-    if ocamlfind_packages = [] then
-      let compiler_extension = if Ext_sys.is_windows_or_cygwin then ".opt.exe" else ".opt" in
-      let compiler = ocaml_dir // compiler ^ compiler_extension in
-      let list_of_args = (compiler :: "-g"
-        :: (if bs_super_errors then ["-bs-super-errors"] else [])) 
-        @ warning_command
-        @ flags
-        (* We filter out -thread because that'll lead to a linker warning like 
-          "ld: warning: directory not found for option '-L/path/of/machine/where/artifacts/where/compiled" 
-        *)
-        @ "-o" :: output_file :: (List.filter (fun thing -> thing <> "-thread") all_object_files) in
-      
-      if verbose then
-        print_endline("Bsb_helper link command:\n" ^ (String.concat "  " list_of_args) ^ "\n");
+    
+    if is_mobile then
+      let interpreter = ocaml_dir // "bin" // "ocamlrun" in
+      let compiler = ocaml_dir // "bin" // compiler in
+      let list_of_args = (interpreter :: compiler :: "-g" :: "-output-obj" :: "-I" :: (ocaml_dir // "lib" // "ocaml") :: 
+            (* "-cclib" :: "-lasmrun" :: "-ccopt" :: "-lasmrun" :: "-cclib" :: "-static" :: "-ccopt" :: "-arch" :: "-ccopt" :: "arm64" :: "-ccopt" :: "-isysroot" :: "-ccopt" :: "/Applications/Xcode-beta.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk" :: "-ccopt" :: "-isystem" :: "-ccopt" :: "/Users/benjamin/Desktop/reprocessing-example-cross-platform/node_modules/ocaml-cross-mobile/ios-arm64/lib/ocaml" :: "-ccopt" :: "-DCAML_NAME_SPACE" *)
+           [])
+          @ warning_command
+          @ flags
+          (* We filter out -thread because that'll lead to a linker warning like 
+            "ld: warning: directory not found for option '-L/path/of/machine/where/artifacts/where/compiled" 
+          *)
+          @ "-o" :: output_file :: (List.filter (fun thing -> thing <> "-thread") all_object_files) in
         
-      Unix.execvp
-        compiler
-        (Array.of_list (list_of_args))
+        if verbose then
+          print_endline("Bsb_helper link command:\n" ^ (String.concat "  " list_of_args) ^ "\n");
+          
+        Unix.execvp
+          interpreter
+          (Array.of_list (list_of_args))
     else begin
-      (* @CrossPlatform This might work on windows since we're using the Unix module which claims to
-         have a windows implementation... We should double check this. *)
-      let list_of_args = "ocamlfind" :: compiler 
-        :: (if bs_super_errors then ["-passopt"; "-bs-super-errors"] else []) 
-        @ ("-linkpkg" :: ocamlfind_packages)
-        @ warning_command
-        @ flags
-        @ ("-g" :: "-o" :: output_file :: all_object_files) in
-      
-      if verbose then
-        print_endline("Bsb_helper link command:\n" ^ (String.concat "  " list_of_args) ^ "\n");
+      (* If there are no ocamlfind packages then let's not use ocamlfind, let's use the opt compiler instead.
+         This is for mainly because we'd like to offer a "sandboxed" experience for those who want it.
+         So if you don't care about opam dependencies you can solely rely on Bucklescript and npm, no need 
+         to install ocamlfind. 
+       *)
+      if ocamlfind_packages = [] then
+        let compiler_extension = if Ext_sys.is_windows_or_cygwin then ".opt.exe" else ".opt" in
+        let compiler = ocaml_dir // compiler ^ compiler_extension in
+        let list_of_args = (compiler :: "-g"
+          :: (if bs_super_errors then ["-bs-super-errors"] else [])) 
+          @ warning_command
+          @ flags
+          (* We filter out -thread because that'll lead to a linker warning like 
+            "ld: warning: directory not found for option '-L/path/of/machine/where/artifacts/where/compiled" 
+          *)
+          @ "-o" :: output_file :: (List.filter (fun thing -> thing <> "-thread") all_object_files) in
         
-      Unix.execvp
-        "ocamlfind"
-        (Array.of_list (list_of_args))
+        if verbose then
+          print_endline("Bsb_helper link command:\n" ^ (String.concat "  " list_of_args) ^ "\n");
+          
+        Unix.execvp
+          compiler
+          (Array.of_list (list_of_args))
+      else begin
+        (* @CrossPlatform This might work on windows since we're using the Unix module which claims to
+           have a windows implementation... We should double check this. *)
+        let list_of_args = "ocamlfind" :: compiler 
+          :: (if bs_super_errors then ["-passopt"; "-bs-super-errors"] else []) 
+          @ ("-linkpkg" :: ocamlfind_packages)
+          @ warning_command
+          @ flags
+          @ ("-g" :: "-o" :: output_file :: all_object_files) in
+        
+        if verbose then
+          print_endline("Bsb_helper link command:\n" ^ (String.concat "  " list_of_args) ^ "\n");
+          
+        Unix.execvp
+          "ocamlfind"
+          (Array.of_list (list_of_args))
+      end
     end
   end else
     Bsb_exception.no_files_to_link suffix_object_files main_module

@@ -26,7 +26,7 @@
 
 (* File following almost the same logic as bsb_ninja but slightly modified for 
    native / bytecode compilation. *)
-type compile_target_t = Native | Bytecode
+type compile_target_t = Native | Bytecode | NativeIos
   
 val handle_file_groups : out_channel ->
   custom_rules:Bsb_rule.t String_map.t -> 

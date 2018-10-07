@@ -33,6 +33,7 @@ val
 #if BS_NATIVE then
   dependency_info:Bsb_dependency_info.t ->
   ocaml_dir:string ->
+  ocaml_dir_host:string ->
   root_project_dir:string ->
   is_top_level: bool ->
   backend:Bsb_config_types.compilation_kind_t ->

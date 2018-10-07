@@ -23,7 +23,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *)
 
 #if BS_NATIVE then
-type pack_t = PackBytecode | PackNative
+type pack_t = PackBytecode | PackNative | PackNativeIos
 
 val pack : pack_t -> 
   main_module:string option ->
@@ -37,6 +37,7 @@ val pack : pack_t ->
   warn_error: string ->
   verbose: bool ->
   build_library:string option ->
+  root_project_dir:string ->
   string ->
   unit
 #end

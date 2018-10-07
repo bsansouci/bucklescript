@@ -39,6 +39,7 @@ type error =
   | Missing_static_libraries_file of string
   | No_package_found_for_ppx of string * string
   | Ppx_not_found_for_package of string * string
+  | Ios_compiler_missing of string
 #end
 
 
@@ -115,6 +116,9 @@ let print (fmt : Format.formatter) (x : error) =
   | Ppx_not_found_for_package (package_name, ppx_name) ->
     Format.fprintf fmt
     "@{<error>Error:@} Couldn't find ppx called '%s' under dep '%s'.\n" package_name ppx_name
+  | Ios_compiler_missing ocaml_dir ->
+    Format.fprintf fmt
+    "@{<error>Error:@} Couldn't find the ios compiler at '%s'. It's a peer dep, you need to install it by running `npm i bsansouci/ocaml-cross-mobile`\n" ocaml_dir
 #end
 
 let conflict_module modname dir1 dir2 =
@@ -131,6 +135,7 @@ let no_files_to_pack suffix = error (No_files_to_pack suffix)
 let missing_static_libraries_file name = error (Missing_static_libraries_file name)
 let no_package_found_for_ppx package_name ppx_name = error (No_package_found_for_ppx (package_name, ppx_name))
 let ppx_not_found_for_package package_name ppx_name = error (Ppx_not_found_for_package (package_name, ppx_name))
+let ios_compiler_missing ocaml_dir = error (Ios_compiler_missing ocaml_dir)
 #end
 
 let config_error config fmt =

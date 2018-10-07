@@ -291,6 +291,12 @@ let linking_native =
               ${ocamlfind_dependencies} ${external_deps_for_linking} ${in} -link-native ${out}"
     "linking_native"
 
+let linking_native_ios =
+  define
+    ~command:"${bsdep} ${bsb_helper_verbose} ${ocaml_dependencies} ${ocaml_linker_flags} ${warnings} ${namespace} -bs-main ${main_module} ${static_libraries} \
+              ${external_deps_for_linking} ${root_project_dir} ${in} -link-native-ios ${out}"
+    "linking_native_ios"
+
 
 let build_cma_library =
   define
@@ -305,6 +311,20 @@ let build_cmxa_library =
               ${bs_package_includes} ${ocaml_lib_includes} ${bsc_extra_includes} \
               ${in} -pack-native-library"
     "build_cmxa_library"
+    
+let build_native_ios_library =
+  define
+    ~command:"${bsdep} ${bsb_helper_verbose} ${build_library} ${ocaml_dependencies} ${ocaml_linker_flags} ${warnings} ${namespace} ${static_libraries}  \
+              ${bs_package_includes} ${ocaml_lib_includes} ${bsc_extra_includes} ${root_project_dir} \
+              ${in} -pack-native-ios-library"
+    "build_native_ios_library"
+    
+    
+let xcode_build =
+  define
+    ~command:"${xcodebuild} ${workspace} ${scheme} ${configuration} ${arch} ${sdk} ${xcodebuild_flags} build ${xcodebuild_envvars}"
+    "xcode_build"
+    
 #end
 
 (* a snapshot of rule_names environment*)
@@ -342,13 +362,17 @@ let reset (custom_rules : string String_map.t) =
     
     linking_bytecode.used <- false;
     linking_native.used <- false;
+    linking_native_ios.used <- false;
     
     build_cma_library.used <- false;
-    build_cmxa_library.used <- false;
+    build_cmxa_library.used <- false;    
+    build_native_ios_library.used <- false;
     
     build_package_gen_mlast_simple.used <- false;
     build_package_build_cmi_bytecode.used <- false;
     build_package_build_cmi_native.used <- false;
+    
+    xcode_build.used <- false;
 #end
 
     build_package.used <- false;

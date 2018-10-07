@@ -271,4 +271,13 @@ let get_build_artifacts_location cwd =
       let project_name = Filename.basename cwd in
       dir // Bsb_config.lib_lit // Bsb_config.node_modules // project_name
   end
+
+(* @Incomplete This won't work if bsb is installed globally or through opam (like with esy) 
+  it doesn't support build_artifacts_dir *)
+let get_mobile_ocaml_dir ~for_device cwd =
+  let parent = Filename.dirname (Filename.dirname (get_bsc_dir ~cwd)) in
+  if parent <> "node_modules" then
+    cwd // "node_modules" // "ocaml-cross-mobile" // (if for_device then "ios-arm64" else "ios-x86")
+  else
+    parent // "ocaml-cross-mobile" // (if for_device then "ios-arm64" else "ios-x86")
 #end

@@ -48,6 +48,7 @@ val no_files_to_pack : string -> 'a
 val missing_static_libraries_file : string -> 'a
 val no_package_found_for_ppx : string -> string -> 'a
 val ppx_not_found_for_package : string -> string -> 'a
+val ios_compiler_missing : string -> 'a
 #end
 
 val invalid_spec : string -> 'a

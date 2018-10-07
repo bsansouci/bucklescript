@@ -12,6 +12,19 @@ type t = {
 
 let (//) = Ext_path.combine
 
+let get_exec_name entry =
+  match entry with
+  | {Bsb_config_types. backend = [NativeTarget]; output_name = None; main_module_name} -> 
+    if Ext_sys.is_windows_or_cygwin then (String.lowercase main_module_name) ^ ".native.exe" 
+                                    else (String.lowercase main_module_name) ^ ".native"
+  | {backend = [NativeTarget]; output_name = Some(name); } -> name
+  | {backend = [BytecodeTarget]; output_name = None; main_module_name} ->
+    if Ext_sys.is_windows_or_cygwin then (String.lowercase main_module_name) ^ ".byte.exe" 
+                                    else (String.lowercase main_module_name) ^ ".byte"
+  | {backend = [BytecodeTarget]; output_name = Some(name); } -> name
+  | _ -> failwith "Internal error: get_exec_name shouldn't be called for anything that isn't a native or bytecode binary"
+
+
 let check_if_dep ~root_project_dir ~backend (dependency_info : t) flag_exec =
   let components = Ext_string.split_by (fun c -> c = Ext_path.sep_char) flag_exec in
   match components with 
@@ -27,13 +40,10 @@ let check_if_dep ~root_project_dir ~backend (dependency_info : t) flag_exec =
           | Bsb_config_types.Js       -> "js"
           | Bsb_config_types.Native   -> "native"
           | Bsb_config_types.Bytecode -> "bytecode"
+          | Bsb_config_types.NativeIos -> "ios"
         end in 
-        let extension = begin match head with
-          | {backend = [NativeTarget]} -> ".native"
-          | {backend = [BytecodeTarget]} -> ".byte"
-          | _ -> assert false
-        end in
-        root_project_dir // Literals.node_modules // dep_name // Bsb_config.lib_bs // nested // entry_name ^ extension
+        let exec_name = get_exec_name head in
+        root_project_dir // Literals.node_modules // dep_name // Bsb_config.lib_bs // nested // exec_name
       end
     end
   | _ -> flag_exec

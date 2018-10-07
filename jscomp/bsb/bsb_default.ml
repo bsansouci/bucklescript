@@ -45,7 +45,7 @@ let ocaml_flags = ["-no-alias-deps";
 
 let ocaml_linker_flags = []
 
-let allowed_build_kinds = [Bsb_config_types.Js; Bsb_config_types.Bytecode; Bsb_config_types.Native]
+let allowed_build_kinds = [Bsb_config_types.Js; Bsb_config_types.Bytecode; Bsb_config_types.Native; Bsb_config_types.NativeIos]
 
-let ocaml_dependencies = ["unix"; "bigarray"; "str"; "dynlink"; "nums"; "threads"; ]
+let ocaml_dependencies = ["unix"; "bigarray"; ]
 #end

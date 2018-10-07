@@ -87,26 +87,30 @@ let collect_dependency_info ~cwd ~bsc_dir ~backend ~config:(config : Bsb_config_
               ) all_ppxes
           | _ -> all_ppxes
          ) !all_ppxes inner_config.Bsb_config_types.entries;
-        begin match backend with 
-        | Bsb_config_types.Js ->  assert false
-        | Bsb_config_types.Bytecode 
-          when List.mem Bsb_config_types.Bytecode Bsb_config_types.(inner_config.allowed_build_kinds) -> 
-            dependency_info.all_external_deps <- (build_artifacts_dir // Bsb_config.lib_ocaml // Literals.bytecode) :: dependency_info.all_external_deps;
-            dependency_info.all_c_linker_flags <- Bsb_config_types.(inner_config.c_linker_flags) @ dependency_info.all_c_linker_flags;
-            dependency_info.all_clibs <- Bsb_config_types.(inner_config.static_libraries) @ dependency_info.all_clibs;
-            dependency_info.all_ocamlfind_dependencies <- Bsb_config_types.(inner_config.ocamlfind_dependencies) @ dependency_info.all_ocamlfind_dependencies;
-            dependency_info.all_ocaml_dependencies <- List.fold_left (fun acc v -> Depend.StringSet.add v acc) dependency_info.all_ocaml_dependencies Bsb_config_types.(inner_config.ocaml_dependencies);
-            
-        | Bsb_config_types.Native 
-          when List.mem Bsb_config_types.Native Bsb_config_types.(inner_config.allowed_build_kinds) -> 
-            dependency_info.all_external_deps <- (build_artifacts_dir // Bsb_config.lib_ocaml // Literals.native) :: dependency_info.all_external_deps;
-            dependency_info.all_c_linker_flags <- Bsb_config_types.(inner_config.c_linker_flags) @ dependency_info.all_c_linker_flags;
-            dependency_info.all_clibs <- Bsb_config_types.(inner_config.static_libraries) @ dependency_info.all_clibs;
-            dependency_info.all_ocamlfind_dependencies <- Bsb_config_types.(inner_config.ocamlfind_dependencies) @ dependency_info.all_ocamlfind_dependencies;
-            dependency_info.all_ocaml_dependencies <- List.fold_left (fun acc v -> Depend.StringSet.add v acc) dependency_info.all_ocaml_dependencies Bsb_config_types.(inner_config.ocaml_dependencies);
-            
-        | _ -> ()
-        end;
+        if List.mem backend Bsb_config_types.(inner_config.allowed_build_kinds) then
+          begin match backend with 
+          | Bsb_config_types.Js ->  assert false
+          | Bsb_config_types.Bytecode -> 
+              dependency_info.all_external_deps <- (build_artifacts_dir // Bsb_config.lib_ocaml // Literals.bytecode) :: dependency_info.all_external_deps;
+              dependency_info.all_c_linker_flags <- Bsb_config_types.(inner_config.c_linker_flags) @ dependency_info.all_c_linker_flags;
+              dependency_info.all_clibs <- Bsb_config_types.(inner_config.static_libraries) @ dependency_info.all_clibs;
+              dependency_info.all_ocamlfind_dependencies <- Bsb_config_types.(inner_config.ocamlfind_dependencies) @ dependency_info.all_ocamlfind_dependencies;
+              dependency_info.all_ocaml_dependencies <- List.fold_left (fun acc v -> Depend.StringSet.add v acc) dependency_info.all_ocaml_dependencies Bsb_config_types.(inner_config.ocaml_dependencies);
+              
+          | Bsb_config_types.Native -> 
+              dependency_info.all_external_deps <- (build_artifacts_dir // Bsb_config.lib_ocaml // Literals.native) :: dependency_info.all_external_deps;
+              dependency_info.all_c_linker_flags <- Bsb_config_types.(inner_config.c_linker_flags) @ dependency_info.all_c_linker_flags;
+              dependency_info.all_clibs <- Bsb_config_types.(inner_config.static_libraries) @ dependency_info.all_clibs;
+              dependency_info.all_ocamlfind_dependencies <- Bsb_config_types.(inner_config.ocamlfind_dependencies) @ dependency_info.all_ocamlfind_dependencies;
+              dependency_info.all_ocaml_dependencies <- List.fold_left (fun acc v -> Depend.StringSet.add v acc) dependency_info.all_ocaml_dependencies Bsb_config_types.(inner_config.ocaml_dependencies);
+              
+          | Bsb_config_types.NativeIos -> 
+              dependency_info.all_external_deps <- (build_artifacts_dir // Bsb_config.lib_ocaml // Literals.ios) :: dependency_info.all_external_deps;
+              dependency_info.all_c_linker_flags <- Bsb_config_types.(inner_config.c_linker_flags) @ dependency_info.all_c_linker_flags;
+              dependency_info.all_clibs <- Bsb_config_types.(inner_config.static_libraries) @ dependency_info.all_clibs;
+              dependency_info.all_ocamlfind_dependencies <- Bsb_config_types.(inner_config.ocamlfind_dependencies) @ dependency_info.all_ocamlfind_dependencies;
+              dependency_info.all_ocaml_dependencies <- List.fold_left (fun acc v -> Depend.StringSet.add v acc) dependency_info.all_ocaml_dependencies Bsb_config_types.(inner_config.ocaml_dependencies);
+          end;
         if List.mem backend Bsb_config_types.(inner_config.allowed_build_kinds)
            && Bsb_config_types.(inner_config.build_script) <> None then begin
           let artifacts_installed = ref [] in
@@ -156,6 +160,7 @@ let regenerate_ninja
     ~backend
     ~main_config:(config : Bsb_config_types.t)
     ~ocaml_dir
+    ~ocaml_dir_host
     ~forced cwd bsc_dir
   : bool =
 #else
@@ -201,6 +206,7 @@ let regenerate_ninja
         | Bsb_config_types.Js       -> "js"
         | Bsb_config_types.Native   -> "native"
         | Bsb_config_types.Bytecode -> "bytecode"
+        | Bsb_config_types.NativeIos -> "ios"
       end in
 #end
       if check_result = Bsb_bsc_version_mismatch then begin 
@@ -255,6 +261,7 @@ let regenerate_ninja
               all_toplevel_ppxes = String_map.empty;
             }
           | Bsb_config_types.Bytecode
+          | Bsb_config_types.NativeIos
           | Bsb_config_types.Native ->
             if not is_top_level then 
               Bsb_dependency_info.{
@@ -274,7 +281,8 @@ let regenerate_ninja
         Bsb_ninja_gen.output_ninja_and_namespace_map 
 #if BS_NATIVE then
           ~dependency_info 
-          ~ocaml_dir 
+          ~ocaml_dir
+          ~ocaml_dir_host
           ~root_project_dir 
           ~is_top_level 
           ~backend 

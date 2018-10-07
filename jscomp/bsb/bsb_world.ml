@@ -83,6 +83,7 @@ let install_targets cwd (config : Bsb_config_types.t option) =
       | Bsb_config_types.Js       -> "js"
       | Bsb_config_types.Native   -> "native"
       | Bsb_config_types.Bytecode -> "bytecode"
+      | Bsb_config_types.NativeIos -> "ios"
     end in
     let destdir = cwd // Bsb_config.lib_ocaml // nested in (* lib is already there after building, so just mkdir [lib/ocaml] *)
     if not @@ Sys.file_exists destdir then begin Bsb_build_util.mkp destdir  end;
@@ -121,7 +122,10 @@ let build_bs_deps cwd deps =
   let bsc_dir = Bsb_build_util.get_bsc_dir ~cwd in
   let vendor_ninja = bsc_dir // "ninja.exe" in
 #if BS_NATIVE then
-  let ocaml_dir = Bsb_build_util.get_ocaml_dir cwd in
+  let ocaml_dir = if backend = Bsb_config_types.NativeIos then 
+    Bsb_build_util.get_mobile_ocaml_dir ~for_device:true cwd
+  else Bsb_build_util.get_ocaml_dir cwd in
+  
   let dependency_info = Bsb_dependency_info.{
     all_external_deps = [];
     all_ocamlfind_dependencies = [];
@@ -162,6 +166,7 @@ let build_bs_deps cwd deps =
               ~build_library:None
               ~main_config:config
               ~ocaml_dir
+              ~ocaml_dir_host:(Bsb_build_util.get_ocaml_dir cwd)
               cwd bsc_dir in (* set true to force regenrate ninja file so we have [config_opt]*)
           all_ppxes := List.fold_left Bsb_config_types.(fun all_ppxes e -> 
             match e with
@@ -198,6 +203,11 @@ let build_bs_deps cwd deps =
                 dependency_info.all_external_deps <- (build_artifacts_dir // Bsb_config.lib_ocaml // "native") :: dependency_info.all_external_deps;
                 
               "native"
+            | Bsb_config_types.NativeIos -> 
+              if has_at_least_one_lib_entry then 
+                dependency_info.all_external_deps <- (build_artifacts_dir // Bsb_config.lib_ocaml // "ios") :: dependency_info.all_external_deps;
+                
+              "ios"
             end in
             let command = 
               {Bsb_unix.cmd = vendor_ninja;

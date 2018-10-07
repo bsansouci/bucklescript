@@ -25,7 +25,7 @@
 #if BS_NATIVE then
 module Rules = Bsb_rule 
 
-type compile_target_t = Native | Bytecode
+type compile_target_t = Native | Bytecode | NativeIos
 
 type info =
   string list  
@@ -126,6 +126,7 @@ let emit_impl_build
   let output_cmx_or_cmo =
     match compile_target with
     | Bytecode -> output_filename_sans_extension ^ Literals.suffix_cmo
+    | NativeIos
     | Native   -> output_filename_sans_extension ^ Literals.suffix_cmx
   in
   let output_js =
@@ -133,6 +134,7 @@ let emit_impl_build
   let bsb_backend = begin match compile_target with
   | Bytecode -> "bytecode"
   | Native   -> "native"
+  | NativeIos -> "ios"
   end in
   let shadows = List.map (fun f -> 
     Bsb_ninja_util.{
@@ -156,6 +158,7 @@ let emit_impl_build
     ~shadows;
   let bin_deps_rule = begin match compile_target with
   | Bytecode -> Rules.build_bin_deps_bytecode
+  | NativeIos
   | Native   -> Rules.build_bin_deps_native
   end in
   output_build
@@ -173,6 +176,7 @@ let emit_impl_build
       group_dir_index in
   let rule_name = begin match compile_target with
   | Bytecode -> Rules.build_cmo_cmi_bytecode
+  | NativeIos
   | Native   -> Rules.build_cmx_cmi_native
   end in
   let cm_outputs, deps =
@@ -236,6 +240,7 @@ let emit_intf_build
   let bsb_backend = begin match compile_target with
   | Bytecode -> "bytecode"
   | Native   -> "native"
+  | NativeIos -> "ios"
   end in
   let shadows = List.map (fun f -> 
     Bsb_ninja_util.{
@@ -282,6 +287,7 @@ let emit_intf_build
     
   let rule = begin match compile_target with
   | Bytecode -> Rules.build_cmi_bytecode
+  | NativeIos
   | Native   -> Rules.build_cmi_native
   end in
   let common_shadows = if is_ppx && not (List.mem "compiler-libs" ocaml_dependencies) then 
@@ -448,20 +454,16 @@ let link oc comp_info
   | Bsb_config_types.Js -> Bsb_config_types.JsTarget
   | Bsb_config_types.Native -> Bsb_config_types.NativeTarget
   | Bsb_config_types.Bytecode -> Bsb_config_types.BytecodeTarget
+  | Bsb_config_types.NativeIos -> Bsb_config_types.NativeIosTarget
   in
-  List.fold_left (fun comp_info ({backend=all_backend; kind; output_name; main_module_name} : Bsb_config_types.entries_t) ->
+  List.fold_left (fun comp_info ({backend=all_backend; kind; output_name; main_module_name} as entry : Bsb_config_types.entries_t) ->
     List.fold_left Bsb_config_types.(fun com_info b -> 
     if b = backend then begin
       let output, rule_name, library_file_name, suffix_cmo_or_cmx, main_module_name, shadows, is_ppx =
         begin match b with
         | JsTarget       -> assert false
         | BytecodeTarget -> 
-          (match output_name with 
-            | None -> 
-              let extension = if Ext_sys.is_windows_or_cygwin then ".exe" else "" in
-              (String.lowercase main_module_name) ^ ".byte" ^ extension
-            | Some name -> name
-          ), 
+          Bsb_dependency_info.get_exec_name entry, 
           Rules.linking_bytecode, 
           "lib" ^ Literals.suffix_cma, 
           Literals.suffix_cmo, 
@@ -469,18 +471,21 @@ let link oc comp_info
           [],
           kind = Ppx
         | NativeTarget -> 
-          (match output_name with 
-            | None -> 
-              let extension = if Ext_sys.is_windows_or_cygwin then ".exe" else "" in
-              (String.lowercase main_module_name) ^ ".native" ^ extension
-            | Some name -> name
-          ), 
+          Bsb_dependency_info.get_exec_name entry, 
           Rules.linking_native  , 
           "lib" ^ Literals.suffix_cmxa, 
           Literals.suffix_cmx, 
           main_module_name,
           [],
           kind = Ppx
+        | NativeIosTarget -> 
+          "MainIosEntrypoint" ^ Literals.suffix_ios_o,
+          Rules.linking_native_ios,
+          "lib" ^ Literals.suffix_cmxa,
+          Literals.suffix_cmx, 
+          main_module_name,
+          [],
+          false
         end in
       let (all_mlast_files, all_cmo_or_cmx_files, all_cmi_files) =
         List.fold_left (fun acc (group : Bsb_file_groups.file_group) -> 
@@ -555,6 +560,14 @@ let link oc comp_info
         ~implicit_deps:(external_deps_lib @ (List.map Ext_bytes.ninja_escaped (all_cmi_files @ all_cmo_or_cmx_files @ static_libraries)))
         ~shadows
         ~rule:rule_name;
+      if backend = Bsb_config_types.NativeIosTarget then begin
+        (* @IosDevice hardcoded here *)
+        output_build oc
+          ~output:"App.app"
+          ~input:""
+          ~implicit_deps:[output]
+          ~rule:Bsb_rule.xcode_build;
+      end;
         comp_info
       end else 
         comp_info
@@ -573,6 +586,10 @@ let pack oc comp_info ~entries ?build_library ~backend ~file_groups ~namespace (
       | Bsb_config_types.Native   -> 
         Literals.library_file ^ Literals.suffix_cmxa, 
         Rules.build_cmxa_library, 
+        Literals.suffix_cmx
+      | Bsb_config_types.NativeIos   -> 
+        Literals.library_file ^ Literals.suffix_cmxa, 
+        Rules.build_native_ios_library, 
         Literals.suffix_cmx
     end in
     (* TODO(sansouci): we pack all source files of the dependency, but we could just pack the
@@ -664,6 +681,7 @@ let handle_file_groups oc
     | Bsb_config_types.Js       -> List.mem Bsb_file_groups.Js group.Bsb_file_groups.backend
     | Bsb_config_types.Native   -> List.mem Bsb_file_groups.Native group.Bsb_file_groups.backend
     | Bsb_config_types.Bytecode -> List.mem Bsb_file_groups.Bytecode group.Bsb_file_groups.backend
+    | Bsb_config_types.NativeIos -> List.mem Bsb_file_groups.NativeIos group.Bsb_file_groups.backend
   ) file_groups in 
   let (entries, ppx_entries) = Bsb_ninja_file_groups.separate_ppx_entries_and_filter entries backend in
   (* should_build_ppx is set to true if there is any file group that requires a ppx or if there's

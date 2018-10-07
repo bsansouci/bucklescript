@@ -51,8 +51,10 @@ val build_cmx_cmi_native : t
 val build_cmi_native : t
 val linking_bytecode : t
 val linking_native : t
+val linking_native_ios : t
 val build_cma_library : t
 val build_cmxa_library : t
+val build_native_ios_library : t
 #end
 
 val build_package : t 
@@ -60,6 +62,7 @@ val build_package : t
 val build_package_gen_mlast_simple : t
 val build_package_build_cmi_bytecode : t
 val build_package_build_cmi_native : t
+val xcode_build : t
 #end
 
 (** rules are generally composed of built-in rules and customized rules, there are two design choices:

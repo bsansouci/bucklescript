@@ -293,12 +293,14 @@ let parse_backend parent_backend input =
         | "js"       -> Bsb_file_groups.Js
         | "native"   -> Bsb_file_groups.Native
         | "bytecode" -> Bsb_file_groups.Bytecode
-        | str -> Bsb_exception.errorf ~loc:loc_start "'backend' field expects one of: 'js', 'bytecode' or 'native'. Found '%s'" str
+        | "ios"      -> Bsb_file_groups.NativeIos
+        | str -> Bsb_exception.errorf ~loc:loc_start "'backend' field expects one of: 'js', 'bytecode', 'native' or 'ios'. Found '%s'" str
       ) (Bsb_build_util.get_list_string s);
     | Some (Str {str = "js"} )       -> [Bsb_file_groups.Js]
     | Some (Str {str = "native"} )   -> [Bsb_file_groups.Native]
     | Some (Str {str = "bytecode"} ) -> [Bsb_file_groups.Bytecode]
-    | Some x -> Bsb_exception.config_error x "'backend' field expects one of: 'js', 'bytecode' or 'native'"
+    | Some (Str {str = "ios"} ) -> [Bsb_file_groups.NativeIos]
+    | Some x -> Bsb_exception.config_error x "'backend' field expects one of: 'js', 'bytecode', 'native' or 'ios'"
     | None -> parent_backend
   end
 #end
@@ -518,7 +520,7 @@ let scan ~not_dev ~root ~cut_generators ~namespace ~clean_staled_bs_js x =
     namespace;
     clean_staled_bs_js;
 #if BS_NATIVE then
-    backend = [Bsb_file_groups.Js; Bsb_file_groups.Native; Bsb_file_groups.Bytecode];
+    backend = [Bsb_file_groups.Js; Bsb_file_groups.Native; Bsb_file_groups.Bytecode; Bsb_file_groups.NativeIos];
     is_ppx = false;
     ppx = [];
 #end

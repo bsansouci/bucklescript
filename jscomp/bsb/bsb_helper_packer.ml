@@ -23,7 +23,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *)
 
 #if BS_NATIVE then
-type pack_t = PackBytecode | PackNative
+type pack_t = PackBytecode | PackNative | PackNativeIos
 
 let (//) = Ext_path.combine
 
@@ -48,10 +48,12 @@ let pack pack_byte_or_native
   ~warn_error
   ~verbose
   ~build_library
+  ~root_project_dir
   cwd =
-  let suffix_object_files, suffix_library_files, compiler, custom_flag = begin match pack_byte_or_native with
-  | PackBytecode -> Literals.suffix_cmo, Literals.suffix_cma , "ocamlc", true
-  | PackNative   -> Literals.suffix_cmx, Literals.suffix_cmxa, "ocamlopt", false
+  let suffix_object_files, suffix_library_files, compiler, custom_flag, is_mobile = begin match pack_byte_or_native with
+  | PackBytecode -> Literals.suffix_cmo, Literals.suffix_cma , "ocamlc", true, false
+  | PackNative   -> Literals.suffix_cmx, Literals.suffix_cmxa, "ocamlopt", false, false
+  | PackNativeIos -> Literals.suffix_cmx, Literals.suffix_cmxa, "ocamlopt", false, true
   end in
   let module_to_filepath = List.fold_left
     (fun m v ->
@@ -133,12 +135,20 @@ let pack pack_byte_or_native
        So if you don't care about opam dependencies you can solely rely on Bucklescript and npm, no need 
        to install ocamlfind. *)
     if ocamlfind_packages = [] then
-      let compiler_extension = if Ext_sys.is_windows_or_cygwin then ".opt.exe" else ".opt" in
-      let ocaml_dir = Bsb_build_util.get_ocaml_dir cwd in
-      let compiler = ocaml_dir // compiler ^ compiler_extension in
+      let (exec, compiler_command) = if is_mobile then 
+        let ocaml_dir = Bsb_build_util.get_mobile_ocaml_dir ~for_device:true root_project_dir in
+        let exec = ocaml_dir // "bin" // "ocamlrun" in
+        let otherargument = ocaml_dir // "bin" // compiler in
+        (exec, exec :: otherargument :: "-a" :: [])
+      else begin
+        let compiler_extension = if Ext_sys.is_windows_or_cygwin then ".opt.exe" else ".opt" in
+        let ocaml_dir = Bsb_build_util.get_ocaml_dir cwd in
+        let exec = ocaml_dir // compiler ^ compiler_extension in
+        (exec, exec :: "-a" :: "-g" :: [])
+        (* (if bs_super_errors then ["-bs-super-errors"] else [])  *)
+      end in
       
-      let list_of_args = (compiler :: "-a" :: "-g" 
-        :: (if bs_super_errors then ["-bs-super-errors"] else []) )
+      let list_of_args = compiler_command
         @ warning_command
         @ flags
         @ "-o" :: (Literals.library_file ^ suffix_library_files) :: includes 
@@ -148,7 +158,7 @@ let pack pack_byte_or_native
         print_endline("Bsb_helper pack command:\n" ^ (String.concat "  " list_of_args) ^ "\n");
         
       Unix.execvp
-        compiler
+        exec
           (Array.of_list list_of_args)
     else begin
       (* @CrossPlatform This might work on windows since we're using the Unix module which claims to

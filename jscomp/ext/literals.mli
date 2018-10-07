@@ -135,6 +135,8 @@ val ppx : string
 #if BS_NATIVE then
 val library : string
 val dot_static_libraries : string
+val suffix_ios_o : string
+val ios : string
 #end
 
 val node_sep : string 

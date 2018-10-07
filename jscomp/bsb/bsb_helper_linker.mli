@@ -23,7 +23,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *)
 
 #if BS_NATIVE then
-type link_t = LinkBytecode of string | LinkNative of string
+type link_t = LinkBytecode of string | LinkNative of string | LinkNativeIos of string
 
 val link : link_t -> 
   main_module:string -> 
@@ -38,6 +38,7 @@ val link : link_t ->
   warnings: string ->
   warn_error: string ->
   verbose: bool ->
+  root_project_dir:string ->
   string ->
   unit
 #end
