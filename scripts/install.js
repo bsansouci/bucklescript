@@ -168,8 +168,8 @@ function non_windows_npm_release() {
         }
         child_process.execSync(make + 
             (isNative 
-                ? " world-native && " 
-                : " world && ") + make + " install", root_dir_config)
+                ? " world-native && " + make + " install-native"  
+                : " world && " + make + " install"), root_dir_config)
     }
 }
 

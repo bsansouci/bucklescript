@@ -18995,7 +18995,7 @@ let output_ninja_and_namespace_map
     | _ -> acc
   ) ocaml_flags ocaml_dependencies) in
   let ocaml_linker_flags = Bsb_build_util.flag_concat "-add-flag" ocaml_linker_flags in
-  let bs_super_errors = if backend <> Bsb_config_types.NativeIos && main_bs_super_errors && not use_ocamlfind then "-bs-super-errors" else "" in
+  let bs_super_errors = if not is_mobile && main_bs_super_errors && not use_ocamlfind then "-bs-super-errors" else "" in
   let build_artifacts_dir = Bsb_build_util.get_build_artifacts_location cwd in
   let ocamlc = "ocamlc" in
   let ocamlopt = "ocamlopt" in
