@@ -36,7 +36,7 @@ let refmt_flags = ["--print"; "binary"]
 let refmt_v3 = "refmt.exe"
 let refmt_none = "refmt.exe"
 
-let main_entries = [{ Bsb_config_types.kind = Library; main_module_name="Index"; output_name=None; backend = [JsTarget]}]
+let main_entries = [{ Bsb_config_types.kind = Library; main_module_name="Index"; output_name=None; backend = [JsTarget]; ocaml_dependencies = []; bs_dependencies = []; ocamlfind_dependencies = [];}]
 
 #if BS_NATIVE then
 let ocaml_flags = ["-no-alias-deps"; 

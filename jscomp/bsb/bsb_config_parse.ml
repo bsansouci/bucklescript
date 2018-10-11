@@ -45,11 +45,17 @@ let parse_entries name (field : Ext_json_types.t array) =
         let main = ref None in
         let output_name = ref None in
         let kind = ref Bsb_config_types.Library in
+        let ocaml_dependencies = ref [] in
+        let ocamlfind_dependencies = ref [] in
+        let bs_dependencies = ref [] in
         
         let _ = map
                 |? (Bsb_build_schemas.backend, `Str (fun x -> backend := [x]))
                 |? (Bsb_build_schemas.backend, `Arr (fun s -> backend := Bsb_build_util.get_list_string s))
                 |? (Bsb_build_schemas.main_module, `Str (fun x -> main := Some x))
+                |? (Bsb_build_schemas.ocaml_dependencies, `Arr (fun x -> ocaml_dependencies := Bsb_build_util.get_list_string x))
+                |? (Bsb_build_schemas.ocamlfind_dependencies, `Arr (fun x -> ocamlfind_dependencies := Bsb_build_util.get_list_string x))
+                |? (Bsb_build_schemas.bs_dependencies, `Arr (fun x -> bs_dependencies := Bsb_build_util.get_list_string x))
                 |? (Bsb_build_schemas.output_name, `Str (fun x -> output_name := Some x))
                   (* Only accept ppx for now, until I can figure out how we can let the user link in specific entries from their project. 
                      If a project has 2 bytecode entries which are libraries, right now they'll conflict because we create the same lib.cma for both.
@@ -100,7 +106,15 @@ let parse_entries name (field : Ext_json_types.t array) =
           | _ -> Bsb_exception.config_error entry "Missing field 'backend'. That field is required and its value be 'js', 'native' or 'bytecode'"
         ) backend in
         
-        Some {Bsb_config_types.kind = !kind; main_module_name; output_name = !output_name; backend}  
+        Some {
+          Bsb_config_types.kind = !kind;
+          main_module_name;
+          output_name = !output_name;
+          backend;
+          ocaml_dependencies = !ocaml_dependencies;
+          ocamlfind_dependencies = !ocamlfind_dependencies;
+          bs_dependencies = !bs_dependencies;
+        }
       | entry -> Bsb_exception.config_error entry "Unrecognized object inside array 'entries' field.") 
     field
 

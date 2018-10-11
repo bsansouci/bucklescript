@@ -11031,7 +11031,10 @@ type entries_t = {
     main_module_name: string;
     output_name: string option;
     kind: kind_t;
-    backend: backend_t list
+    backend: backend_t list;
+    ocaml_dependencies: string list;
+    bs_dependencies: string list;
+    ocamlfind_dependencies: string list;
 }
 
 
@@ -11176,7 +11179,7 @@ let refmt_flags = ["--print"; "binary"]
 let refmt_v3 = "refmt.exe"
 let refmt_none = "refmt.exe"
 
-let main_entries = [{ Bsb_config_types.kind = Library; main_module_name="Index"; output_name=None; backend = [JsTarget]}]
+let main_entries = [{ Bsb_config_types.kind = Library; main_module_name="Index"; output_name=None; backend = [JsTarget]; ocaml_dependencies = []; bs_dependencies = []; ocamlfind_dependencies = [];}]
 
 
 let ocaml_flags = ["-no-alias-deps"; 
@@ -11574,11 +11577,17 @@ let parse_entries name (field : Ext_json_types.t array) =
         let main = ref None in
         let output_name = ref None in
         let kind = ref Bsb_config_types.Library in
+        let ocaml_dependencies = ref [] in
+        let ocamlfind_dependencies = ref [] in
+        let bs_dependencies = ref [] in
         
         let _ = map
                 |? (Bsb_build_schemas.backend, `Str (fun x -> backend := [x]))
                 |? (Bsb_build_schemas.backend, `Arr (fun s -> backend := Bsb_build_util.get_list_string s))
                 |? (Bsb_build_schemas.main_module, `Str (fun x -> main := Some x))
+                |? (Bsb_build_schemas.ocaml_dependencies, `Arr (fun x -> ocaml_dependencies := Bsb_build_util.get_list_string x))
+                |? (Bsb_build_schemas.ocamlfind_dependencies, `Arr (fun x -> ocamlfind_dependencies := Bsb_build_util.get_list_string x))
+                |? (Bsb_build_schemas.bs_dependencies, `Arr (fun x -> bs_dependencies := Bsb_build_util.get_list_string x))
                 |? (Bsb_build_schemas.output_name, `Str (fun x -> output_name := Some x))
                   (* Only accept ppx for now, until I can figure out how we can let the user link in specific entries from their project. 
                      If a project has 2 bytecode entries which are libraries, right now they'll conflict because we create the same lib.cma for both.
@@ -11629,7 +11638,15 @@ let parse_entries name (field : Ext_json_types.t array) =
           | _ -> Bsb_exception.config_error entry "Missing field 'backend'. That field is required and its value be 'js', 'native' or 'bytecode'"
         ) backend in
         
-        Some {Bsb_config_types.kind = !kind; main_module_name; output_name = !output_name; backend}  
+        Some {
+          Bsb_config_types.kind = !kind;
+          main_module_name;
+          output_name = !output_name;
+          backend;
+          ocaml_dependencies = !ocaml_dependencies;
+          ocamlfind_dependencies = !ocamlfind_dependencies;
+          bs_dependencies = !bs_dependencies;
+        }
       | entry -> Bsb_exception.config_error entry "Unrecognized object inside array 'entries' field.") 
     field
 
@@ -18944,12 +18961,13 @@ let output_ninja_and_namespace_map
   =
   let custom_rules = Bsb_rule.reset generators in 
 
-  let has_any_entry = List.exists (fun e -> 
-      List.exists (fun b -> match b with 
+  let equal_backend b = match b with 
     | Bsb_config_types.JsTarget       -> backend = Bsb_config_types.Js
     | Bsb_config_types.NativeTarget   -> backend = Bsb_config_types.Native
     | Bsb_config_types.NativeIosTarget -> backend = Bsb_config_types.NativeIos
-    | Bsb_config_types.BytecodeTarget -> backend = Bsb_config_types.Bytecode) e.Bsb_config_types.backend
+    | Bsb_config_types.BytecodeTarget -> backend = Bsb_config_types.Bytecode in
+  let has_any_entry = List.exists (fun e -> 
+      List.exists equal_backend e.Bsb_config_types.backend
   ) entries in
   let nested = begin match backend with
     | Bsb_config_types.Js       ->  "js"
@@ -18968,8 +18986,11 @@ let output_ninja_and_namespace_map
   
   let use_ocamlfind = not is_mobile && (ocamlfind_dependencies <> [] || dependency_info.Bsb_dependency_info.all_ocamlfind_dependencies <> []) in
   
+  let ocaml_dependencies = List.fold_left (fun acc ({ocaml_dependencies; backend=entry_backends} : Bsb_config_types.entries_t) -> if List.exists equal_backend entry_backends then acc @ ocaml_dependencies else acc) ocaml_dependencies entries in
   let all_ocaml_dependencies = List.fold_left (fun acc v -> Depend.StringSet.add v acc) dependency_info.all_ocaml_dependencies ocaml_dependencies in
   let all_ocaml_dependencies = Depend.StringSet.elements all_ocaml_dependencies in
+  
+  let ocamlfind_dependencies = List.fold_left (fun acc ({ocamlfind_dependencies; backend=entry_backends} : Bsb_config_types.entries_t) -> if List.exists equal_backend entry_backends then acc @ ocamlfind_dependencies else acc) ocamlfind_dependencies entries in
 
   let ocaml_flags = if is_mobile then
     Bsb_build_util.flag_concat Ext_string.single_space ("-nostdlib" :: ocaml_flags)

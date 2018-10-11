@@ -103,12 +103,13 @@ let output_ninja_and_namespace_map
   =
   let custom_rules = Bsb_rule.reset generators in 
 #if BS_NATIVE then
-  let has_any_entry = List.exists (fun e -> 
-      List.exists (fun b -> match b with 
+  let equal_backend b = match b with 
     | Bsb_config_types.JsTarget       -> backend = Bsb_config_types.Js
     | Bsb_config_types.NativeTarget   -> backend = Bsb_config_types.Native
     | Bsb_config_types.NativeIosTarget -> backend = Bsb_config_types.NativeIos
-    | Bsb_config_types.BytecodeTarget -> backend = Bsb_config_types.Bytecode) e.Bsb_config_types.backend
+    | Bsb_config_types.BytecodeTarget -> backend = Bsb_config_types.Bytecode in
+  let has_any_entry = List.exists (fun e -> 
+      List.exists equal_backend e.Bsb_config_types.backend
   ) entries in
   let nested = begin match backend with
     | Bsb_config_types.Js       ->  "js"
@@ -127,8 +128,11 @@ let output_ninja_and_namespace_map
   
   let use_ocamlfind = not is_mobile && (ocamlfind_dependencies <> [] || dependency_info.Bsb_dependency_info.all_ocamlfind_dependencies <> []) in
   
+  let ocaml_dependencies = List.fold_left (fun acc ({ocaml_dependencies; backend=entry_backends} : Bsb_config_types.entries_t) -> if List.exists equal_backend entry_backends then acc @ ocaml_dependencies else acc) ocaml_dependencies entries in
   let all_ocaml_dependencies = List.fold_left (fun acc v -> Depend.StringSet.add v acc) dependency_info.all_ocaml_dependencies ocaml_dependencies in
   let all_ocaml_dependencies = Depend.StringSet.elements all_ocaml_dependencies in
+  
+  let ocamlfind_dependencies = List.fold_left (fun acc ({ocamlfind_dependencies; backend=entry_backends} : Bsb_config_types.entries_t) -> if List.exists equal_backend entry_backends then acc @ ocamlfind_dependencies else acc) ocamlfind_dependencies entries in
 
   let ocaml_flags = if is_mobile then
     Bsb_build_util.flag_concat Ext_string.single_space ("-nostdlib" :: ocaml_flags)

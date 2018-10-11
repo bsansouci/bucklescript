@@ -43,7 +43,10 @@ type entries_t = {
     main_module_name: string;
     output_name: string option;
     kind: kind_t;
-    backend: backend_t list
+    backend: backend_t list;
+    ocaml_dependencies: string list;
+    bs_dependencies: string list;
+    ocamlfind_dependencies: string list;
 }
 
 #if BS_NATIVE then
