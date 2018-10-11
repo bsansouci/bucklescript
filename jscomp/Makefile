@@ -514,6 +514,33 @@ depend:
 	# $(addprefix bsb/, $(addsuffix .mli, $(BSB_SRCS))) \
 	# $(addprefix bsb/, $(addsuffix .ml, $(BSB_SRCS))) \
 
+depend-native:
+	BS_NATIVE=true BS_DEBUG=true $(CAMLDEP) -absname -native -I stubs -I ext -I common -I syntax -I depends -I core -I ounit -I ounit_tests -I bsb -I super_errors -I outcome_printer \
+	$(addprefix stubs/, $(addsuffix .ml, $(STUB_SRCS))) \
+	$(addprefix stubs/, $(addsuffix .mli, $(STUB_SRCS))) \
+	$(addprefix ext/, $(addsuffix .ml, $(EXT_SRCS))) \
+	$(addprefix ext/, $(addsuffix .mli, $(EXT_SRCS))) \
+	$(addprefix common/, $(addsuffix .ml, $(COMMON_SRCS))) \
+	$(addprefix common/, $(addsuffix .mli, $(COMMON_SRCS))) \
+	$(addprefix syntax/, $(addsuffix .ml, $(SYNTAX_SRCS))) \
+	$(addprefix syntax/, $(addsuffix .mli, $(SYNTAX_SRCS))) \
+	$(addprefix depends/, $(addsuffix .mli, $(DEPENDS_SRCS))) \
+	$(addprefix depends/, $(addsuffix .ml, $(DEPENDS_SRCS))) \
+	$(addprefix core/, $(addsuffix .mli, $(CORE_SRCS))) \
+	$(addprefix core/, $(addsuffix .ml, $(CORE_SRCS))) \
+	$(addprefix core/, $(addsuffix .mli, $(OTHER_CORE_SRCS))) \
+	$(addprefix core/, $(addsuffix .ml, $(OTHER_CORE_SRCS))) \
+	$(addprefix ounit/, $(addsuffix .mli, $(OUNIT_SRCS))) \
+	$(addprefix ounit/, $(addsuffix .ml, $(OUNIT_SRCS))) \
+	$(addprefix super_errors/, $(addsuffix .ml, $(SUPER_ERRORS_SRCS))) \
+	$(addprefix super_errors/, $(addsuffix .mli, $(SUPER_ERRORS_SRCS))) \
+	$(addprefix outcome_printer/, $(addsuffix .ml, $(REASON_OUTCOME_PRINTER_SRCS))) \
+	$(addprefix outcome_printer/, $(addsuffix .mli, $(REASON_OUTCOME_PRINTER_SRCS))) \
+	$(addprefix ounit_tests/, $(addsuffix .mli, $(OUNIT_TESTS_SRCS))) \
+	$(addprefix ounit_tests/, $(addsuffix .ml, $(OUNIT_TESTS_SRCS))) \
+	bsb/*.ml bsb/*.mli *.ml *.mli > all.depend
+	# $(addprefix bsb/, $(addsuffix .mli, $(BSB_SRCS))) \
+	# $(addprefix bsb/, $(addsuffix .ml, $(BSB_SRCS))) \
 
 
 
