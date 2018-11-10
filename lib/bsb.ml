@@ -4509,6 +4509,7 @@ val no_files_to_pack : string -> 'a
 val missing_static_libraries_file : string -> 'a
 val no_package_found_for_ppx : string -> string -> 'a
 val ppx_not_found_for_package : string -> string -> 'a
+val bs_ppx_tools_not_found : unit -> 'a
 
 
 val invalid_spec : string -> 'a
@@ -4558,6 +4559,7 @@ type error =
   | Missing_static_libraries_file of string
   | No_package_found_for_ppx of string * string
   | Ppx_not_found_for_package of string * string
+  | Bs_ppx_tools_not_found
 
 
 
@@ -4634,6 +4636,8 @@ let print (fmt : Format.formatter) (x : error) =
   | Ppx_not_found_for_package (package_name, ppx_name) ->
     Format.fprintf fmt
     "@{<error>Error:@} Couldn't find ppx called '%s' under dep '%s'.\n" package_name ppx_name
+  | Bs_ppx_tools_not_found ->
+    Format.fprintf fmt "@{<error>Error:@} Bs_ppx_tools not found.\n"
 
 
 let conflict_module modname dir1 dir2 =
@@ -4650,6 +4654,7 @@ let no_files_to_pack suffix = error (No_files_to_pack suffix)
 let missing_static_libraries_file name = error (Missing_static_libraries_file name)
 let no_package_found_for_ppx package_name ppx_name = error (No_package_found_for_ppx (package_name, ppx_name))
 let ppx_not_found_for_package package_name ppx_name = error (Ppx_not_found_for_package (package_name, ppx_name))
+let bs_ppx_tools_not_found () = error Bs_ppx_tools_not_found
 
 
 let config_error config fmt =
@@ -6552,6 +6557,8 @@ val build_artifacts_dir : (string option) ref
 
 val get_build_artifacts_location : string -> string
 
+val get_bs_ppx_tools : string -> string
+
 
 end = struct
 #1 "bsb_build_util.ml"
@@ -6826,6 +6833,20 @@ let get_build_artifacts_location cwd =
       let project_name = Filename.basename cwd in
       dir // Bsb_config.lib_lit // Bsb_config.node_modules // project_name
   end
+
+let get_bs_ppx_tools root_project_dir = 
+  let bs_ppx_tools = root_project_dir // Literals.node_modules // Bs_version.package_name // "lib" // "bs_ppx_tools.exe" in
+  if Sys.file_exists bs_ppx_tools then 
+    bs_ppx_tools
+  else begin
+    let bs_ppx_tools = (Filename.dirname root_project_dir) // Bs_version.package_name // "lib" // "bs_ppx_tools.exe" in
+    if (Filename.basename (Filename.dirname root_project_dir)) = "node_modules" 
+        && Sys.file_exists bs_ppx_tools then 
+      bs_ppx_tools
+    else
+      Bsb_exception.bs_ppx_tools_not_found ()
+  end
+
 
 
 end
@@ -12200,17 +12221,17 @@ let standard_library =
 let extension = if Sys.win32 || Sys.cygwin then ".exe" else ""
 let standard_runtime = (Filename.dirname Sys.executable_name) // "bin" // "ocamlrun" ^ extension
 let ccomp_type = "cc"
-let bytecomp_c_compiler = "gcc -O  -Wall -D_FILE_OFFSET_BITS=64 -D_REENTRANT -O "
-let bytecomp_c_libraries = "-lcurses -lpthread"
-let native_c_compiler = "gcc -O  -D_FILE_OFFSET_BITS=64 -D_REENTRANT"
+let bytecomp_c_compiler = "gcc -O -Wall -D_FILE_OFFSET_BITS=64 -O "
+let bytecomp_c_libraries = ""
+let native_c_compiler = "gcc -O  -D_FILE_OFFSET_BITS=64"
 let native_c_libraries = ""
 let native_pack_linker = "ld -r -arch x86_64  -o "
 let ranlib = "ranlib"
 let ar = "ar"
 let cc_profile = "-pg"
-let mkdll = "gcc -bundle -flat_namespace -undefined suppress -Wl,-no_compact_unwind"
+let mkdll = ""
 let mkexe = "gcc -Wl,-no_compact_unwind"
-let mkmaindll = "gcc -bundle -flat_namespace -undefined suppress -Wl,-no_compact_unwind"
+let mkmaindll = ""
 
 let exec_magic_number = "Caml1999X011"
 and cmi_magic_number = "Caml1999I017"
@@ -12258,7 +12279,7 @@ let default_executable_name =
   | "Win32" | "Cygwin" -> "camlprog.exe"
   | _ -> "camlprog"
 
-let systhread_supported = true;;
+let systhread_supported = false;;
 
 let print_config oc =
   let p name valu = Printf.fprintf oc "%s: %s\n" name valu in
@@ -16265,7 +16286,9 @@ let merlin_file_gen ~cwd
     end;
 
     Buffer.add_string buffer "\n";
+
     revise_merlin nested (cwd // merlin) buffer 
+
   end
 
 
@@ -18123,7 +18146,7 @@ let emit_impl_build
   let shadows = if is_ppx then 
     {
       Bsb_ninja_util.key = "ppx_flags"; 
-      op = AppendList ["-ppx"; Ext_bytes.ninja_escaped root_project_dir // Literals.node_modules // Bs_version.package_name // "lib" // "bs_ppx_tools.exe"];
+      op = AppendList ["-ppx"; Ext_bytes.ninja_escaped (Bsb_build_util.get_bs_ppx_tools root_project_dir)];
     } :: shadows
   else shadows in
   output_build oc
