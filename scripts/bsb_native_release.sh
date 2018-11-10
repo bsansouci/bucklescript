@@ -1,4 +1,9 @@
 export MACOSX_DEPLOYMENT_TARGET="10.10"
+
+opam update
+opam switch reinstall 4.02.3+buckle-master
+eval $(opam env)
+
 cd vendor/ocaml && make -j9 world.opt && make install  && cd ../..
 rm -rf lib/ocaml/pervasives.cmi
 node scripts/install.js native
