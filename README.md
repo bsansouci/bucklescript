@@ -5,9 +5,13 @@
 Bsb-native is a fork of [bsb](https://bucklescript.github.io/docs/en/build-overview.html) that compiles to native OCaml instead.
 
 ## Install
+```sh
+# Install bsb-native
+npm install --save-dev bsb-native
 
-1) Run `npm install --save-dev bsb-native` / `yarn add --dev bsb-native`.
-2) Add a `bsconfig.json` like you would for bsb. Bsb-native uses the same schema, located [here](http://bucklescript.github.io/bucklescript/docson/#build-schema.json) with small additions like `entries` (see below for complete config schema).
+# Add a bsconfig.json
+npx bsb --init .
+```
 
 An [example bsconfig.json](https://github.com/bsansouci/bsb-native-example/blob/master/bsconfig.json):
 ```js
@@ -21,24 +25,16 @@ An [example bsconfig.json](https://github.com/bsansouci/bsb-native-example/blob/
 }
 ```
 
-## Run
-`./node_modules/.bin/bsb -make-world` (or add an [npm script](https://docs.npmjs.com/misc/scripts) that runs `bsb -make-world`).
+See the full schema [below](#bsconfig.json-schema).
 
-That will build the first entry and use its `backend` to build all other entries targetting that `backend`. 
+## Run
+`npx bsb -make-world` (or add an [npm script](https://docs.npmjs.com/misc/scripts) that runs `bsb -make-world`).
+
+That will build the first entry and use its `backend` to build all other entries targeting that `backend`. 
 
 e.g if you have multiple `bytecode` targets, they'll all get built but not the `js` ones nor `native` ones. If you want to build to all targets you need to run the build command multiple times with different `-backend`.
 
-## Initialize a new package
-
-Bsb-native comes with a basic init package to get you started. To create a package named `Hello` run:
-
-```sh
-bsb -init Hello
-```
-
-And a folder named `Hello` will be created with a basic project layout. If you want to initialize an already created folder, use `.` as the last argument.
-
-## Useful commandline flags
+## Useful command line flags
 The `-make-world` flag builds all of the dependencies and the project.
 
 The `-clean-world` flag cleans all of the build artifacts.
@@ -53,7 +49,7 @@ The `-build-library` flag takes a module name and will pack everything in the cu
 
 ## Opam package support
 Yes `bsb-native` supports opam packages (see [ocamlfind example](https://github.com/bsansouci/bsb-native-example/tree/opam-example)).
-**BUT** you need to be on the switch `4.02.3+buckle-master` (which you can get to by running `opam switch 4.02.3+buckle-master`).
+**BUT** you need to be on the switch `4.02.3+buckle-master` (which you can get to by running `opam switch 4.02.3+buckle-master && eval $(opam env)`).
 ```js
 {
   "name" : "NameOfLibrary",
@@ -76,17 +72,33 @@ Yes `bsb-native` supports opam packages (see [ocamlfind example](https://github.
     
     // Contains only the added fields, the rest is the same as bsb.
     "sources": [{
-      "type": "ppx" // Extra field added to tell bsb-native that a fold contains source for a ppx.
-      "ppx": ["Myppx", "theirPpx/theirPpx.exe"] // Array of ppx to run on all files in this directory. If it's a relative path, it's relative to `node_modules`, if it's a module name it's a local ppx.
-      }]
+      // Extra field added to tell bsb-native that a folder contains the 
+      // source for a ppx.
+      "type": "ppx",
+      
+      // Array of ppx to run on all files in this directory. If it's a
+      // relative path, it's relative to `node_modules`, if it's a module
+      // name it's a local ppx.
+      "ppx": ["Myppx", "theirPpx/theirPpx.exe"],
+      
+      // Restrict a folder to being built to only one target. Can be a 
+      // string or an array of strings.
+      "backend": "native"
+    }],
   
     // Entries is an array of targets to be built.
     // When running `bsb -backend bytecode`, bsb will filter this array for
     // all the entries compiling to bytecode and compile _all_ of those.
     "entries": [{
-      "backend": "bytecode", // Can be an array of string or a string: "bytecode" (ocamlc), "js" (bsc) or "native" (ocamlopt)
-      "main-module": "MainModule", // This has to be capitalized
-      "output-name": "snake.exe", // Custom executable name.
+      // Can be an array of string or a string: "bytecode" (ocamlc), "js" 
+      // (bsc) or "native" (ocamlopt).
+      "backend": "bytecode",
+      
+      // The entry point module. Has to be capitalized.
+      "main-module": "MainModule",
+      
+      // Custom executable name.
+      "output-name": "snake.exe",
     }],
 
     // Array of opam dependencies.
@@ -113,7 +125,9 @@ Yes `bsb-native` supports opam packages (see [ocamlfind example](https://github.
     // which also exposes `Bla`, the compiler will use the native `Bla` when
     // compiling to native and the JS `Bla` when compiling to JS thanks to this
     // flag.
-    "allowed-build-kinds": "js", // Can be a string or an array, with the same values as "entries".
+    //
+    // Can be a string or an array, with the same values as "entries".
+    "allowed-build-kinds": "js",
 
     // List of relative paths (relative from library dir) to be linked at the 
     // end. Bsb-native doesn't care how those were generated as long as they
@@ -132,7 +146,7 @@ Yes `bsb-native` supports opam packages (see [ocamlfind example](https://github.
 ```
 
 ## C compilation
-bsb-native allows C compilation through an OCaml/Reason file. To expose that file to bsb you can add `"build-script": "build_script.re"` to your `bsconfig.json`. 
+bsb-native allows C compilation, that works the same way on all platforms, through an OCaml/Reason file. To expose that file to bsb you can add `"build-script": "build_script.re"` to your `bsconfig.json`. 
 
 Bsb expose to that file a module called `Bsb_internals` which contains helpers to compile C code.
 ```reason
@@ -151,10 +165,6 @@ let node_modules : string;
 ```
 
 Here is a [simple example](https://github.com/bsansouci/reasongl/blob/2364bc0de0dc0d89b85c6bc1fc64b0ceb169038f/build_script.re) of a `build_script.re` file.
-
-The generated artifacts need to be added to the `"static-libraries": []` array inside the `bsconfig.json` in order to be added at the linking phase.
-
-Here's the same [simple example](https://github.com/bsansouci/reasongl/blob/2364bc0de0dc0d89b85c6bc1fc64b0ceb169038f/bsconfig.json#L16)'s `bsconfig.json`.
 
 The `gcc` function exposed to the `build-script` file uses a vendored mingw compiler, which works on all platforms (linux, osx, windows). 
 
@@ -189,7 +199,7 @@ Same for `OS_TYPE`.
 
 Platform specific files (like `MyModule_Native`) should be added to a folder that is only built for that specific backend (`native`, in the `MyModule_Native` case). You can do that by adding this to your `bsconfig.json` file:
 
-```json
+```js
 "sources": [{
   "dir": "src",
   "subdirs": [{
