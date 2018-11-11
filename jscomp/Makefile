@@ -38,12 +38,12 @@ all:
 	make libs
 
 native:
-	make OCAML_VERSION="4.02.3" BS_NATIVE=true ../lib/bsb.exe 
-	make OCAML_VERSION="4.02.3" BS_NATIVE=true ../lib/bsb_helper.exe 
-	make OCAML_VERSION="4.02.3" BS_NATIVE=true ../lib/bsc.exe 
-	make OCAML_VERSION="4.02.3" libs
-	make OCAML_VERSION="4.02.3" BS_NATIVE=true -C belt_byte
-	make OCAML_VERSION="4.02.3" BS_NATIVE=true -C belt_native
+	make BS_NATIVE=true ../lib/bsb.exe 
+	make BS_NATIVE=true ../lib/bsb_helper.exe 
+	make BS_NATIVE=true ../lib/bsc.exe 
+	make libs
+	make BS_NATIVE=true -C belt_byte
+	make BS_NATIVE=true -C belt_native
 
 install:
 	make -C ../ install
@@ -571,10 +571,9 @@ snapshotml:./bin/bspack.exe
 	$(MAKE) -j9 $(SNAPSHOT_SRCS)
 
 BS_NATIVE=false
-OCAML_VERSION="4.02.3"
 
 force-snapshotml-native:
-	$(MAKE) OCAML_VERSION="4.02.3" BS_NATIVE=true force-snapshotml
+	$(MAKE) BS_NATIVE=true force-snapshotml
 	
 force-snapshotml:
 	rm -f $(SNAPSHOT_DEPS) $(SNAPSHOT_SRCS)
