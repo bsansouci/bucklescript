@@ -149,11 +149,11 @@ function checkPrebuilt() {
 
 
 function non_windows_npm_release() {
-    if (fs.existsSync(path.join(lib_dir,'ocaml','pervasives.cmi'))) {
+    if (!isNative && fs.existsSync(path.join(lib_dir,'ocaml','pervasives.cmi'))) {
         console.log('Found pervasives.cmi, assume it was already built')
         return true // already built before
     }
-    if (checkPrebuilt()) {
+    if (!isNative && checkPrebuilt()) {
         // release mode, already has bsc.exe
         child_process.execSync(make + " libs && " + make + " install", root_dir_config)
     } else {
