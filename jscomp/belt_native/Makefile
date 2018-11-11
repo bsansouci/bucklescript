@@ -1,3 +1,10 @@
+# To compile to ios you need to
+# 1) cross compile stubs.c to ios: `xcrun -sdk iphoneos clang -arch armv7 -c -I /Users/benjamin/Desktop/reprocessing-example-cross-platform/node_modules/ocaml-cross-mobile/ios-arm64/lib/ocaml/ stubs.c`
+# 2) Use the right compiler: 
+#    COMPILER=/Users/benjamin/Desktop/reprocessing-example-cross-platform/node_modules/ocaml-cross-mobile/ios-arm64/bin/ocamlrun /Users/benjamin/Desktop/reprocessing-example-cross-platform/node_modules/ocaml-cross-mobile/ios-arm64/bin/ocamlopt
+# 3) add an include because that compiler has no idea where its stdlib is
+#   INCLUDES=-I /Users/benjamin/Desktop/reprocessing-example-cross-platform/node_modules/ocaml-cross-mobile/ios-arm64/lib/ocaml
+
 include ../Makefile.shared
 
 ifdef SYSTEMROOT
@@ -106,7 +113,7 @@ files: $(addprefix ../others/, $(addsuffix .ml, $(filter-out $(GENERATED_SOURCE_
 	cp ../belt_byte/js.ml ../belt_byte/js.mli ../belt_byte/test.ml ./
 
 stubs.o: stubs.c
-	$(COMPILER) -c $^
+	$(COMPILER) $(INCLUDES) -c $^
 
 $(RUNTIME): ../../lib/belt_bsppx.exe stubs.o
 

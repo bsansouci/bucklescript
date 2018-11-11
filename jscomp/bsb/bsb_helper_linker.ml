@@ -86,7 +86,7 @@ let link link_byte_or_native
          and for belt the artifacts are under `native` or `byte` there.  *)
     let artifacts_dir = Bsb_build_util.get_ocaml_lib_dir ~is_js:true cwd // nested in
     let (library_files, clibs) = if is_mobile 
-      then library_files, clibs else 
+      then ((Bsb_build_util.get_mobile_ocaml_dir ~for_device:true root_project_dir // "lib" // "ocaml") // (Literals.library_file ^ suffix_library_files)) :: library_files, clibs else 
       (artifacts_dir // (Literals.library_file ^ suffix_library_files)) :: library_files, artifacts_dir // "stubs.o" :: clibs in
     (* This list will be reversed so we append the otherlibs object files at the end, and they'll end at the beginning. *)
 
