@@ -19,7 +19,7 @@ function mkdirp(dir, cb) {
   });
 }
 
-let version = '4.0.6';
+let version = JSON.parse(fs.readFileSync("package.json")).version;
 
 var zipFilename;
 if (isWin) {
