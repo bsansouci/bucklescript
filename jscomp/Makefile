@@ -38,12 +38,12 @@ all:
 	make libs
 
 native:
-	make BS_NATIVE=true ../lib/bsb.exe 
-	make BS_NATIVE=true ../lib/bsb_helper.exe 
-	make BS_NATIVE=true ../lib/bsc.exe 
-	make libs
-	make BS_NATIVE=true -C belt_byte
-	make BS_NATIVE=true -C belt_native
+	make OCAML_VERSION="4.02.3" BS_NATIVE=true ../lib/bsb.exe 
+	make OCAML_VERSION="4.02.3" BS_NATIVE=true ../lib/bsb_helper.exe 
+	make OCAML_VERSION="4.02.3" BS_NATIVE=true ../lib/bsc.exe 
+	make OCAML_VERSION="4.02.3" libs
+	make OCAML_VERSION="4.02.3" BS_NATIVE=true -C belt_byte
+	make OCAML_VERSION="4.02.3" BS_NATIVE=true -C belt_native
 
 install:
 	make -C ../ install
@@ -571,9 +571,10 @@ snapshotml:./bin/bspack.exe
 	$(MAKE) -j9 $(SNAPSHOT_SRCS)
 
 BS_NATIVE=false
+OCAML_VERSION="4.02.3"
 
 force-snapshotml-native:
-	$(MAKE) BS_NATIVE=true force-snapshotml
+	$(MAKE) OCAML_VERSION="4.02.3" BS_NATIVE=true force-snapshotml
 	
 force-snapshotml:
 	rm -f $(SNAPSHOT_DEPS) $(SNAPSHOT_SRCS)
@@ -585,25 +586,25 @@ SNAPSHOT_SRCS+=$(addprefix bin/, $(addsuffix .ml, all_ounit_tests))
 SNAPSHOT_DEPS=$(SNAPSHOT_SRCS:.ml=.d)
 
 ../lib/bsppx.ml:./bin/bspack.exe
-	$< -D BS_NATIVE=$(BS_NATIVE) -U BS_DEBUG -bs-MD  -module-alias Config=Config_whole_compiler  -I $(OCAML_SRC_UTILS) -I $(OCAML_SRC_PARSING)  -I stubs -I common -I ext -I syntax -I core -bs-main Bsppx_main -o $@
+	$< -D OCAML_VERSION=$(OCAML_VERSION) -D BS_NATIVE=$(BS_NATIVE) -U BS_DEBUG -bs-MD  -module-alias Config=Config_whole_compiler  -I $(OCAML_SRC_UTILS) -I $(OCAML_SRC_PARSING)  -I stubs -I common -I ext -I syntax -I core -bs-main Bsppx_main -o $@
 
 ../lib/whole_compiler.ml:./bin/bspack.exe
-	$< -D BS_NATIVE=$(BS_NATIVE) -U BS_DEBUG -bs-MD -module-alias Config=Config_whole_compiler -bs-exclude-I config -o $@ -bs-main Js_main -I $(OCAML_SRC_UTILS) -I $(OCAML_SRC_PARSING) -I $(OCAML_SRC_TYPING) -I $(OCAML_SRC_BYTECOMP) -I $(OCAML_SRC_DRIVER)/  -I stubs -I ext -I syntax -I depends -I common -I core -I super_errors -I outcome_printer
+	$< -D OCAML_VERSION=$(OCAML_VERSION) -D BS_NATIVE=$(BS_NATIVE) -U BS_DEBUG -bs-MD -module-alias Config=Config_whole_compiler -bs-exclude-I config -o $@ -bs-main Js_main -I $(OCAML_SRC_UTILS) -I $(OCAML_SRC_PARSING) -I $(OCAML_SRC_TYPING) -I $(OCAML_SRC_BYTECOMP) -I $(OCAML_SRC_DRIVER)/  -I stubs -I ext -I syntax -I depends -I common -I core -I super_errors -I outcome_printer
 
 ../lib/bsdep.ml:./bin/bspack.exe
-	$< -D BS_OCAMLDEP=true  -D BS_NATIVE=$(BS_NATIVE) -U BS_DEBUG -bs-MD  -module-alias Config=Config_whole_compiler   -I $(OCAML_SRC_UTILS) -I $(OCAML_SRC_PARSING) -I $(OCAML_SRC_DRIVER) -I $(OCAML_SRC_TOOLS) -I common -I ext -I syntax -I depends -I core -I stubs -bs-main Ocamldep -o $@
+	$< -D BS_OCAMLDEP=true  -D OCAML_VERSION=$(OCAML_VERSION) -D BS_NATIVE=$(BS_NATIVE) -U BS_DEBUG -bs-MD  -module-alias Config=Config_whole_compiler   -I $(OCAML_SRC_UTILS) -I $(OCAML_SRC_PARSING) -I $(OCAML_SRC_DRIVER) -I $(OCAML_SRC_TOOLS) -I common -I ext -I syntax -I depends -I core -I stubs -bs-main Ocamldep -o $@
 
 ../lib/bsb_helper.ml:./bin/bspack.exe
-	 $< -bs-MD -D BS_NATIVE=$(BS_NATIVE) -U BS_DEBUG   -I stubs -I common -I ext -I syntax -I depends -I bsb  -bs-main Bsb_helper_main -o $@
+	 $< -bs-MD -D OCAML_VERSION=$(OCAML_VERSION) -D BS_NATIVE=$(BS_NATIVE) -U BS_DEBUG   -I stubs -I common -I ext -I syntax -I depends -I bsb  -bs-main Bsb_helper_main -o $@
 	 
 ../lib/bsb_internals.ml:./bin/bspack.exe
-	 $< -bs-MD -D BS_NATIVE=$(BS_NATIVE) -U BS_DEBUG   -I stubs -I common -I ext -I syntax -I depends -I bsb  -bs-main Bsb_internals -o $@
+	 $< -bs-MD -D OCAML_VERSION=$(OCAML_VERSION) -D BS_NATIVE=$(BS_NATIVE) -U BS_DEBUG   -I stubs -I common -I ext -I syntax -I depends -I bsb  -bs-main Bsb_internals -o $@
 
 ../lib/bsb.ml:./bin/bspack.exe
-	 $<  -D BS_MIN_LEX_DEPS=true -bs-MD -D BS_NATIVE=$(BS_NATIVE) -U BS_DEBUG -I $(OCAML_SRC_UTILS) -I $(OCAML_SRC_PARSING) -I stubs -I common -I ext -I syntax -I depends -I bsb -I ext  -bs-main Bsb_main -o $@
+	 $<  -D BS_MIN_LEX_DEPS=true -bs-MD -D OCAML_VERSION=$(OCAML_VERSION) -D BS_NATIVE=$(BS_NATIVE) -U BS_DEBUG -I $(OCAML_SRC_UTILS) -I $(OCAML_SRC_PARSING) -I stubs -I common -I ext -I syntax -I depends -I bsb -I ext  -bs-main Bsb_main -o $@
 
 ../lib/bspp.ml:./bin/bspack.exe
-	  $< -D BS_MIN_LEX_DEPS=true -D BS_NATIVE=$(BS_NATIVE) -U BS_DEBUG -bs-MD -module-alias Config=Config_whole_compiler   -I $(OCAML_SRC_UTILS) -I $(OCAML_SRC_PARSING)?parser   -I common -I ext -I syntax -I depends -I bspp -I core -bs-main Bspp_main -o $@
+	  $< -D BS_MIN_LEX_DEPS=true -D OCAML_VERSION=$(OCAML_VERSION) -D BS_NATIVE=$(BS_NATIVE) -U BS_DEBUG -bs-MD -module-alias Config=Config_whole_compiler   -I $(OCAML_SRC_UTILS) -I $(OCAML_SRC_PARSING)?parser   -I common -I ext -I syntax -I depends -I bspp -I core -bs-main Bspp_main -o $@
 
 ../lib/bspp.exe:../lib/bspp.mli ../lib/bspp.ml
 	make -C ../lib bspp.exe
