@@ -101,9 +101,8 @@ all:
 main: $(RUNTIME)
 	$(COMPILER) -a -o lib.cmxa $(OBJECT_FILES)
 
-files: $(addprefix ../others/, $(addsuffix .ml, $(filter-out $(GENERATED_SOURCE_LIST), $(SOURCE_LIST)))) $(addprefix ../others/, $(addsuffix .mli, $(filter-out js_math belt $(GENERATED_SOURCE_LIST), $(SOURCE_LIST))))
+files: ../belt_byte/js.ml ../belt_byte/js.mli $(addprefix ../belt_byte/, $(addsuffix .ml, $(SOURCE_LIST))) $(addprefix ../belt_byte/, $(addsuffix .mli, $(filter-out js_math belt belt_SortArrayString belt_internalSetString belt_internalSetInt belt_internalMapString belt_internalMapInt, $(SOURCE_LIST))))
 	cp $^ ./
-	cp ../belt_byte/js.ml ../belt_byte/js.mli ../belt_byte/test.ml ./
 
 stubs.o: stubs.c
 	$(COMPILER) -c $^
@@ -143,75 +142,6 @@ clean::
 	belt_internalMapStringM.ml belt_internalMapStringM.mli\
 	belt_MutableMapString.mli belt_MutableMapString.ml\
 	belt_MutableMapInt.mli belt_MutableMapInt.ml
-
-belt_HashSetString.ml: ../others/hashset.cppo.ml
-	cppo -D BS_NATIVE -D TYPE_STRING $^ > $@
-belt_HashSetInt.ml: ../others/hashset.cppo.ml
-	cppo -D BS_NATIVE -D TYPE_INT $^ > $@
-belt_HashSetString.mli: ../others/hashset.cppo.mli
-	cppo -D BS_NATIVE -D TYPE_STRING $^ > $@
-belt_HashSetInt.mli: ../others/hashset.cppo.mli
-	cppo -D BS_NATIVE -D TYPE_INT $^ > $@
-belt_HashMapString.ml: ../others/hashmap.cppo.ml
-	cppo -D BS_NATIVE -D TYPE_STRING $^ > $@
-belt_HashMapInt.ml: ../others/hashmap.cppo.ml
-	cppo -D BS_NATIVE -D TYPE_INT $^ > $@
-belt_HashMapString.mli: ../others/hashmap.cppo.mli
-	cppo -D BS_NATIVE -D TYPE_STRING $^ > $@
-belt_HashMapInt.mli: ../others/hashmap.cppo.mli
-	cppo -D BS_NATIVE -D TYPE_INT $^ > $@
-belt_MapString.ml: ../others/map.cppo.ml
-	cppo -D BS_NATIVE -D TYPE_STRING $^ > $@
-belt_MapInt.ml: ../others/map.cppo.ml
-	cppo -D BS_NATIVE -D TYPE_INT $^ > $@
-belt_MapString.mli: ../others/map.cppo.mli
-	cppo -D BS_NATIVE -D TYPE_STRING $^ > $@
-belt_MapInt.mli: ../others/map.cppo.mli
-	cppo -D BS_NATIVE -D TYPE_INT $^ > $@
-belt_MutableMapString.mli: ../others/mapm.cppo.mli
-	cppo -D BS_NATIVE -D TYPE_STRING $^ > $@
-belt_MutableMapInt.mli: ../others/mapm.cppo.mli
-	cppo -D BS_NATIVE -D TYPE_INT $^ > $@
-belt_MutableMapString.ml: ../others/mapm.cppo.ml
-	cppo -D BS_NATIVE -D TYPE_STRING $^ > $@
-belt_MutableMapInt.ml: ../others/mapm.cppo.ml
-	cppo -D BS_NATIVE -D TYPE_INT $^ > $@
-belt_internalMapInt.ml : ../others/internal_map.cppo.ml
-	cppo -D BS_NATIVE -D TYPE_INT $^ > $@
-belt_internalMapString.ml : ../others/internal_map.cppo.ml
-	cppo -D BS_NATIVE -D TYPE_STRING $^ > $@
-belt_internalSetInt.ml: ../others/internal_set.cppo.ml
-	cppo -D BS_NATIVE -D TYPE_INT $^ > $@
-belt_internalSetString.ml: ../others/internal_set.cppo.ml
-	cppo -D BS_NATIVE -D TYPE_STRING $^ > $@
-
-belt_SetInt.ml: ../others/set.cppo.ml
-	cppo -D BS_NATIVE -D TYPE_INT $^ > $@
-belt_SetString.ml: ../others/set.cppo.ml
-	cppo -D BS_NATIVE -D TYPE_STRING $^ > $@
-
-belt_SetInt.mli: ../others/set.cppo.mli
-	cppo -D BS_NATIVE -D TYPE_INT $^ > $@
-belt_SetString.mli: ../others/set.cppo.mli
-	cppo -D BS_NATIVE -D TYPE_STRING $^ > $@
-
-belt_MutableSetInt.ml: ../others/setm.cppo.ml
-	cppo -D BS_NATIVE -D TYPE_INT $^ > $@
-belt_MutableSetString.ml: ../others/setm.cppo.ml
-	cppo -D BS_NATIVE -D TYPE_STRING $^ > $@
-belt_MutableSetInt.mli: ../others/setm.cppo.mli
-	cppo -D BS_NATIVE -D TYPE_INT $^ > $@
-belt_MutableSetString.mli: ../others/setm.cppo.mli
-	cppo -D BS_NATIVE -D TYPE_STRING $^ > $@
-
-belt_SortArrayInt.ml : ../others/sort.cppo.ml
-	cppo -D BS_NATIVE -D TYPE_INT $^ >$@
-belt_SortArrayString.ml : ../others/sort.cppo.ml
-	cppo -D BS_NATIVE -D TYPE_STRING $^ >$@
-belt_SortArrayInt.mli : ../others/sort.cppo.mli
-	cppo -D BS_NATIVE -D TYPE_INT $^ > $@
-belt_gSortArrayString.mli : ../others/sort.cppo.mli
-	cppo -D BS_NATIVE -D TYPE_STRING $^ > $@
 
 .mli.cmi:
 	BS_NATIVE=true $(COMPILER) $(INCLUDES) -pp $(BSPP) $(COMPFLAGS) -o $@ -c $<
