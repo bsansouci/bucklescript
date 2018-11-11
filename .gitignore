@@ -99,3 +99,10 @@ jscomp/build_tests/*/lib/
 bin/ninja.exe
 tmp/
 notes.md
+
+# bsb-native specific things
+jscomp/belt_native/*.ml*
+!jscomp/belt_native/caml_hash.ml
+!jscomp/belt_native/test.ml
+vendor/ocaml/lib
+vendor/ocaml/bin
