@@ -23,11 +23,11 @@ let version = JSON.parse(fs.readFileSync("package.json")).version;
 
 var zipFilename;
 if (isWin) {
-  zipFilename = `bucklescript-win-${version}.zip`;
+  zipFilename = `bsb-native-win-${version}.zip`;
 } else if (isOSX) {
-  zipFilename = `bucklescript-osx-${version}.zip`;
+  zipFilename = `bsb-native-osx-${version}.zip`;
 } else if (isLinux) {
-  zipFilename = `bucklescript-linux-${version}.zip`;
+  zipFilename = `bsb-native-linux-${version}.zip`;
 } else {
   console.error("No pre-built binaries for " + process.platform + " yet! Please open an issue on bsansouci/bucklescript!");
   return;
