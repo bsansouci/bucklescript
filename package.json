@@ -32,7 +32,7 @@
     "postinstall": "node scripts/install.js"
   },
   "name": "bsb-native",
-  "version": "4.0.8",
+  "version": "4.0.7",
   "description": "Bucklescript build systen fork to compile to native",
   "repository": {
     "type": "git",
