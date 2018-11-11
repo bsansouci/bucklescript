@@ -12220,9 +12220,9 @@ let standard_library =
 let extension = if Sys.win32 || Sys.cygwin then ".exe" else ""
 let standard_runtime = (Filename.dirname Sys.executable_name) // "bin" // "ocamlrun" ^ extension
 let ccomp_type = "cc"
-let bytecomp_c_compiler = "gcc -O -Wall -D_FILE_OFFSET_BITS=64 -O "
-let bytecomp_c_libraries = ""
-let native_c_compiler = "gcc -O  -D_FILE_OFFSET_BITS=64"
+let bytecomp_c_compiler = "gcc -O -Wall -D_FILE_OFFSET_BITS=64 -D_REENTRANT -O "
+let bytecomp_c_libraries = "-lpthread"
+let native_c_compiler = "gcc -O  -D_FILE_OFFSET_BITS=64 -D_REENTRANT"
 let native_c_libraries = ""
 let native_pack_linker = "ld -r -arch x86_64  -o "
 let ranlib = "ranlib"
@@ -12278,7 +12278,7 @@ let default_executable_name =
   | "Win32" | "Cygwin" -> "camlprog.exe"
   | _ -> "camlprog"
 
-let systhread_supported = false;;
+let systhread_supported = true;;
 
 let print_config oc =
   let p name valu = Printf.fprintf oc "%s: %s\n" name valu in
