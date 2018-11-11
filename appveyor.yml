@@ -77,10 +77,10 @@ build_script:
   - bash -lc "cd /c/projects/bucklescript/vendor/ninja; python configure.py --platform=mingw; /c/projects/bucklescript/vendor/ninja/snapshot/ninja.win32"
   - bash -lc "cp /c/projects/bucklescript/vendor/ninja/ninja.exe /c/projects/bucklescript/lib/ninja.exe"
   # Create the zip
-  - bash -lc "cd /c/projects/bucklescript/ && zip -r bsb-native-win-4.0.6.zip lib vendor/ocaml/bin/ocamlrun.exe vendor/ocaml/ocamlc.opt.exe vendor/ocaml/ocamlopt.opt.exe vendor/ocaml/lib/ocaml vendor/flexdll vendor/mingw32/ vendor/lib vendor/include -x lib/bsb -x lib/bsc -x lib/bsrefmt"
+  - bash -lc "cd /c/projects/bucklescript/ && zip -r bsb-native-win-4.0.7.zip lib vendor/ocaml/bin/ocamlrun.exe vendor/ocaml/ocamlc.opt.exe vendor/ocaml/ocamlopt.opt.exe vendor/ocaml/lib/ocaml vendor/flexdll vendor/mingw32/ vendor/lib vendor/include -x lib/bsb -x lib/bsc -x lib/bsrefmt"
 
 artifacts:
-  - path: bsb-native-win-4.0.6.zip
+  - path: bsb-native-win-4.0.7.zip
 
 test_script:
   - bash -xlc "pacman --noconfirm -S --quiet --needed mingw-w64-x86_64-nodejs"
@@ -88,5 +88,5 @@ test_script:
   - bash -lc "cd /c/projects/bucklescript/reprocessing-example; npm install"
   - bash -lc "find /c/projects/bucklescript/reprocessing-example/node_modules/bsb-native -type f -not -name 'package.json' -not -name 'bsconfig.json' -not -name 'bsb' -not -name 'bsc' -not -name 'bsrefmt' -delete"
   - bash -lc "cp /c/projects/bucklescript/package.json /c/projects/bucklescript/reprocessing-example/node_modules/bsb-native/"
-  - bash -lc "unzip -q /c/projects/bucklescript/bsb-native-win-4.0.6.zip -d /c/projects/bucklescript/reprocessing-example/node_modules/bsb-native"
+  - bash -lc "unzip -q /c/projects/bucklescript/bsb-native-win-4.0.7.zip -d /c/projects/bucklescript/reprocessing-example/node_modules/bsb-native"
   - bash -lc "cd /c/projects/bucklescript/reprocessing-example; ./node_modules/bsb-native/lib/bsb.exe -make-world || cat lib/bs/bytecode/build.ninja"
