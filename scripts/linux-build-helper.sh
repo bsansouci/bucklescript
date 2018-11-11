@@ -6,15 +6,17 @@ set -ex
 ################################################################
 
 # install zip in order to create the zip package later
-yum install -y zip
+yum install -y zip git
 
 # activate the Holy Build Box environment.
 source /hbb/activate
 
 # build ocaml
 cd /io/vendor/ocaml
-DIRNAME=`pwd` /io/vendor/ocaml/configure -prefix `pwd`  -no-ocamldoc -no-ocamlbuild -no-curses -no-graph -no-debugger
-make -j9 world.opt
+DIRNAME=`pwd`
+/io/vendor/ocaml/configure -prefix `pwd` -cc "gcc -fPIC" -aspp "gcc -c -fPIC" -no-ocamldoc -no-ocamlbuild -no-curses -no-graph -no-debugger
+make clean
+make world.opt
 make install
 mkdir -p $DIRNAME/lib/ocaml/caml
 make -C otherlibs/systhreads
@@ -25,6 +27,7 @@ cp /io/vendor/ninja-build/ninja.linux64 /io/lib/ninja.exe
 
 # build bsc/bsb
 cd /io
+PATH=/io/vendor/ocaml:$PATH make -C jscomp clean
 PATH=/io/vendor/ocaml:$PATH make
 PATH=/io/vendor/ocaml:$PATH make install
 
