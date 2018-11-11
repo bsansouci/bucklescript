@@ -168,11 +168,11 @@ function buildLibsAndInstall(){
 }
 
 function provideCompiler() {
-    if (fs.existsSync(path.join(lib_dir,'ocaml','pervasives.cmi'))) {
+    if (!isNative && fs.existsSync(path.join(lib_dir,'ocaml','pervasives.cmi'))) {
         console.log('Found pervasives.cmi, assume it was already built')
         return true // already built before
     }
-    if (!checkPrebuilt()) {
+    if (!isNative && !checkPrebuilt()) {
         // when not having bsc.exe
         tryToProvideOCamlCompiler()
         if (process.env.BS_TRAVIS_CI === "1") {
