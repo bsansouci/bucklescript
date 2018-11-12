@@ -1,9 +1,9 @@
 # To compile to ios you need to
-# 1) cross compile stubs.c to ios: `xcrun -sdk iphoneos clang -arch armv7 -c -I /Users/benjamin/Desktop/reprocessing-example-cross-platform/node_modules/ocaml-cross-mobile/ios-arm64/lib/ocaml/ stubs.c`
+# 1) cross compile stubs.c to ios: `xcrun -sdk iphoneos clang -arch armv7 -c -I /Users/bsansouci/Desktop/reprocessing-example-cross-platform/node_modules/ocaml-cross-mobile/ios-arm64/lib/ocaml/ stubs.c`
 # 2) Use the right compiler: 
-#    COMPILER=/Users/benjamin/Desktop/reprocessing-example-cross-platform/node_modules/ocaml-cross-mobile/ios-arm64/bin/ocamlrun /Users/benjamin/Desktop/reprocessing-example-cross-platform/node_modules/ocaml-cross-mobile/ios-arm64/bin/ocamlopt
+#    COMPILER=/Users/bsansouci/Desktop/reprocessing-example-cross-platform/node_modules/ocaml-cross-mobile/ios-arm64/bin/ocamlrun /Users/bsansouci/Desktop/reprocessing-example-cross-platform/node_modules/ocaml-cross-mobile/ios-arm64/bin/ocamlopt
 # 3) add an include because that compiler has no idea where its stdlib is
-#   INCLUDES=-I /Users/benjamin/Desktop/reprocessing-example-cross-platform/node_modules/ocaml-cross-mobile/ios-arm64/lib/ocaml
+#   INCLUDES=-I /Users/bsansouci/Desktop/reprocessing-example-cross-platform/node_modules/ocaml-cross-mobile/ios-arm64/lib/ocaml
 
 include ../Makefile.shared
 
@@ -14,7 +14,7 @@ else
 endif
 PATHSEP=$(strip $(PATHSEP2))
 
-COMPILER=ocamlopt.opt
+COMPILER=/Users/bsansouci/Desktop/reprocessing-example-cross-platform/node_modules/ocaml-cross-mobile/ios-arm64/bin/ocamlrun /Users/bsansouci/Desktop/reprocessing-example-cross-platform/node_modules/ocaml-cross-mobile/ios-arm64/bin/ocamlopt
 BSPP=..$(PATHSEP)..$(PATHSEP)lib$(PATHSEP)bspp.exe
 BELT_BSPPX=..$(PATHSEP)..$(PATHSEP)lib$(PATHSEP)belt_bsppx.exe
 
@@ -95,25 +95,19 @@ SOURCE_LIST= \
 OBJECT_FILES := $(addsuffix .cmx, $(LOCAL_SOURCE_LIST)) $(addsuffix .cmx, $(SOURCE_LIST))
 RUNTIME := $(addsuffix .cmi, $(SOURCE_LIST)) $(addsuffix .cmi, $(LOCAL_SOURCE_LIST)) $(OBJECT_FILES)
 
-INCLUDES=
+INCLUDES=-I /Users/bsansouci/Desktop/reprocessing-example-cross-platform/node_modules/ocaml-cross-mobile/ios-arm64/lib/ocaml
 
 BS_FLAGS=  $(BS_COMMON_FLAGS)
 COMPFLAGS += $(BS_FLAGS) -g -w +3-40-49 -warn-error A -bin-annot -ppx $(BELT_BSPPX)
 
-
-all: 
-	make files
-	make main
-
-main: $(RUNTIME)
+lib.cmxa: $(RUNTIME)
 	$(COMPILER) -a -o lib.cmxa $(OBJECT_FILES)
 
-files: $(addprefix ../others/, $(addsuffix .ml, $(filter-out $(GENERATED_SOURCE_LIST), $(SOURCE_LIST)))) $(addprefix ../others/, $(addsuffix .mli, $(filter-out js_math belt $(GENERATED_SOURCE_LIST), $(SOURCE_LIST))))
+js.ml js.mli $(addsuffix .ml, $(SOURCE_LIST)) $(addsuffix .mli, $(filter-out js_math belt belt_SortArrayString belt_internalSetString belt_internalSetInt belt_internalMapString belt_internalMapInt, $(SOURCE_LIST))): ../belt_byte/js.ml ../belt_byte/js.mli $(addprefix ../belt_byte/, $(addsuffix .ml, $(SOURCE_LIST))) $(addprefix ../belt_byte/, $(addsuffix .mli, $(filter-out js_math belt belt_SortArrayString belt_internalSetString belt_internalSetInt belt_internalMapString belt_internalMapInt, $(SOURCE_LIST))))
 	cp $^ ./
-	cp ../belt_byte/js.ml ../belt_byte/js.mli ../belt_byte/test.ml ./
 
 stubs.o: stubs.c
-	$(COMPILER) $(INCLUDES) -c $^
+	$(COMPILER) -c $^
 
 $(RUNTIME): ../../lib/belt_bsppx.exe stubs.o
 
@@ -150,77 +144,6 @@ clean::
 	belt_internalMapStringM.ml belt_internalMapStringM.mli\
 	belt_MutableMapString.mli belt_MutableMapString.ml\
 	belt_MutableMapInt.mli belt_MutableMapInt.ml
-
-ifndef BS_RELEASE_BUILD
-belt_HashSetString.ml: ../others/hashset.cppo.ml
-	cppo -D BS_NATIVE -D TYPE_STRING $^ > $@
-belt_HashSetInt.ml: ../others/hashset.cppo.ml
-	cppo -D BS_NATIVE -D TYPE_INT $^ > $@
-belt_HashSetString.mli: ../others/hashset.cppo.mli
-	cppo -D BS_NATIVE -D TYPE_STRING $^ > $@
-belt_HashSetInt.mli: ../others/hashset.cppo.mli
-	cppo -D BS_NATIVE -D TYPE_INT $^ > $@
-belt_HashMapString.ml: ../others/hashmap.cppo.ml
-	cppo -D BS_NATIVE -D TYPE_STRING $^ > $@
-belt_HashMapInt.ml: ../others/hashmap.cppo.ml
-	cppo -D BS_NATIVE -D TYPE_INT $^ > $@
-belt_HashMapString.mli: ../others/hashmap.cppo.mli
-	cppo -D BS_NATIVE -D TYPE_STRING $^ > $@
-belt_HashMapInt.mli: ../others/hashmap.cppo.mli
-	cppo -D BS_NATIVE -D TYPE_INT $^ > $@
-belt_MapString.ml: ../others/map.cppo.ml
-	cppo -D BS_NATIVE -D TYPE_STRING $^ > $@
-belt_MapInt.ml: ../others/map.cppo.ml
-	cppo -D BS_NATIVE -D TYPE_INT $^ > $@
-belt_MapString.mli: ../others/map.cppo.mli
-	cppo -D BS_NATIVE -D TYPE_STRING $^ > $@
-belt_MapInt.mli: ../others/map.cppo.mli
-	cppo -D BS_NATIVE -D TYPE_INT $^ > $@
-belt_MutableMapString.mli: ../others/mapm.cppo.mli
-	cppo -D BS_NATIVE -D TYPE_STRING $^ > $@
-belt_MutableMapInt.mli: ../others/mapm.cppo.mli
-	cppo -D BS_NATIVE -D TYPE_INT $^ > $@
-belt_MutableMapString.ml: ../others/mapm.cppo.ml
-	cppo -D BS_NATIVE -D TYPE_STRING $^ > $@
-belt_MutableMapInt.ml: ../others/mapm.cppo.ml
-	cppo -D BS_NATIVE -D TYPE_INT $^ > $@
-belt_internalMapInt.ml : ../others/internal_map.cppo.ml
-	cppo -D BS_NATIVE -D TYPE_INT $^ > $@
-belt_internalMapString.ml : ../others/internal_map.cppo.ml
-	cppo -D BS_NATIVE -D TYPE_STRING $^ > $@
-belt_internalSetInt.ml: ../others/internal_set.cppo.ml
-	cppo -D BS_NATIVE -D TYPE_INT $^ > $@
-belt_internalSetString.ml: ../others/internal_set.cppo.ml
-	cppo -D BS_NATIVE -D TYPE_STRING $^ > $@
-
-belt_SetInt.ml: ../others/set.cppo.ml
-	cppo -D BS_NATIVE -D TYPE_INT $^ > $@
-belt_SetString.ml: ../others/set.cppo.ml
-	cppo -D BS_NATIVE -D TYPE_STRING $^ > $@
-
-belt_SetInt.mli: ../others/set.cppo.mli
-	cppo -D BS_NATIVE -D TYPE_INT $^ > $@
-belt_SetString.mli: ../others/set.cppo.mli
-	cppo -D BS_NATIVE -D TYPE_STRING $^ > $@
-
-belt_MutableSetInt.ml: ../others/setm.cppo.ml
-	cppo -D BS_NATIVE -D TYPE_INT $^ > $@
-belt_MutableSetString.ml: ../others/setm.cppo.ml
-	cppo -D BS_NATIVE -D TYPE_STRING $^ > $@
-belt_MutableSetInt.mli: ../others/setm.cppo.mli
-	cppo -D BS_NATIVE -D TYPE_INT $^ > $@
-belt_MutableSetString.mli: ../others/setm.cppo.mli
-	cppo -D BS_NATIVE -D TYPE_STRING $^ > $@
-
-belt_SortArrayInt.ml : ../others/sort.cppo.ml
-	cppo -D BS_NATIVE -D TYPE_INT $^ >$@
-belt_SortArrayString.ml : ../others/sort.cppo.ml
-	cppo -D BS_NATIVE -D TYPE_STRING $^ >$@
-belt_SortArrayInt.mli : ../others/sort.cppo.mli
-	cppo -D BS_NATIVE -D TYPE_INT $^ > $@
-belt_gSortArrayString.mli : ../others/sort.cppo.mli
-	cppo -D BS_NATIVE -D TYPE_STRING $^ > $@
-endif	
 
 .mli.cmi:
 	BS_NATIVE=true $(COMPILER) $(INCLUDES) -pp $(BSPP) $(COMPFLAGS) -o $@ -c $<

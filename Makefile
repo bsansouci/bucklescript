@@ -36,9 +36,7 @@ libs-native:
 	$(MAKE) -C jscomp/others -j $(NPROCS) all
 	$(MAKE) -C jscomp/stdlib -j $(NPROCS) all
 	
-	$(MAKE) BS_NATIVE=true  -C jscomp/belt_byte -j $(NPROCS) files
 	$(MAKE) BS_NATIVE=true  -C jscomp/belt_byte -j $(NPROCS)
-	$(MAKE) BS_NATIVE=true  -C jscomp/belt_native -j $(NPROCS) files
 	$(MAKE) BS_NATIVE=true  -C jscomp/belt_native -j $(NPROCS)
 
 
