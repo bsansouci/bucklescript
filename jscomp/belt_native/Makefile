@@ -106,8 +106,9 @@ lib.cmxa: $(RUNTIME)
 js.ml js.mli $(addsuffix .ml, $(SOURCE_LIST)) $(addsuffix .mli, $(filter-out js_math belt belt_SortArrayString belt_internalSetString belt_internalSetInt belt_internalMapString belt_internalMapInt, $(SOURCE_LIST))): ../belt_byte/js.ml ../belt_byte/js.mli $(addprefix ../belt_byte/, $(addsuffix .ml, $(SOURCE_LIST))) $(addprefix ../belt_byte/, $(addsuffix .mli, $(filter-out js_math belt belt_SortArrayString belt_internalSetString belt_internalSetInt belt_internalMapString belt_internalMapInt, $(SOURCE_LIST))))
 	cp $^ ./
 
+NODE_MODULES=dirname `pwd` | xargs dirname | xargs dirname 
 stubs.o: stubs.c
-	$(COMPILER) -c $^
+	xcrun -sdk iphoneos clang -arch armv7 -c -I $(NODE_MODULES)/ocaml-cross-mobile/ios-arm64/lib/ocaml/ stubs.c
 
 $(RUNTIME): ../../lib/belt_bsppx.exe stubs.o
 
