@@ -32,9 +32,8 @@ process.env.BS_RELEASE_BUILD = 'true'
 // Add vendor bin path
 // So that second try will work
 process.env.PATH =
-    (isNative ? path.join(__dirname, '..', 'vendor', 'ocaml') : '') +
-    path.join(__dirname, '..', 'vendor', 'ocaml', 'bin') +
-    path.delimiter +
+    (isNative ? path.join(__dirname, '..', 'vendor', 'ocaml') + path.delimiter : '') +
+    path.join(__dirname, '..', 'vendor', 'ocaml', 'bin') + path.delimiter +
     process.env.PATH
 
 function setUpNinja() {
