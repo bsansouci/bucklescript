@@ -26,17 +26,12 @@ npm install
 
 # Build BuckleScript's forked OCaml
 cd vendor/ocaml
-./configure -prefix `pwd`
-make world.opt
-make install
+./configure -prefix `pwd` && make world.opt && make install
 
 # Build BuckleScript itself
 cd ../../
-make
+make world-native
 make install
-
-# install this local bs globally
-npm -g install .
 ```
 
 ## Test on a Dummy Project
@@ -44,7 +39,7 @@ npm -g install .
 Go somewhere else and do this:
 
 ```
-bsb -init foo -theme basic-reason
+/path/to/bucklescript/lib/bsb -init foo -theme basic-reason
 cd foo
 npm run build
 ```
@@ -52,11 +47,8 @@ npm run build
 And whenever you modify a file in bucklescript, run this inside `jscomp/`:
 
 ```
-make ../lib/bsc.exe && ./install-bsc.sh # build the compiler and make it available globally
-make ../lib/bsb.exe && ./install-bsb.sh # build the build system and make it available globally
+make native
 ```
-
-This will substitute the global `bsc.exe` & `bsb.exe` you just installed with the newly built one. Then run `npm run build` again in the dummy project and see the changes! The iteration cycle for testing these should be around 2 seconds =).
 
 ## Troubleshooting
 
@@ -76,9 +68,8 @@ This section is reserved for when you're making a change to the vendored ocaml c
 ```
 # at project root
 cd jscomp
-make force-snapshotml # make sure your changes are reflected in jscomp/bin/whole_compiler.ml
-make -C ../lib bsc.exe && ./install-bsc.sh
-make -C ../lib bsb.exe && ./install-bsb.sh
+make force-snapshotml-native # make sure your changes are reflected in jscomp/bin/whole_compiler.ml
+make native
 ```
 
 ## Contributing to the runtime
@@ -146,7 +137,7 @@ custom styles located in `docs/api_static`.
 In release mode, assuming you have NodeJS and OCaml compiler with the right version installed:
 
 ```sh
-node scripts/install.js
+node scripts/install.js native
 ```
 
 The build process will generate configure file with correct `LIBDIR` path,
