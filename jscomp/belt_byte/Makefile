@@ -93,14 +93,10 @@ INCLUDES=
 BS_FLAGS=  $(BS_COMMON_FLAGS)
 COMPFLAGS += $(BS_FLAGS) -g -w +3-40-49 -warn-error A -bin-annot -ppx $(BELT_BSPPX)
 
-all: 
-	make files
-	make main
-
-main: $(RUNTIME)
+lib.cma: $(RUNTIME)
 	$(COMPILER) -a -o lib.cma $(OBJECT_FILES)
 
-files: $(addprefix ../others/, $(addsuffix .ml, $(filter-out $(GENERATED_SOURCE_LIST), $(SOURCE_LIST)))) $(addprefix ../others/, $(addsuffix .mli, $(filter-out js_math belt $(GENERATED_SOURCE_LIST), $(SOURCE_LIST))))
+$(addsuffix .ml, $(filter-out $(GENERATED_SOURCE_LIST), $(SOURCE_LIST))) $(addsuffix .mli, $(filter-out js_math belt $(GENERATED_SOURCE_LIST), $(SOURCE_LIST))): $(addprefix ../others/, $(addsuffix .ml, $(filter-out $(GENERATED_SOURCE_LIST), $(SOURCE_LIST)))) $(addprefix ../others/, $(addsuffix .mli, $(filter-out js_math belt $(GENERATED_SOURCE_LIST), $(SOURCE_LIST))))
 	cp -f $^ ./
 
 stubs.o: stubs.c
