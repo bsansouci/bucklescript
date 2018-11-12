@@ -10,10 +10,20 @@ opam switch reinstall 4.02.3+buckle-master
 eval `opam config env`
 
 # Don't run ./scripts/buildocaml.sh because that turns off some features we actually want.
-cd vendor/ocaml && make clean && ./configure  -prefix `pwd` && make -j9 world.opt && make install  && cd ../..
+cd vendor/ocaml
+./configure  -prefix `pwd`
+make clean
+make -j9 world.opt
+make install
+cd ../..
 
 # Re-generate packed files for convenience.
-cd jscomp && make force-snapshotml-native && cd ..
+cd jscomp
+make common/bs_version.ml
+make core/js_map.ml
+make core/js_fold.ml
+make force-snapshotml-native
+cd ..
 
 # Get version number from package.json
 VERSION=$(cat package.json | sed -n -E 's/.*"version": "(.*)",/\1/p')

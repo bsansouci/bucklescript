@@ -68,7 +68,7 @@ build_script:
   - bash -lc "FLEXLINKFLAGS='-L/c/msys64/MINGW32/i686-w64-mingw32/lib -L/c/msys64/MINGW32/lib -L/c/msys64/MINGW32/lib/gcc/i686-w64-mingw32/7.3.0' PATH=/c/projects/bucklescript/vendor/flexdll:$PATH make -C /c/projects/bucklescript/vendor/ocaml -f Makefile.nt otherlibrariesopt"
   - bash -lc "FLEXLINKFLAGS='-L/c/msys64/MINGW32/i686-w64-mingw32/lib -L/c/msys64/MINGW32/lib -L/c/msys64/MINGW32/lib/gcc/i686-w64-mingw32/7.3.0' PATH=/c/projects/bucklescript/vendor/flexdll:$PATH make -C /c/projects/bucklescript/vendor/ocaml -f Makefile.nt install"
   # Build bucklescript
-  - bash -lc "PATH=/c/projects/bucklescript/vendor/ocaml:/c/projects/bucklescript/vendor/ocaml/bin:$PATH make -C /c/projects/bucklescript world-native && make -C /c/projects/bucklescript install"
+  - bash -lc "PATH=/c/projects/bucklescript/vendor/ocaml:/c/projects/bucklescript/vendor/ocaml/bin:$PATH BS_RELEASE_BUILD=true make -C /c/projects/bucklescript world-native && make -C /c/projects/bucklescript install"
   # Build ninja with color support
   - bash -lc "cd /c/projects/bucklescript/vendor/ninja; python configure.py --platform=mingw; /c/projects/bucklescript/vendor/ninja/snapshot/ninja.win32"
   - bash -lc "cp /c/projects/bucklescript/vendor/ninja/ninja.exe /c/projects/bucklescript/lib/ninja.exe"
