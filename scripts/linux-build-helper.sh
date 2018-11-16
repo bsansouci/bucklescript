@@ -5,7 +5,7 @@ set -ex
 # don't call this script directly, call linux-build.sh instead #
 ################################################################
 
-VERSION=$(grep 'version' /io/package.json | sed -r 's/.*([0-9.]+.[0-9]+.[0-9]+).*/\1/')
+VERSION=$(sed -nr 's/.*"version": "(.*)",/\1/p' /io/package.json)
 echo Building version $VERSION
 
 # install zip in order to create the zip package later
