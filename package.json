@@ -16,6 +16,9 @@
     "should-equal": "^1.0.1",
     "uglify-js": "^3.0.10"
   },
+  "dependencies": {
+    "yauzl": "^2.9.1"
+  },
   "bin": {
     "bsb": "lib/bsb",
     "bsc": "lib/bsc",
@@ -32,7 +35,7 @@
     "postinstall": "node scripts/install.js"
   },
   "name": "bsb-native",
-  "version": "4.0.9",
+  "version": "4.0.7000",
   "description": "Bucklescript build systen fork to compile to native",
   "repository": {
     "type": "git",
