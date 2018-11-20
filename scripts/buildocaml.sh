@@ -6,4 +6,4 @@ set -e
 # export OCAMLRUNPARAM=b
 
 cd vendor/ocaml
-./configure -prefix `pwd`  -no-ocamldoc -no-ocamlbuild -no-shared-libs -no-curses -no-graph -no-pthread -no-debugger  && make -j9 world.opt && make install  && cd ..
+./configure -prefix `pwd` && make -j9 world.opt && make install  && cd ..
