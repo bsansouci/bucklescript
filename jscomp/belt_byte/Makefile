@@ -102,7 +102,7 @@ $(addsuffix .ml, $(filter-out $(GENERATED_SOURCE_LIST), $(SOURCE_LIST))) $(addsu
 stubs.o: stubs.c
 	$(COMPILER) -c $^
 
-$(RUNTIME): ../../lib/belt_bsppx.exe stubs.o
+$(RUNTIME): ../../lib/bspp.exe ../../lib/belt_bsppx.exe stubs.o
 
 OCAML_SRC_UTILS=../../vendor/ocaml/utils
 OCAML_SRC_PARSING=../../vendor/ocaml/parsing
