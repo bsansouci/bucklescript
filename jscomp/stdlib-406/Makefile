@@ -24,7 +24,7 @@ CAMLC=$(CAMLRUN) $(COMPILER)
 #           -g -warn-error A -bin-annot -nostdlib \
 #           -safe-string -strict-formats
 
-BS_COMMON_FLAGS= -bs-no-version-header  -bs-diagnose -bs-no-check-div-by-zero -bs-cross-module-opt -bs-package-name bs-platform -bs-no-warn-unimplemented-external
+BS_COMMON_FLAGS= -bs-no-version-header  -bs-diagnose -bs-no-check-div-by-zero -bs-cross-module-opt -bs-package-name bsb-native -bs-no-warn-unimplemented-external
 include ../Makefile.shared
 
 BS_FLAGS= $(BS_COMMON_FLAGS) $(BS_PKG_FLAGS)
