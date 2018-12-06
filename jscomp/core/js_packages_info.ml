@@ -132,7 +132,7 @@ let query_package_infos
     | exception _ -> Package_not_found
 
 
-let runtime_package_name = "bs-platform"
+let runtime_package_name = "bsb-native"
 (* "xx/lib/ocaml/js.cmj" *)
 let runtime_package_path = 
   lazy (Filename.dirname (Filename.dirname 
