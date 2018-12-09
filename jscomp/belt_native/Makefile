@@ -13,6 +13,7 @@ BELT_BSPPX=..$(PATHSEP)..$(PATHSEP)lib$(PATHSEP)belt_bsppx.exe
 
 LOCAL_SOURCE_LIST= \
 	caml_hash \
+	js_null \
 	js
 
 GENERATED_SOURCE_LIST= \
@@ -96,7 +97,7 @@ COMPFLAGS += $(BS_FLAGS) -g -w +3-40-49 -warn-error A -bin-annot -ppx $(BELT_BSP
 lib.cmxa: $(RUNTIME)
 	$(COMPILER) -a -o lib.cmxa $(OBJECT_FILES)
 
-js.ml js.mli $(addsuffix .ml, $(SOURCE_LIST)) $(addsuffix .mli, $(filter-out js_math belt belt_SortArrayString belt_internalSetString belt_internalSetInt belt_internalMapString belt_internalMapInt, $(SOURCE_LIST))): ../belt_byte/js.ml ../belt_byte/js.mli $(addprefix ../belt_byte/, $(addsuffix .ml, $(SOURCE_LIST))) $(addprefix ../belt_byte/, $(addsuffix .mli, $(filter-out js_math belt belt_SortArrayString belt_internalSetString belt_internalSetInt belt_internalMapString belt_internalMapInt, $(SOURCE_LIST))))
+js.ml js_null.ml js.mli $(addsuffix .ml, $(SOURCE_LIST)) $(addsuffix .mli, $(filter-out js_math belt belt_SortArrayString belt_internalSetString belt_internalSetInt belt_internalMapString belt_internalMapInt, $(SOURCE_LIST))): ../belt_byte/js_null.ml ../belt_byte/js.ml ../belt_byte/js.mli $(addprefix ../belt_byte/, $(addsuffix .ml, $(SOURCE_LIST))) $(addprefix ../belt_byte/, $(addsuffix .mli, $(filter-out js_math belt belt_SortArrayString belt_internalSetString belt_internalSetInt belt_internalMapString belt_internalMapInt, $(SOURCE_LIST))))
 	cp $^ ./
 
 stubs.o: stubs.c
