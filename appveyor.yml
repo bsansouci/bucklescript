@@ -90,3 +90,4 @@ test_script:
   - bash -lc "cp /c/projects/bucklescript/package.json /c/projects/bucklescript/reprocessing-example/node_modules/bsb-native/"
   - bash -lc "unzip -q /c/projects/bucklescript/bsb-native-win-4.0.7.zip -d /c/projects/bucklescript/reprocessing-example/node_modules/bsb-native"
   - bash -lc "cd /c/projects/bucklescript/reprocessing-example; ./node_modules/bsb-native/lib/bsb.exe -make-world || cat lib/bs/bytecode/build.ninja"
+
