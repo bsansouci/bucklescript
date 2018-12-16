@@ -4652,6 +4652,10 @@ let concat dirname filename =
 let check_suffix_case =
   Ext_string.ends_with
 
+
+let sep_char = String.get Filename.dir_sep 0
+
+
 end
 module Ext_modulename : sig 
 #1 "ext_modulename.mli"
