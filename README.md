@@ -10,7 +10,7 @@ Bsb-native is a fork of [bsb](https://bucklescript.github.io/docs/en/build-overv
 npm install --save-dev bsb-native
 
 # Add a bsconfig.json
-npx bsb --init .
+npx bsb -init .
 ```
 
 An [example bsconfig.json](https://github.com/bsansouci/bsb-native-example/blob/master/bsconfig.json):
