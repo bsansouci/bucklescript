@@ -67,8 +67,8 @@ let fromString (x : string) : t =
         ~loc:__LOC__
         "Compiler version mismatch. The project might have been built with one version of BuckleScript, and then with another. Please wipe the artifacts and do a clean build."
 
-let handle_extension record_as_js_object e (self : Bs_ast_mapper.mapper)
-    (({txt ; loc} as lid , payload) : Parsetree.extension) = 
+let handle_extension_helper record_as_js_object e (self : Bs_ast_mapper.mapper)
+    (({txt ; loc} as lid , payload) : Parsetree.extension) =
   begin match txt with
     | "bs.raw" | "raw" -> 
       begin match payload with 
@@ -159,6 +159,72 @@ let handle_extension record_as_js_object e (self : Bs_ast_mapper.mapper)
           Location.raise_errorf 
             ~loc "expect a boolean expression in the payload"
       )
+    | "bs.node" | "node" ->
+      let strip s =
+        match s with
+        | "_module" -> "module"
+        | x -> x  in
+      begin match Ast_payload.as_ident payload with
+        | Some {txt = Lident
+                    ( "__filename"
+                    | "__dirname"
+                    | "_module"
+                    | "require" as name); loc}
+          ->
+          let exp =
+            Ast_util.handle_external loc (strip name)  in
+          let typ =
+            Ast_core_type.lift_option_type
+            @@
+            if name = "_module" then
+              Typ.constr ~loc
+                { txt = Ldot (Lident "Node", "node_module") ;
+                  loc} []
+            else if name = "require" then
+              (Typ.constr ~loc
+                 { txt = Ldot (Lident "Node", "node_require") ;
+                   loc} [] )
+            else
+              Ast_literal.type_string ~loc () in
+          Exp.constraint_ ~loc exp typ
+        | Some _ | None ->
+          begin match payload with
+            | PTyp _ ->
+              Location.raise_errorf
+                ~loc "Illegal payload, expect an expression payload instead of type payload"
+            | PPat _ ->
+              Location.raise_errorf
+                ~loc "Illegal payload, expect an expression payload instead of pattern  payload"
+            | _ ->
+              Location.raise_errorf
+                ~loc "Illegal payload"
+          end
+
+      end
+    | "bs.debugger"|"debugger" ->
+      {e with pexp_desc = Ast_util.handle_debugger loc payload}
+    | "bs.obj" | "obj" ->
+      begin match payload with
+        | PStr [{pstr_desc = Pstr_eval (e,_)}]
+          ->
+          Ext_ref.non_exn_protect record_as_js_object true
+            (fun () -> self.expr self e )
+        | _ -> Location.raise_errorf ~loc "Expect an expression here"
+      end
+    | _ ->
+      match payload with
+      | PTyp typ when Ext_string.starts_with txt Literals.bs_deriving_dot ->
+        self.expr self (Ast_derive.gen_expression lid typ)
+      | _ ->
+        e (* For an unknown extension, we don't really need to process further*)
+        (* Exp.extension ~loc ~attrs:e.pexp_attributes (
+            self.extension self extension) *)
+        (* Bs_ast_mapper.default_mapper.expr self e   *)
+  end
+
+let handle_extension record_as_js_object e (self : Bs_ast_mapper.mapper)
+    (({txt ; loc} as lid , payload) as extension : Parsetree.extension) =
+  begin match txt with
     | "bs.assert" | "assert" ->
       (
         match payload with 
@@ -222,59 +288,8 @@ let handle_extension record_as_js_object e (self : Bs_ast_mapper.mapper)
           Location.raise_errorf 
             ~loc "expect a boolean expression in the payload"
       )
-    | "bs.node" | "node" ->
-      let strip s =
-        match s with 
-        | "_module" -> "module" 
-        | x -> x  in 
-      begin match Ast_payload.as_ident payload with
-        | Some {txt = Lident
-                    ( "__filename"
-                    | "__dirname"
-                    | "_module"
-                    | "require" as name); loc}
-          ->
-          let exp =
-            Ast_util.handle_external loc (strip name)  in
-          let typ =
-            Ast_core_type.lift_option_type  
-            @@                 
-            if name = "_module" then
-              Typ.constr ~loc
-                { txt = Ldot (Lident "Node", "node_module") ;
-                  loc} []   
-            else if name = "require" then
-              (Typ.constr ~loc
-                 { txt = Ldot (Lident "Node", "node_require") ;
-                   loc} [] )  
-            else
-              Ast_literal.type_string ~loc () in                  
-          Exp.constraint_ ~loc exp typ                
-        | Some _ | None ->
-          begin match payload with 
-            | PTyp _ -> 
-              Location.raise_errorf 
-                ~loc "Illegal payload, expect an expression payload instead of type payload"              
-            | PPat _ ->
-              Location.raise_errorf 
-                ~loc "Illegal payload, expect an expression payload instead of pattern  payload"        
-            | _ -> 
-              Location.raise_errorf 
-                ~loc "Illegal payload"
-          end
-
-      end             
-    | "bs.debugger"|"debugger" ->
-      {e with pexp_desc = Ast_util.handle_debugger loc payload}
-    | "bs.obj" | "obj" ->
-      begin match payload with 
-        | PStr [{pstr_desc = Pstr_eval (e,_)}]
-          -> 
-          Ext_ref.non_exn_protect record_as_js_object true
-            (fun () -> self.expr self e ) 
-        | _ -> Location.raise_errorf ~loc "Expect an expression here"
-      end
     | _ ->
+#if BS_NATIVE then
       match payload with
       | PTyp typ when Ext_string.starts_with txt Literals.bs_deriving_dot ->
         self.expr self (Ast_derive.gen_expression lid typ)
@@ -284,3 +299,6 @@ let handle_extension record_as_js_object e (self : Bs_ast_mapper.mapper)
             self.extension self extension) *)
         (* Bs_ast_mapper.default_mapper.expr self e   *)
   end 
+#else
+    handle_extension_helper record_as_js_object e extension
+#end

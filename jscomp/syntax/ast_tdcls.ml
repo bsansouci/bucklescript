@@ -44,6 +44,47 @@ let newTdcls
          else x )
       
 
+#if BS_NATIVE then
+(* @perf this could be faster, by not being done alongside the rest.
+  Right now we process the types a billion times for different things (also because I'm trying to
+  keep the codebase not too different from bucklescript).
+  For native optional is boxed and records are actually backed by records, not external JS obj.
+  Those two differences mean we need to do a bit more processing of the types and labels.
+
+  For example we can't just make the type annotated with `bs.deriving abstract` actually abstract
+  in the same way. Inside the generated module the type needs to stay record, so we can generate a
+  constructor function which can have as its body a record literal.
+  Since we have to keep the type like that, we then need to add a module signature to constrain the
+  generated module (and turn the annotated type into an abstract type).
+  We turn the type into an abstract type from the user's perspective because that allows us to use
+  whatever underlying representation we want without affecting the interface exposed to the user.
+
+                    ben - June 8th 2018
+*)
+let turn_bs_optional_into_optional (tdcls : Parsetree.type_declaration list) =
+  List.map (fun tdcl -> match tdcl.Parsetree.ptype_kind with
+  | Ptype_record labels ->
+    {tdcl with ptype_kind = Ptype_record (List.map (fun ({Parsetree.pld_type; pld_loc; pld_attributes} as dcl : Parsetree.label_declaration) ->
+          let has_optional_field = Ast_attributes.has_bs_optional pld_attributes in
+          if has_optional_field then
+          (* @Incomplete remove ALL attributes when we might want to only remove the bs.optional.
+
+                     Ben - June 8th 2018
+           *)
+            { dcl with
+              Parsetree.pld_type = {ptyp_desc =
+               Ptyp_constr(
+                 {txt = Lident "option";
+                  loc = pld_loc}
+                  , [pld_type]);
+                  ptyp_loc = pld_loc;
+                ptyp_attributes = []
+              };
+            }
+          else dcl
+        ) labels)}
+  | _ -> tdcl) tdcls
+#end
 
 let handleTdclsInSigi
     (self : Bs_ast_mapper.mapper)
@@ -67,7 +108,11 @@ let handleTdclsInSigi
                (Mty.typeof_ ~loc
                   (Mod.constraint_ ~loc
                      (Mod.structure ~loc [
+#if BS_NATIVE then
+                         Ast_compatible.rec_type_str ~loc (turn_bs_optional_into_optional newTdclsNewAttrs)
+#else
                          Ast_compatible.rec_type_str ~loc newTdclsNewAttrs
+#end
                          ] )
                      (Mty.signature ~loc [])) ) )
           :: (* include module type of struct [processed_code for checking like invariance ]end *)
@@ -105,7 +150,14 @@ let handleTdclsInStru
     in
     let kind = Ast_derive_abstract.isAbstract actions in 
     if kind <> Not_abstract then
-      let codes = 
+#if BS_NATIVE then
+      let (codes, codes_sig) = Ast_derive_abstract.handleTdclsInStr ~light:(kind = Light_abstract) originalTdclsNewAttrs in
+      (* the codes_sig will hide the implementation of the type that is a record. *)
+      Ast_structure.constraint_ ~loc
+        (self.structure self codes)
+        (self.signature self codes_sig)
+#else
+      let codes =
           Ast_derive_abstract.handleTdclsInStr ~light:(kind = Light_abstract) originalTdclsNewAttrs in
       (* use [tdcls2] avoid nonterminating *)
       Ast_structure.fuseAll ~loc
@@ -113,6 +165,7 @@ let handleTdclsInStru
           Ast_structure.constraint_ ~loc [newStr] []
           :: (* [include struct end : sig end] for error checking *)
           self.structure self codes)
+#end
     else
       Ast_structure.fuseAll ~loc
         (newStr ::

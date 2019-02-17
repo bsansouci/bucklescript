@@ -14,8 +14,10 @@ build bsb.$ext:  cc bsb.mli bsb.ml
     flags = $flags unix.cmxa str.cmxa
 build bsb_helper.$ext:  cc bsb_helper.mli bsb_helper.ml
     flags = $flags unix.cmxa -w -a
+build belt_bsppx.$ext:  cc belt_bsppx.mli belt_bsppx.ml
+    flags = $flags -w -a
 build refmt.$ext: cc refmt_main3.mli refmt_main3.ml
-    flags = $flags -w -40-30 -no-alias-deps -I +compiler-libs ocamlcommon.cmxa 
+    flags = $flags -w -40-30 -no-alias-deps -I +compiler-libs ocamlcommon.cmxa
 build reactjs_jsx_ppx_2.$ext: cc reactjs_jsx_ppx_v2.mli reactjs_jsx_ppx_v2.ml
     flags = $flags -w -40-30 -no-alias-deps -I +compiler-libs ocamlcommon.cmxa
 build bsc.$ext: cc whole_compiler.mli whole_compiler.ml

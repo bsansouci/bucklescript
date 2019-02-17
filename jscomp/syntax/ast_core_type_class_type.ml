@@ -221,7 +221,35 @@ let handle_core_type
     else inner_type
   | _ -> super.typ self ty
     
-let handle_class_type_fields self fields = 
+(* Shadow previous function because #if cannot be nested, so it'd look ugly to wrap handle_core_type in it. *)
+#if BS_NATIVE then
+
+let handle_core_type
+    ~(super : Bs_ast_mapper.mapper)
+    ~(self : Bs_ast_mapper.mapper)
+    (ty : Parsetree.core_type)
+    record_as_js_object
+  =
+  match ty with
+  | {ptyp_attributes ;
+     ptyp_desc = Ptyp_arrow (label, args, body);
+     (* let it go without regard label names,
+        it will report error later when the label is not empty
+     *)
+     ptyp_loc = loc
+    } ->
+    begin match  Ast_attributes.process_attributes_rev ptyp_attributes with
+      | Uncurry _, ptyp_attributes ->
+        Ast_util.to_uncurry_type loc self label args body
+      | Meth_callback _, _
+      | Method _, _
+      | Nothing , _ ->
+        Bs_ast_mapper.default_mapper.typ self ty
+    end
+  | _ -> super.typ self ty
+#end
+
+let handle_class_type_fields self fields =
   Ext_list.fold_right fields []
   (handle_class_type_field self)
   

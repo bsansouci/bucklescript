@@ -2,6 +2,6 @@
 
 # used mostly by platforms which does not provide
 # prebuilt binaries, so we output .exe directly
-ocamlopt = ocamlopt.opt 
+ocamlopt = ../vendor/ocaml/bin/ocamlopt.opt
 ext = exe
 include body.ninja

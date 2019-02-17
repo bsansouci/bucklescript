@@ -1250,7 +1250,7 @@ build ../odoc_gen/generator.cmxs : mk_shared ../odoc_gen/generator.mli ../odoc_g
         if (err !== null) {
             throw err
         }
-        cp.execSync(`ninja -f ${cppoNinjaFile}`, { cwd: jscompDir })
+        cp.execSync(`../lib/ninja.exe -f ${cppoNinjaFile}`, { cwd: jscompDir })
         /**
          * @type{string[]}
          */

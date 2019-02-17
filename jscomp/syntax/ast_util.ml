@@ -187,24 +187,36 @@ let generic_to_uncurry_type  kind loc (mapper : Bs_ast_mapper.mapper) label
        we should stop 
     *)
     match Ast_attributes.process_attributes_rev typ.ptyp_attributes with 
-    | Nothing, _   -> 
-      begin match typ.ptyp_desc with 
+    | Nothing, ptyp_attributes   ->
+      begin match typ.ptyp_desc with
         | Ptyp_arrow (label, arg, body)
           -> 
           if not (Ast_compatible.is_arg_label_simple label) then
             Bs_syntaxerr.err typ.ptyp_loc Label_in_uncurried_bs_attribute;
-          aux (mapper.typ mapper arg :: acc) body 
-        | _ -> mapper.typ mapper typ, acc 
+#if BS_NATIVE then
+          (* Simply do a recursive call to strip all ptyp_attributes. *)
+          let res, acc = aux acc body in
+          {typ with ptyp_attributes; ptyp_desc = Ptyp_arrow (label, mapper.typ mapper arg, res)}, acc
+#else
+          aux (mapper.typ mapper arg :: acc) body
+#end
+        | _ -> mapper.typ mapper typ, acc
       end
     | _, _ -> mapper.typ mapper typ, acc  
   in 
   let first_arg = mapper.typ mapper first_arg in
-  let result, rev_extra_args = aux  [first_arg] typ in 
-  let args  = List.rev rev_extra_args in 
-  let filter_args args  =  
-    match args with 
-    | [{Parsetree.ptyp_desc = 
-          (Ptyp_constr ({txt = Lident "unit"}, []) 
+#if BS_NATIVE then
+  let res, _ = aux [] typ in
+  { Parsetree.ptyp_attributes = [];
+    ptyp_loc = loc;
+    ptyp_desc = Parsetree.Ptyp_arrow (label, first_arg, res)}
+#else
+  let result, rev_extra_args = aux  [first_arg] typ in
+  let args  = List.rev rev_extra_args in
+  let filter_args args  =
+    match args with
+    | [{Parsetree.ptyp_desc =
+          (Ptyp_constr ({txt = Lident "unit"}, [])
           )}]
       -> []
     | _ -> args in
@@ -218,6 +230,7 @@ let generic_to_uncurry_type  kind loc (mapper : Bs_ast_mapper.mapper) label
 
   | `Method_callback
     -> lift_js_method_callback loc args result 
+#end
 
 
 let to_uncurry_type  = 
@@ -231,21 +244,30 @@ let generic_to_uncurry_exp kind loc (self : Bs_ast_mapper.mapper)  pat body
   = 
   let rec aux acc (body : Parsetree.expression) = 
     match Ast_attributes.process_attributes_rev body.pexp_attributes with 
-    | Nothing, _ -> 
-      begin match body.pexp_desc with 
-        | Pexp_fun (arg_label,_, arg, body)
-          -> 
+    | Nothing, pexp_attributes ->
+      begin match body.pexp_desc with
+        | Pexp_fun (arg_label,whateverthisis, arg, body)
+          ->
           if not (Ast_compatible.is_arg_label_simple arg_label)  then
             Bs_syntaxerr.err loc Label_in_uncurried_bs_attribute;
-          aux (self.pat self arg :: acc) body 
-        | _ -> self.expr self body, acc 
-      end 
-    | _, _ -> self.expr self body, acc  
-  in 
-  let first_arg = self.pat self pat in  
-  let () = 
-    match kind with 
-    | `Method_callback -> 
+#if BS_NATIVE then
+          let res, acc = aux acc body in
+          {body with pexp_attributes; pexp_desc = Pexp_fun (arg_label, whateverthisis, self.pat self arg, res)}, acc
+#else
+          aux (self.pat self arg :: acc) body
+#end
+        | _ -> self.expr self body, acc
+      end
+    | _, _ -> self.expr self body, acc
+  in
+  let first_arg = self.pat self pat in
+#if BS_NATIVE then
+  let res, _ = aux [] body in
+  Parsetree.Pexp_fun ("", None, first_arg, res)
+#else
+  let () =
+    match kind with
+    | `Method_callback ->
       if not @@ Ast_pat.is_single_variable_pattern_conservative first_arg then
         Bs_syntaxerr.err first_arg.ppat_loc  Bs_this_simple_pattern
     | _ -> ()
@@ -292,6 +314,7 @@ let generic_to_uncurry_exp kind loc (self : Bs_ast_mapper.mapper)  pat body
       ) in
     Ast_external_mk.local_extern_cont loc ~pval_prim ~pval_type 
       (fun prim -> Ast_compatible.app1 ~loc prim body) 
+#end
 
 let to_uncurry_fn   = 
   generic_to_uncurry_exp `Fn
@@ -644,11 +667,14 @@ let record_as_js_object
     args 
 
 
-
-let isCamlExceptionOrOpenVariant : Longident.t = 
+#if BS_NATIVE then
+let isCamlExceptionOrOpenVariant : Longident.t =
+  Ldot (Lident "Caml_exceptions", "isCamlExceptionOrOpenVariant")
+#else
+let isCamlExceptionOrOpenVariant : Longident.t =
   Ldot (Ldot (Lident "Js","Exn"), "isCamlExceptionOrOpenVariant")
+#end
 
-  
 let obj_magic : Longident.t = 
   Ldot (Lident "Obj", "magic")
 
