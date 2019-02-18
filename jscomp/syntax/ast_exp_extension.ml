@@ -223,7 +223,7 @@ let handle_extension_helper record_as_js_object e (self : Bs_ast_mapper.mapper)
   end
 
 let handle_extension record_as_js_object e (self : Bs_ast_mapper.mapper)
-    (({txt ; loc} as lid , payload) as extension : Parsetree.extension) =
+    (({txt ; loc} , payload) as extension : Parsetree.extension) =
   begin match txt with
     | "bs.assert" | "assert" ->
       (
@@ -298,7 +298,7 @@ let handle_extension record_as_js_object e (self : Bs_ast_mapper.mapper)
         (* Exp.extension ~loc ~attrs:e.pexp_attributes (
             self.extension self extension) *)
         (* Bs_ast_mapper.default_mapper.expr self e   *)
-  end 
 #else
-    handle_extension_helper record_as_js_object e extension
+    handle_extension_helper record_as_js_object e self extension
 #end
+  end
