@@ -66,7 +66,7 @@ let process_method_attributes_rev (attrs : t) =
       | "bs.set"
         ->
         let result =
-          Ext_list.fold_left (Ast_payload.ident_or_record_as_config loc payload) `Get 
+          Ext_list.fold_left (Ast_payload.ident_or_record_as_config loc payload) `Get
             (fun st ({txt ; loc}, opt_expr)  ->
                if txt =  "no_get" then
                  match opt_expr with
@@ -83,12 +83,12 @@ let process_method_attributes_rev (attrs : t) =
         {st with set = Some result }, acc
       | _ ->
         (st, attr::acc  )
-    ) 
+    )
 
-type attr_kind = 
-  | Nothing 
-  | Meth_callback of attr 
-  | Uncurry of attr 
+type attr_kind =
+  | Nothing
+  | Meth_callback of attr
+  | Uncurry of attr
   | Method of attr
 
 let process_attributes_rev (attrs : t) : attr_kind * t =
@@ -97,7 +97,6 @@ let process_attributes_rev (attrs : t) : attr_kind * t =
       | "bs", (Nothing | Uncurry _)
         ->
         Uncurry attr, acc (* TODO: warn unused/duplicated attribute *)
-#if BS_NATIVE = false then
       | "bs.this", (Nothing | Meth_callback _)
         ->  Meth_callback attr, acc
       | "bs.meth",  (Nothing | Method _)
@@ -105,10 +104,9 @@ let process_attributes_rev (attrs : t) : attr_kind * t =
       | "bs", _
       | "bs.this", _
         -> Bs_syntaxerr.err loc Conflict_bs_bs_this_bs_meth
-#end
       | _ , _ ->
         st, attr::acc
-    ) 
+    )
 
 let process_pexp_fun_attributes_rev (attrs : t) =
   Ext_list.fold_left attrs (`Nothing, []) (fun (st, acc) (({txt; loc}, _) as attr ) ->
@@ -119,7 +117,7 @@ let process_pexp_fun_attributes_rev (attrs : t) =
 
       | _ , _ ->
         st, attr::acc
-    ) 
+    )
 
 let process_bs (attrs : t) =
   Ext_list.fold_left attrs (`Nothing, []) (fun (st, acc) (({txt; loc}, _) as attr ) ->
@@ -129,7 +127,7 @@ let process_bs (attrs : t) =
         `Has, acc
       | _ , _ ->
         st, attr::acc
-    ) 
+    )
 
 let process_external attrs =
   List.exists (fun (({txt; }, _)  : attr) ->
@@ -144,7 +142,7 @@ type derive_attr = {
 }
 
 let process_derive_type (attrs : t) : derive_attr * t =
-  Ext_list.fold_left attrs ({explict_nonrec = false; bs_deriving = None }, []) 
+  Ext_list.fold_left attrs ({explict_nonrec = false; bs_deriving = None }, [])
     (fun (st, acc) ({txt ; loc}, payload  as attr)  ->
       match  st, txt  with
       |  {bs_deriving = None}, "bs.deriving"
@@ -162,7 +160,7 @@ let process_derive_type (attrs : t) : derive_attr * t =
             { st with explict_nonrec = true }
           else st in
         st, attr::acc
-    ) 
+    )
 
 let iter_process_derive_type (attrs : t) =
   let st = ref {explict_nonrec = false; bs_deriving = None } in
@@ -194,16 +192,16 @@ let iter_process_derive_type (attrs : t) =
 (* duplicated [bs.uncurry] [bs.string] not allowed,
   it is worse in bs.uncurry since it will introduce
   inconsistency in arity
- *)  
+ *)
 let iter_process_bs_string_int_unwrap_uncurry (attrs : Parsetree.attributes) =
-  let st = ref `Nothing in 
-  let assign v (({loc;_}, _ ) as attr : attr) = 
-    if !st = `Nothing then 
-    begin 
+  let st = ref `Nothing in
+  let assign v (({loc;_}, _ ) as attr : attr) =
+    if !st = `Nothing then
+    begin
       Bs_ast_invariant.mark_used_bs_attribute attr;
       st := v ;
-    end  
-    else Bs_syntaxerr.err loc Conflict_attributes  in 
+    end
+    else Bs_syntaxerr.err loc Conflict_attributes  in
   Ext_list.iter attrs (fun (({txt ; loc}, (payload : _ ) ) as attr)  ->
       match  txt with
       | "bs.string"
@@ -219,7 +217,7 @@ let iter_process_bs_string_int_unwrap_uncurry (attrs : Parsetree.attributes) =
         assign (`Uncurry (Ast_payload.is_single_int payload)) attr
       | _ -> ()
     ) ;
-  !st 
+  !st
 
 
 let iter_process_bs_string_as  (attrs : t) : string option =
@@ -234,7 +232,7 @@ let iter_process_bs_string_as  (attrs : t) : string option =
           match Ast_payload.is_single_string payload with
           | None ->
             Bs_syntaxerr.err loc Expect_string_literal
-          | Some  (v,_dec) ->            
+          | Some  (v,_dec) ->
             Bs_ast_invariant.mark_used_bs_attribute attr ;
             st:= Some v
         else
@@ -255,14 +253,14 @@ let iter_process_bs_string_as_ast  (attrs : t) : Parsetree.expression option =
           match Ast_payload.is_single_string_as_ast payload with
           | None ->
             Bs_syntaxerr.err loc Expect_string_literal
-          | Some _ as v ->            
+          | Some _ as v ->
             Bs_ast_invariant.mark_used_bs_attribute attr ;
             st:=  v
         else
           Bs_syntaxerr.err loc Duplicated_bs_as
       | _  -> ()
     ) ;
-  !st  
+  !st
 
 let has_bs_optional  (attrs : t) : bool =
   Ext_list.exists attrs (fun
@@ -273,7 +271,7 @@ let has_bs_optional  (attrs : t) : bool =
         Bs_ast_invariant.mark_used_bs_attribute attr ;
         true
       | _  -> false
-    ) 
+    )
 
 
 
@@ -343,15 +341,15 @@ let bs_get : attr
   =  {txt = "bs.get"; loc = locg}, Ast_payload.empty
 
 let bs_get_arity : attr
-  =  {txt = "internal.arity"; loc = locg}, 
-    PStr 
+  =  {txt = "internal.arity"; loc = locg},
+    PStr
     [{pstr_desc =
          Pstr_eval (
           Ast_compatible.const_exp_int ~loc:locg 1
            ,
            [])
       ; pstr_loc = locg}]
-  
+
 
 let bs_set : attr
   =  {txt = "bs.set"; loc = locg}, Ast_payload.empty
@@ -372,12 +370,12 @@ let bs_return_undefined : attr
            },[])
       ; pstr_loc = locg}]
 
-let deprecated s : attr =       
+let deprecated s : attr =
   {txt = "ocaml.deprecated"; loc = locg },
   PStr
     [
       {pstr_desc =
          Pstr_eval (
-           Ast_compatible.const_exp_string ~loc:locg s, 
+           Ast_compatible.const_exp_string ~loc:locg s,
            [])
       ; pstr_loc = locg}]
