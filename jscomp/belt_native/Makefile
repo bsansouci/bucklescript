@@ -1,6 +1,6 @@
 # To compile to ios you need to
 # 1) cross compile stubs.c to ios: `xcrun -sdk iphoneos clang -arch armv7 -c -I /Users/bsansouci/Desktop/reprocessing-example-cross-platform/node_modules/ocaml-cross-mobile/ios-arm64/lib/ocaml/ stubs.c`
-# 2) Use the right compiler: 
+# 2) Use the right compiler:
 #    COMPILER=/Users/bsansouci/Desktop/reprocessing-example-cross-platform/node_modules/ocaml-cross-mobile/ios-arm64/bin/ocamlrun /Users/bsansouci/Desktop/reprocessing-example-cross-platform/node_modules/ocaml-cross-mobile/ios-arm64/bin/ocamlopt
 # 3) add an include because that compiler has no idea where its stdlib is
 #   INCLUDES=-I /Users/bsansouci/Desktop/reprocessing-example-cross-platform/node_modules/ocaml-cross-mobile/ios-arm64/lib/ocaml
@@ -14,7 +14,7 @@ else
 endif
 PATHSEP=$(strip $(PATHSEP2))
 
-COMPILER=/Users/bsansouci/Desktop/reprocessing-example-cross-platform/node_modules/ocaml-cross-mobile/ios-arm64/bin/ocamlrun /Users/bsansouci/Desktop/reprocessing-example-cross-platform/node_modules/ocaml-cross-mobile/ios-arm64/bin/ocamlopt
+COMPILER=../../vendor/ocaml/bin/ocamlopt.opt
 BSPP=..$(PATHSEP)..$(PATHSEP)lib$(PATHSEP)bspp.exe
 BELT_BSPPX=..$(PATHSEP)..$(PATHSEP)lib$(PATHSEP)belt_bsppx.exe
 
@@ -95,7 +95,7 @@ SOURCE_LIST= \
 OBJECT_FILES := $(addsuffix .cmx, $(LOCAL_SOURCE_LIST)) $(addsuffix .cmx, $(SOURCE_LIST))
 RUNTIME := $(addsuffix .cmi, $(SOURCE_LIST)) $(addsuffix .cmi, $(LOCAL_SOURCE_LIST)) $(OBJECT_FILES)
 
-INCLUDES=-I /Users/bsansouci/Desktop/reprocessing-example-cross-platform/node_modules/ocaml-cross-mobile/ios-arm64/lib/ocaml
+INCLUDES=-I ../../vendor/ocaml/lib/ocaml
 
 BS_FLAGS=  $(BS_COMMON_FLAGS)
 COMPFLAGS += $(BS_FLAGS) -g -w +3-40-49 -warn-error A -bin-annot -ppx $(BELT_BSPPX)
@@ -106,7 +106,7 @@ lib.cmxa: $(RUNTIME)
 js.ml js.mli $(addsuffix .ml, $(SOURCE_LIST)) $(addsuffix .mli, $(filter-out js_math belt belt_SortArrayString belt_internalSetString belt_internalSetInt belt_internalMapString belt_internalMapInt, $(SOURCE_LIST))): ../belt_byte/js.ml ../belt_byte/js.mli $(addprefix ../belt_byte/, $(addsuffix .ml, $(SOURCE_LIST))) $(addprefix ../belt_byte/, $(addsuffix .mli, $(filter-out js_math belt belt_SortArrayString belt_internalSetString belt_internalSetInt belt_internalMapString belt_internalMapInt, $(SOURCE_LIST))))
 	cp $^ ./
 
-NODE_MODULES=dirname `pwd` | xargs dirname | xargs dirname 
+NODE_MODULES=dirname `pwd` | xargs dirname | xargs dirname
 stubs.o: stubs.c
 	xcrun -sdk iphoneos clang -arch armv7 -c -I $(NODE_MODULES)/ocaml-cross-mobile/ios-arm64/lib/ocaml/ stubs.c
 
@@ -155,8 +155,8 @@ clean::
 
 -include .depend
 
-ML_SOURCES=$(addsuffix .ml, $(SOURCE_LIST)) $(addsuffix .ml, $(LOCAL_SOURCE_LIST)) 
-MLI_SOURCES=$(addsuffix .mli, $(SOURCE_LIST)) $(addsuffix .mli, $(LOCAL_SOURCE_LIST)) 
+ML_SOURCES=$(addsuffix .ml, $(SOURCE_LIST)) $(addsuffix .ml, $(LOCAL_SOURCE_LIST))
+MLI_SOURCES=$(addsuffix .mli, $(SOURCE_LIST)) $(addsuffix .mli, $(LOCAL_SOURCE_LIST))
 
 depend:
 	BS_NATIVE=true $(CAMLDEP) -pp $(BSPP) -ppx $(BELT_BSPPX) -native $(INCLUDES) $(ML_SOURCES) $(MLI_SOURCES) > .depend
