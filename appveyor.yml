@@ -13,6 +13,7 @@ install:
   - bash -lc "curl -L http://repo.msys2.org/mingw/i686/mingw-w64-i686-gcc-libs-7.3.0-2-any.pkg.tar.xz > mingw-w64-i686-gcc-libs-7.3.0-2-any.pkg.tar.xz"
   - bash -lc "pacman --noconfirm --needed -U mingw-w64-i686-gcc-7.3.0-2-any.pkg.tar.xz"
   - bash -lc "pacman --noconfirm --needed -U mingw-w64-i686-gcc-libs-7.3.0-2-any.pkg.tar.xz"
+  - bash -lc "pacman -Syu"
   # download prebuilt flexdll
   - appveyor DownloadFile https://github.com/alainfrisch/flexdll/releases/download/0.37/flexdll-bin-0.37.zip
   - 7z.exe e flexdll-bin-0.37.zip -o"C:\projects\bucklescript\vendor\flexdll" -y
