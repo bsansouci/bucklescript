@@ -145,8 +145,10 @@ void caml_build_primitive_table(char * lib_path,
      - directories specified in the CAML_LD_LIBRARY_PATH
      - directories specified in the executable
      - directories specified in the file <stdlib>/ld.conf */
-  tofree1 = caml_decompose_path(&caml_shared_libs_path,
-                                getenv("CAML_LD_LIBRARY_PATH"));
+  // @BenHack We remove this check for env vars because we don't want to depend on the environment
+  // the executable is ran in.
+  // tofree1 = caml_decompose_path(&caml_shared_libs_path,
+  //                               getenv("CAML_LD_LIBRARY_PATH"));
   if (lib_path != NULL)
     for (p = lib_path; *p != 0; p += strlen(p) + 1)
       caml_ext_table_add(&caml_shared_libs_path, p);
@@ -171,7 +173,7 @@ void caml_build_primitive_table(char * lib_path,
 #endif
   }
   /* Clean up */
-  caml_stat_free(tofree1);
+  // caml_stat_free(tofree1);
   caml_stat_free(tofree2);
   caml_ext_table_free(&caml_shared_libs_path, 0);
 }
