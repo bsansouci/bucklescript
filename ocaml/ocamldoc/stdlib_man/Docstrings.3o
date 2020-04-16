@@ -1,0 +1,408 @@
+.TH "Docstrings" 3 2020-04-16 OCamldoc "OCaml library"
+.SH NAME
+Docstrings \- Documentation comments
+.SH Module
+Module   Docstrings
+.SH Documentation
+.sp
+Module
+.BI "Docstrings"
+ : 
+.B sig  end
+
+.sp
+Documentation comments
+
+.sp
+
+.sp
+.sp
+
+.I val init 
+: 
+.B unit -> unit
+.sp
+(Re)Initialise all docstring state
+
+.sp
+
+.I val warn_bad_docstrings 
+: 
+.B unit -> unit
+.sp
+Emit warnings for unattached and ambiguous docstrings
+
+.sp
+
+.PP
+
+.B === 
+.B Docstrings
+.B  ===
+
+.PP
+.I type docstring 
+
+.sp
+Documentation comments
+
+.sp
+
+.I val docstring 
+: 
+.B string -> Location.t -> docstring
+.sp
+Create a docstring
+
+.sp
+
+.I val register 
+: 
+.B docstring -> unit
+.sp
+Register a docstring
+
+.sp
+
+.I val docstring_body 
+: 
+.B docstring -> string
+.sp
+Get the text of a docstring
+
+.sp
+
+.I val docstring_loc 
+: 
+.B docstring -> Location.t
+.sp
+Get the location of a docstring
+
+.sp
+
+.PP
+
+.B === 
+.B Set functions
+.B 
+.B 
+.B    These functions are used by the lexer to associate docstrings to
+.B    the locations of tokens\&. ===
+
+.PP
+
+.I val set_pre_docstrings 
+: 
+.B Lexing.position -> docstring list -> unit
+.sp
+Docstrings immediately preceding a token
+
+.sp
+
+.I val set_post_docstrings 
+: 
+.B Lexing.position -> docstring list -> unit
+.sp
+Docstrings immediately following a token
+
+.sp
+
+.I val set_floating_docstrings 
+: 
+.B Lexing.position -> docstring list -> unit
+.sp
+Docstrings not immediately adjacent to a token
+
+.sp
+
+.I val set_pre_extra_docstrings 
+: 
+.B Lexing.position -> docstring list -> unit
+.sp
+Docstrings immediately following the token which precedes this one
+
+.sp
+
+.I val set_post_extra_docstrings 
+: 
+.B Lexing.position -> docstring list -> unit
+.sp
+Docstrings immediately preceding the token which follows this one
+
+.sp
+
+.PP
+
+.B === 
+.B Items
+.B 
+.B 
+.B     The Docstrings\&.docs type represents documentation attached to an item\&. ===
+
+.PP
+.I type docs 
+= {
+ docs_pre : 
+.B docstring option
+;
+ docs_post : 
+.B docstring option
+;
+ }
+
+.sp
+
+.sp
+
+.I val empty_docs 
+: 
+.B docs
+.sp
+
+.sp
+
+.I val docs_attr 
+: 
+.B docstring -> Parsetree.attribute
+.sp
+
+.sp
+
+.I val add_docs_attrs 
+: 
+.B docs -> Parsetree.attributes -> Parsetree.attributes
+.sp
+Convert item documentation to attributes and add them to an
+attribute list
+
+.sp
+
+.I val symbol_docs 
+: 
+.B unit -> docs
+.sp
+Fetch the item documentation for the current symbol\&. This also
+marks this documentation (for ambiguity warnings)\&.
+
+.sp
+
+.I val symbol_docs_lazy 
+: 
+.B unit -> docs Lazy.t
+.sp
+
+.sp
+
+.I val rhs_docs 
+: 
+.B int -> int -> docs
+.sp
+Fetch the item documentation for the symbols between two
+positions\&. This also marks this documentation (for ambiguity
+warnings)\&.
+
+.sp
+
+.I val rhs_docs_lazy 
+: 
+.B int -> int -> docs Lazy.t
+.sp
+
+.sp
+
+.I val mark_symbol_docs 
+: 
+.B unit -> unit
+.sp
+Mark the item documentation for the current symbol (for ambiguity
+warnings)\&.
+
+.sp
+
+.I val mark_rhs_docs 
+: 
+.B int -> int -> unit
+.sp
+Mark as associated the item documentation for the symbols between
+two positions (for ambiguity warnings)
+
+.sp
+
+.PP
+
+.B === 
+.B Fields and constructors
+.B 
+.B 
+.B     The Docstrings\&.info type represents documentation attached to a field or
+.B     constructor\&. ===
+
+.PP
+.I type info 
+= 
+.B docstring option
+
+.sp
+
+.sp
+
+.I val empty_info 
+: 
+.B info
+.sp
+
+.sp
+
+.I val info_attr 
+: 
+.B docstring -> Parsetree.attribute
+.sp
+
+.sp
+
+.I val add_info_attrs 
+: 
+.B info -> Parsetree.attributes -> Parsetree.attributes
+.sp
+Convert field info to attributes and add them to an
+attribute list
+
+.sp
+
+.I val symbol_info 
+: 
+.B unit -> info
+.sp
+Fetch the field info for the current symbol\&.
+
+.sp
+
+.I val rhs_info 
+: 
+.B int -> info
+.sp
+Fetch the field info following the symbol at a given position\&.
+
+.sp
+
+.PP
+
+.B === 
+.B Unattached comments
+.B 
+.B 
+.B     The Docstrings\&.text type represents documentation which is not attached to
+.B     anything\&. ===
+
+.PP
+.I type text 
+= 
+.B docstring list
+
+.sp
+
+.sp
+
+.I val empty_text 
+: 
+.B text
+.sp
+
+.sp
+
+.I val empty_text_lazy 
+: 
+.B text Lazy.t
+.sp
+
+.sp
+
+.I val text_attr 
+: 
+.B docstring -> Parsetree.attribute
+.sp
+
+.sp
+
+.I val add_text_attrs 
+: 
+.B text -> Parsetree.attributes -> Parsetree.attributes
+.sp
+Convert text to attributes and add them to an attribute list
+
+.sp
+
+.I val symbol_text 
+: 
+.B unit -> text
+.sp
+Fetch the text preceding the current symbol\&.
+
+.sp
+
+.I val symbol_text_lazy 
+: 
+.B unit -> text Lazy.t
+.sp
+
+.sp
+
+.I val rhs_text 
+: 
+.B int -> text
+.sp
+Fetch the text preceding the symbol at the given position\&.
+
+.sp
+
+.I val rhs_text_lazy 
+: 
+.B int -> text Lazy.t
+.sp
+
+.sp
+
+.PP
+
+.B === 
+.B Extra text
+.B 
+.B 
+.B     There may be additional text attached to the delimiters of a block
+.B     (e\&.g\&. struct and end)\&. This is fetched by the following
+.B     functions, which are applied to the contents of the block rather
+.B     than the delimiters\&. ===
+
+.PP
+
+.I val symbol_pre_extra_text 
+: 
+.B unit -> text
+.sp
+Fetch additional text preceding the current symbol
+
+.sp
+
+.I val symbol_post_extra_text 
+: 
+.B unit -> text
+.sp
+Fetch additional text following the current symbol
+
+.sp
+
+.I val rhs_pre_extra_text 
+: 
+.B int -> text
+.sp
+Fetch additional text preceding the symbol at the given position
+
+.sp
+
+.I val rhs_post_extra_text 
+: 
+.B int -> text
+.sp
+Fetch additional text following the symbol at the given position
+
+.sp

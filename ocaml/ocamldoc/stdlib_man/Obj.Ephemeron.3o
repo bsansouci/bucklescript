@@ -1,0 +1,183 @@
+.TH "Obj.Ephemeron" 3 2020-04-16 OCamldoc "OCaml library"
+.SH NAME
+Obj.Ephemeron \- no description
+.SH Module
+Module   Obj.Ephemeron
+.SH Documentation
+.sp
+Module
+.BI "Ephemeron"
+ : 
+.B sig  end
+
+.sp
+
+.sp
+
+.sp
+.sp
+
+.PP
+
+.B === Ephemeron with arbitrary arity and untyped ===
+
+.PP
+.I type obj_t 
+= 
+.B Obj.t
+
+.sp
+alias for 
+.B Obj\&.t
+
+
+.sp
+.I type t 
+
+.sp
+an ephemeron cf 
+.B Ephemeron
+
+
+.sp
+
+.I val create 
+: 
+.B int -> t
+.sp
+
+.B create n
+returns an ephemeron with 
+.B n
+keys\&.
+All the keys and the data are initially empty
+
+.sp
+
+.I val length 
+: 
+.B t -> int
+.sp
+return the number of keys
+
+.sp
+
+.I val get_key 
+: 
+.B t -> int -> obj_t option
+.sp
+Same as 
+.B Ephemeron\&.K1\&.get_key
+
+
+.sp
+
+.I val get_key_copy 
+: 
+.B t -> int -> obj_t option
+.sp
+Same as 
+.B Ephemeron\&.K1\&.get_key_copy
+
+
+.sp
+
+.I val set_key 
+: 
+.B t -> int -> obj_t -> unit
+.sp
+Same as 
+.B Ephemeron\&.K1\&.set_key
+
+
+.sp
+
+.I val unset_key 
+: 
+.B t -> int -> unit
+.sp
+Same as 
+.B Ephemeron\&.K1\&.unset_key
+
+
+.sp
+
+.I val check_key 
+: 
+.B t -> int -> bool
+.sp
+Same as 
+.B Ephemeron\&.K1\&.check_key
+
+
+.sp
+
+.I val blit_key 
+: 
+.B t -> int -> t -> int -> int -> unit
+.sp
+Same as 
+.B Ephemeron\&.K1\&.blit_key
+
+
+.sp
+
+.I val get_data 
+: 
+.B t -> obj_t option
+.sp
+Same as 
+.B Ephemeron\&.K1\&.get_data
+
+
+.sp
+
+.I val get_data_copy 
+: 
+.B t -> obj_t option
+.sp
+Same as 
+.B Ephemeron\&.K1\&.get_data_copy
+
+
+.sp
+
+.I val set_data 
+: 
+.B t -> obj_t -> unit
+.sp
+Same as 
+.B Ephemeron\&.K1\&.set_data
+
+
+.sp
+
+.I val unset_data 
+: 
+.B t -> unit
+.sp
+Same as 
+.B Ephemeron\&.K1\&.unset_data
+
+
+.sp
+
+.I val check_data 
+: 
+.B t -> bool
+.sp
+Same as 
+.B Ephemeron\&.K1\&.check_data
+
+
+.sp
+
+.I val blit_data 
+: 
+.B t -> t -> unit
+.sp
+Same as 
+.B Ephemeron\&.K1\&.blit_data
+
+
+.sp

@@ -1,0 +1,830 @@
+.TH "Sys" 3 2020-04-16 OCamldoc "OCaml library"
+.SH NAME
+Sys \- System interface.
+.SH Module
+Module   Sys
+.SH Documentation
+.sp
+Module
+.BI "Sys"
+ : 
+.B sig  end
+
+.sp
+System interface\&.
+.sp
+Every function in this module raises 
+.B Sys_error
+with an
+informative message when the underlying system call signal
+an error\&.
+
+.sp
+
+.sp
+.sp
+
+.I val argv 
+: 
+.B string array
+.sp
+The command line arguments given to the process\&.
+The first element is the command name used to invoke the program\&.
+The following elements are the command\-line arguments
+given to the program\&.
+
+.sp
+
+.I val executable_name 
+: 
+.B string
+.sp
+The name of the file containing the executable currently running\&.
+
+.sp
+
+.I val file_exists 
+: 
+.B string -> bool
+.sp
+Test if a file with the given name exists\&.
+
+.sp
+
+.I val is_directory 
+: 
+.B string -> bool
+.sp
+Returns 
+.B true
+if the given name refers to a directory,
+.B false
+if it refers to another kind of file\&.
+Raise 
+.B Sys_error
+if no file exists with the given name\&.
+
+.sp
+.B "Since"
+3.10.0
+
+.sp
+
+.I val remove 
+: 
+.B string -> unit
+.sp
+Remove the given file name from the file system\&.
+
+.sp
+
+.I val rename 
+: 
+.B string -> string -> unit
+.sp
+Rename a file\&.  
+.B rename oldpath newpath
+renames the file
+called 
+.B oldpath
+, giving it 
+.B newpath
+as its new name,
+moving it between directories if needed\&.  If 
+.B newpath
+already
+exists, its contents will be replaced with those of 
+.B oldpath
+\&.
+Depending on the operating system, the metadata (permissions,
+owner, etc) of 
+.B newpath
+can either be preserved or be replaced by
+those of 
+.B oldpath
+\&.
+
+.sp
+.B "Since"
+4.06 concerning the "replace existing file" behavior
+
+.sp
+
+.I val getenv 
+: 
+.B string -> string
+.sp
+Return the value associated to a variable in the process
+environment\&. Raise 
+.B Not_found
+if the variable is unbound\&.
+
+.sp
+
+.I val getenv_opt 
+: 
+.B string -> string option
+.sp
+Return the value associated to a variable in the process
+environment or 
+.B None
+if the variable is unbound\&.
+
+.sp
+.B "Since"
+4.05
+
+.sp
+
+.I val command 
+: 
+.B string -> int
+.sp
+Execute the given shell command and return its exit code\&.
+
+.sp
+
+.I val time 
+: 
+.B unit -> float
+.sp
+Return the processor time, in seconds, used by the program
+since the beginning of execution\&.
+
+.sp
+
+.I val chdir 
+: 
+.B string -> unit
+.sp
+Change the current working directory of the process\&.
+
+.sp
+
+.I val getcwd 
+: 
+.B unit -> string
+.sp
+Return the current working directory of the process\&.
+
+.sp
+
+.I val readdir 
+: 
+.B string -> string array
+.sp
+Return the names of all files present in the given directory\&.
+Names denoting the current directory and the parent directory
+(
+.B "\&."
+and 
+.B "\&.\&."
+in Unix) are not returned\&.  Each string in the
+result is a file name rather than a complete path\&.  There is no
+guarantee that the name strings in the resulting array will appear
+in any specific order; they are not, in particular, guaranteed to
+appear in alphabetical order\&.
+
+.sp
+
+.I val interactive 
+: 
+.B bool Pervasives.ref
+.sp
+This reference is initially set to 
+.B false
+in standalone
+programs and to 
+.B true
+if the code is being executed under
+the interactive toplevel system 
+.B ocaml
+\&.
+
+.sp
+
+.I val os_type 
+: 
+.B string
+.sp
+Operating system currently executing the OCaml program\&. One of
+.sp
+\- 
+.B "Unix"
+(for all Unix versions, including Linux and Mac OS X),
+.sp
+\- 
+.B "Win32"
+(for MS\-Windows, OCaml compiled with MSVC++ or Mingw),
+.sp
+\- 
+.B "Cygwin"
+(for MS\-Windows, OCaml compiled with Cygwin)\&.
+
+
+.sp
+.I type backend_type 
+=
+ | Native
+ | Bytecode
+ | Other
+.B of 
+.B string
+ 
+.sp
+Currently, the official distribution only supports 
+.B Native
+and
+.B Bytecode
+, but it can be other backends with alternative
+compilers, for example, javascript\&.
+
+.sp
+.B "Since"
+4.04.0
+
+.sp
+
+.I val backend_type 
+: 
+.B backend_type
+.sp
+Backend type  currently executing the OCaml program\&.
+
+.sp
+.B "Since"
+4.04.0
+
+.sp
+
+.I val unix 
+: 
+.B bool
+.sp
+True if 
+.B Sys\&.os_type = "Unix"
+\&.
+
+.sp
+.B "Since"
+4.01.0
+
+.sp
+
+.I val win32 
+: 
+.B bool
+.sp
+True if 
+.B Sys\&.os_type = "Win32"
+\&.
+
+.sp
+.B "Since"
+4.01.0
+
+.sp
+
+.I val cygwin 
+: 
+.B bool
+.sp
+True if 
+.B Sys\&.os_type = "Cygwin"
+\&.
+
+.sp
+.B "Since"
+4.01.0
+
+.sp
+
+.I val word_size 
+: 
+.B int
+.sp
+Size of one word on the machine currently executing the OCaml
+program, in bits: 32 or 64\&.
+
+.sp
+
+.I val int_size 
+: 
+.B int
+.sp
+Size of an int\&.  It is 31 bits (resp\&. 63 bits) when using the
+OCaml compiler on a 32 bits (resp\&. 64 bits) platform\&.  It may
+differ for other compilers, e\&.g\&. it is 32 bits when compiling to
+JavaScript\&.
+
+.sp
+.B "Since"
+4.03.0
+
+.sp
+
+.I val big_endian 
+: 
+.B bool
+.sp
+Whether the machine currently executing the Caml program is big\-endian\&.
+
+.sp
+.B "Since"
+4.00.0
+
+.sp
+
+.I val max_string_length 
+: 
+.B int
+.sp
+Maximum length of strings and byte sequences\&.
+
+.sp
+
+.I val max_array_length 
+: 
+.B int
+.sp
+Maximum length of a normal array\&.  The maximum length of a float
+array is 
+.B max_array_length/2
+on 32\-bit machines and
+.B max_array_length
+on 64\-bit machines\&.
+
+.sp
+
+.I val runtime_variant 
+: 
+.B unit -> string
+.sp
+Return the name of the runtime variant the program is running on\&.
+This is normally the argument given to 
+.B \-runtime\-variant
+at compile
+time, but for byte\-code it can be changed after compilation\&.
+
+.sp
+.B "Since"
+4.03.0
+
+.sp
+
+.I val runtime_parameters 
+: 
+.B unit -> string
+.sp
+Return the value of the runtime parameters, in the same format
+as the contents of the 
+.B OCAMLRUNPARAM
+environment variable\&.
+
+.sp
+.B "Since"
+4.03.0
+
+.sp
+
+.PP
+
+.B === 
+.B Signal handling
+.B  ===
+
+.PP
+.I type signal_behavior 
+=
+ | Signal_default
+ | Signal_ignore
+ | Signal_handle
+.B of 
+.B (int -> unit)
+ 
+.sp
+What to do when receiving a signal:
+.sp
+\-
+.B Signal_default
+: take the default behavior
+(usually: abort the program)
+.sp
+\-
+.B Signal_ignore
+: ignore the signal
+.sp
+\-
+.B Signal_handle f
+: call function 
+.B f
+, giving it the signal
+number as argument\&.
+
+
+.sp
+
+.I val signal 
+: 
+.B int -> signal_behavior -> signal_behavior
+.sp
+Set the behavior of the system on receipt of a given signal\&.  The
+first argument is the signal number\&.  Return the behavior
+previously associated with the signal\&. If the signal number is
+invalid (or not available on your system), an 
+.B Invalid_argument
+exception is raised\&.
+
+.sp
+
+.I val set_signal 
+: 
+.B int -> signal_behavior -> unit
+.sp
+Same as 
+.B Sys\&.signal
+but return value is ignored\&.
+
+.sp
+
+.PP
+
+.B === 
+.B Signal numbers for the standard POSIX signals\&.
+.B  ===
+
+.PP
+
+.I val sigabrt 
+: 
+.B int
+.sp
+Abnormal termination
+
+.sp
+
+.I val sigalrm 
+: 
+.B int
+.sp
+Timeout
+
+.sp
+
+.I val sigfpe 
+: 
+.B int
+.sp
+Arithmetic exception
+
+.sp
+
+.I val sighup 
+: 
+.B int
+.sp
+Hangup on controlling terminal
+
+.sp
+
+.I val sigill 
+: 
+.B int
+.sp
+Invalid hardware instruction
+
+.sp
+
+.I val sigint 
+: 
+.B int
+.sp
+Interactive interrupt (ctrl\-C)
+
+.sp
+
+.I val sigkill 
+: 
+.B int
+.sp
+Termination (cannot be ignored)
+
+.sp
+
+.I val sigpipe 
+: 
+.B int
+.sp
+Broken pipe
+
+.sp
+
+.I val sigquit 
+: 
+.B int
+.sp
+Interactive termination
+
+.sp
+
+.I val sigsegv 
+: 
+.B int
+.sp
+Invalid memory reference
+
+.sp
+
+.I val sigterm 
+: 
+.B int
+.sp
+Termination
+
+.sp
+
+.I val sigusr1 
+: 
+.B int
+.sp
+Application\-defined signal 1
+
+.sp
+
+.I val sigusr2 
+: 
+.B int
+.sp
+Application\-defined signal 2
+
+.sp
+
+.I val sigchld 
+: 
+.B int
+.sp
+Child process terminated
+
+.sp
+
+.I val sigcont 
+: 
+.B int
+.sp
+Continue
+
+.sp
+
+.I val sigstop 
+: 
+.B int
+.sp
+Stop
+
+.sp
+
+.I val sigtstp 
+: 
+.B int
+.sp
+Interactive stop
+
+.sp
+
+.I val sigttin 
+: 
+.B int
+.sp
+Terminal read from background process
+
+.sp
+
+.I val sigttou 
+: 
+.B int
+.sp
+Terminal write from background process
+
+.sp
+
+.I val sigvtalrm 
+: 
+.B int
+.sp
+Timeout in virtual time
+
+.sp
+
+.I val sigprof 
+: 
+.B int
+.sp
+Profiling interrupt
+
+.sp
+
+.I val sigbus 
+: 
+.B int
+.sp
+Bus error
+
+.sp
+.B "Since"
+4.03
+
+.sp
+
+.I val sigpoll 
+: 
+.B int
+.sp
+Pollable event
+
+.sp
+.B "Since"
+4.03
+
+.sp
+
+.I val sigsys 
+: 
+.B int
+.sp
+Bad argument to routine
+
+.sp
+.B "Since"
+4.03
+
+.sp
+
+.I val sigtrap 
+: 
+.B int
+.sp
+Trace/breakpoint trap
+
+.sp
+.B "Since"
+4.03
+
+.sp
+
+.I val sigurg 
+: 
+.B int
+.sp
+Urgent condition on socket
+
+.sp
+.B "Since"
+4.03
+
+.sp
+
+.I val sigxcpu 
+: 
+.B int
+.sp
+Timeout in cpu time
+
+.sp
+.B "Since"
+4.03
+
+.sp
+
+.I val sigxfsz 
+: 
+.B int
+.sp
+File size limit exceeded
+
+.sp
+.B "Since"
+4.03
+
+.sp
+
+.I exception Break 
+
+.sp
+Exception raised on interactive interrupt if 
+.B Sys\&.catch_break
+is on\&.
+
+.sp
+
+.I val catch_break 
+: 
+.B bool -> unit
+.sp
+
+.B catch_break
+governs whether interactive interrupt (ctrl\-C)
+terminates the program or raises the 
+.B Break
+exception\&.
+Call 
+.B catch_break true
+to enable raising 
+.B Break
+,
+and 
+.B catch_break false
+to let the system
+terminate the program on user interrupt\&.
+
+.sp
+
+.I val ocaml_version 
+: 
+.B string
+.sp
+
+.B ocaml_version
+is the version of OCaml\&.
+It is a string of the form 
+.B "major\&.minor[\&.patchlevel][+additional\-info]"
+,
+where 
+.B major
+, 
+.B minor
+, and 
+.B patchlevel
+are integers, and
+.B additional\-info
+is an arbitrary string\&. The 
+.B [\&.patchlevel]
+and
+.B [+additional\-info]
+parts may be absent\&.
+
+.sp
+
+.I val enable_runtime_warnings 
+: 
+.B bool -> unit
+.sp
+Control whether the OCaml runtime system can emit warnings
+on stderr\&.  Currently, the only supported warning is triggered
+when a channel created by 
+.B open_*
+functions is finalized without
+being closed\&.  Runtime warnings are enabled by default\&.
+
+.sp
+.B "Since"
+4.03.0
+
+.sp
+
+.I val runtime_warnings_enabled 
+: 
+.B unit -> bool
+.sp
+Return whether runtime warnings are currently enabled\&.
+
+.sp
+.B "Since"
+4.03.0
+
+.sp
+
+.PP
+
+.B === 
+.B Optimization
+.B  ===
+
+.PP
+
+.I val opaque_identity 
+: 
+.B 'a -> 'a
+.sp
+For the purposes of optimization, 
+.B opaque_identity
+behaves like an
+unknown (and thus possibly side\-effecting) function\&.
+.sp
+At runtime, 
+.B opaque_identity
+disappears altogether\&.
+.sp
+A typical use of this function is to prevent pure computations from being
+optimized away in benchmarking loops\&.  For example:
+.B 
+.B       for _round = 1 to 100_000 do
+.B         ignore (Sys\&.opaque_identity (my_pure_computation ()))
+.B       done
+.B     
+
+
+.sp
+.B "Since"
+4.03.0
+
+.sp

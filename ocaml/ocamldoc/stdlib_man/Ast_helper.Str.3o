@@ -1,0 +1,152 @@
+.TH "Ast_helper.Str" 3 2020-04-16 OCamldoc "OCaml library"
+.SH NAME
+Ast_helper.Str \- Structure items
+.SH Module
+Module   Ast_helper.Str
+.SH Documentation
+.sp
+Module
+.BI "Str"
+ : 
+.B sig  end
+
+.sp
+Structure items
+
+.sp
+
+.sp
+.sp
+
+.I val mk 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   Parsetree.structure_item_desc -> Parsetree.structure_item
+.sp
+
+.sp
+
+.I val eval 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Parsetree.attributes ->
+.B   Parsetree.expression -> Parsetree.structure_item
+.sp
+
+.sp
+
+.I val value 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   Asttypes.rec_flag -> Parsetree.value_binding list -> Parsetree.structure_item
+.sp
+
+.sp
+
+.I val primitive 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   Parsetree.value_description -> Parsetree.structure_item
+.sp
+
+.sp
+
+.I val type_ 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   Asttypes.rec_flag ->
+.B   Parsetree.type_declaration list -> Parsetree.structure_item
+.sp
+
+.sp
+
+.I val type_extension 
+: 
+.B ?loc:Ast_helper.loc -> Parsetree.type_extension -> Parsetree.structure_item
+.sp
+
+.sp
+
+.I val exception_ 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   Parsetree.extension_constructor -> Parsetree.structure_item
+.sp
+
+.sp
+
+.I val module_ 
+: 
+.B ?loc:Ast_helper.loc -> Parsetree.module_binding -> Parsetree.structure_item
+.sp
+
+.sp
+
+.I val rec_module 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   Parsetree.module_binding list -> Parsetree.structure_item
+.sp
+
+.sp
+
+.I val modtype 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   Parsetree.module_type_declaration -> Parsetree.structure_item
+.sp
+
+.sp
+
+.I val open_ 
+: 
+.B ?loc:Ast_helper.loc -> Parsetree.open_description -> Parsetree.structure_item
+.sp
+
+.sp
+
+.I val class_ 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   Parsetree.class_declaration list -> Parsetree.structure_item
+.sp
+
+.sp
+
+.I val class_type 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   Parsetree.class_type_declaration list -> Parsetree.structure_item
+.sp
+
+.sp
+
+.I val include_ 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   Parsetree.include_declaration -> Parsetree.structure_item
+.sp
+
+.sp
+
+.I val extension 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs -> Parsetree.extension -> Parsetree.structure_item
+.sp
+
+.sp
+
+.I val attribute 
+: 
+.B ?loc:Ast_helper.loc -> Parsetree.attribute -> Parsetree.structure_item
+.sp
+
+.sp
+
+.I val text 
+: 
+.B Docstrings.text -> Parsetree.structure_item list
+.sp
+
+.sp

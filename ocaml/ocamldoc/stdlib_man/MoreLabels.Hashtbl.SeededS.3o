@@ -1,0 +1,148 @@
+.TH "MoreLabels.Hashtbl.SeededS" 3 2020-04-16 OCamldoc "OCaml library"
+.SH NAME
+MoreLabels.Hashtbl.SeededS \- no description
+.SH Module type
+Module type   MoreLabels.Hashtbl.SeededS
+.SH Documentation
+.sp
+Module type
+.BI "SeededS"
+ = 
+.B sig  end
+
+.sp
+
+.sp
+
+.sp
+.sp
+.I type key 
+
+.sp
+
+.sp
+.I type 
+.B 'a
+.I t 
+
+.sp
+
+.sp
+
+.I val create 
+: 
+.B ?random:bool -> int -> 'a t
+.sp
+
+.sp
+
+.I val clear 
+: 
+.B 'a t -> unit
+.sp
+
+.sp
+
+.I val reset 
+: 
+.B 'a t -> unit
+.sp
+
+.sp
+
+.I val copy 
+: 
+.B 'a t -> 'a t
+.sp
+
+.sp
+
+.I val add 
+: 
+.B 'a t ->
+.B   key:key -> data:'a -> unit
+.sp
+
+.sp
+
+.I val remove 
+: 
+.B 'a t -> key -> unit
+.sp
+
+.sp
+
+.I val find 
+: 
+.B 'a t -> key -> 'a
+.sp
+
+.sp
+
+.I val find_opt 
+: 
+.B 'a t ->
+.B   key -> 'a option
+.sp
+
+.sp
+
+.I val find_all 
+: 
+.B 'a t -> key -> 'a list
+.sp
+
+.sp
+
+.I val replace 
+: 
+.B 'a t ->
+.B   key:key -> data:'a -> unit
+.sp
+
+.sp
+
+.I val mem 
+: 
+.B 'a t -> key -> bool
+.sp
+
+.sp
+
+.I val iter 
+: 
+.B f:(key:key -> data:'a -> unit) ->
+.B   'a t -> unit
+.sp
+
+.sp
+
+.I val filter_map_inplace 
+: 
+.B f:(key:key -> data:'a -> 'a option) ->
+.B   'a t -> unit
+.sp
+
+.sp
+
+.I val fold 
+: 
+.B f:(key:key -> data:'a -> 'b -> 'b) ->
+.B   'a t -> init:'b -> 'b
+.sp
+
+.sp
+
+.I val length 
+: 
+.B 'a t -> int
+.sp
+
+.sp
+
+.I val stats 
+: 
+.B 'a t -> MoreLabels.Hashtbl.statistics
+.sp
+
+.sp

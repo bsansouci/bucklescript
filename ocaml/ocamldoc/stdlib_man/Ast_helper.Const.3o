@@ -1,0 +1,74 @@
+.TH "Ast_helper.Const" 3 2020-04-16 OCamldoc "OCaml library"
+.SH NAME
+Ast_helper.Const \- no description
+.SH Module
+Module   Ast_helper.Const
+.SH Documentation
+.sp
+Module
+.BI "Const"
+ : 
+.B sig  end
+
+.sp
+
+.sp
+
+.sp
+.sp
+
+.I val char 
+: 
+.B char -> Parsetree.constant
+.sp
+
+.sp
+
+.I val string 
+: 
+.B ?quotation_delimiter:string -> string -> Parsetree.constant
+.sp
+
+.sp
+
+.I val integer 
+: 
+.B ?suffix:char -> string -> Parsetree.constant
+.sp
+
+.sp
+
+.I val int 
+: 
+.B ?suffix:char -> int -> Parsetree.constant
+.sp
+
+.sp
+
+.I val int32 
+: 
+.B ?suffix:char -> int32 -> Parsetree.constant
+.sp
+
+.sp
+
+.I val int64 
+: 
+.B ?suffix:char -> int64 -> Parsetree.constant
+.sp
+
+.sp
+
+.I val nativeint 
+: 
+.B ?suffix:char -> nativeint -> Parsetree.constant
+.sp
+
+.sp
+
+.I val float 
+: 
+.B ?suffix:char -> string -> Parsetree.constant
+.sp
+
+.sp

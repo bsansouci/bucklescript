@@ -1,0 +1,68 @@
+.TH "Parse" 3 2020-04-16 OCamldoc "OCaml library"
+.SH NAME
+Parse \- Entry points in the parser
+.SH Module
+Module   Parse
+.SH Documentation
+.sp
+Module
+.BI "Parse"
+ : 
+.B sig  end
+
+.sp
+Entry points in the parser
+
+.sp
+
+.sp
+.sp
+
+.I val implementation 
+: 
+.B Lexing.lexbuf -> Parsetree.structure
+.sp
+
+.sp
+
+.I val interface 
+: 
+.B Lexing.lexbuf -> Parsetree.signature
+.sp
+
+.sp
+
+.I val toplevel_phrase 
+: 
+.B Lexing.lexbuf -> Parsetree.toplevel_phrase
+.sp
+
+.sp
+
+.I val use_file 
+: 
+.B Lexing.lexbuf -> Parsetree.toplevel_phrase list
+.sp
+
+.sp
+
+.I val core_type 
+: 
+.B Lexing.lexbuf -> Parsetree.core_type
+.sp
+
+.sp
+
+.I val expression 
+: 
+.B Lexing.lexbuf -> Parsetree.expression
+.sp
+
+.sp
+
+.I val pattern 
+: 
+.B Lexing.lexbuf -> Parsetree.pattern
+.sp
+
+.sp

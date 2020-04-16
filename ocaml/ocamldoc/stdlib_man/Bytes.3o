@@ -1,0 +1,1263 @@
+.TH "Bytes" 3 2020-04-16 OCamldoc "OCaml library"
+.SH NAME
+Bytes \- Byte sequence operations.
+.SH Module
+Module   Bytes
+.SH Documentation
+.sp
+Module
+.BI "Bytes"
+ : 
+.B sig  end
+
+.sp
+Byte sequence operations\&.
+.sp
+A byte sequence is a mutable data structure that contains a
+fixed\-length sequence of bytes\&. Each byte can be indexed in
+constant time for reading or writing\&.
+.sp
+Given a byte sequence 
+.B s
+of length 
+.B l
+, we can access each of the
+.B l
+bytes of 
+.B s
+via its index in the sequence\&. Indexes start at
+.B 0
+, and we will call an index valid in 
+.B s
+if it falls within the
+range 
+.B [0\&.\&.\&.l\-1]
+(inclusive)\&. A position is the point between two
+bytes or at the beginning or end of the sequence\&.  We call a
+position valid in 
+.B s
+if it falls within the range 
+.B [0\&.\&.\&.l]
+(inclusive)\&. Note that the byte at index 
+.B n
+is between positions
+.B n
+and 
+.B n+1
+\&.
+.sp
+Two parameters 
+.B start
+and 
+.B len
+are said to designate a valid
+range of 
+.B s
+if 
+.B len >= 0
+and 
+.B start
+and 
+.B start+len
+are valid
+positions in 
+.B s
+\&.
+.sp
+Byte sequences can be modified in place, for instance via the 
+.B set
+and 
+.B blit
+functions described below\&.  See also strings (module
+.B String
+), which are almost the same data structure, but cannot be
+modified in place\&.
+.sp
+Bytes are represented by the OCaml type 
+.B char
+\&.
+
+.sp
+.B "Since"
+4.02.0
+
+.sp
+
+.sp
+.sp
+
+.I val length 
+: 
+.B bytes -> int
+.sp
+Return the length (number of bytes) of the argument\&.
+
+.sp
+
+.I val get 
+: 
+.B bytes -> int -> char
+.sp
+
+.B get s n
+returns the byte at index 
+.B n
+in argument 
+.B s
+\&.
+.sp
+Raise 
+.B Invalid_argument
+if 
+.B n
+is not a valid index in 
+.B s
+\&.
+
+.sp
+
+.I val set 
+: 
+.B bytes -> int -> char -> unit
+.sp
+
+.B set s n c
+modifies 
+.B s
+in place, replacing the byte at index 
+.B n
+with 
+.B c
+\&.
+.sp
+Raise 
+.B Invalid_argument
+if 
+.B n
+is not a valid index in 
+.B s
+\&.
+
+.sp
+
+.I val create 
+: 
+.B int -> bytes
+.sp
+
+.B create n
+returns a new byte sequence of length 
+.B n
+\&. The
+sequence is uninitialized and contains arbitrary bytes\&.
+.sp
+Raise 
+.B Invalid_argument
+if 
+.B n < 0
+or 
+.B n > 
+.B Sys\&.max_string_length
+\&.
+
+.sp
+
+.I val make 
+: 
+.B int -> char -> bytes
+.sp
+
+.B make n c
+returns a new byte sequence of length 
+.B n
+, filled with
+the byte 
+.B c
+\&.
+.sp
+Raise 
+.B Invalid_argument
+if 
+.B n < 0
+or 
+.B n > 
+.B Sys\&.max_string_length
+\&.
+
+.sp
+
+.I val init 
+: 
+.B int -> (int -> char) -> bytes
+.sp
+
+.B Bytes\&.init n f
+returns a fresh byte sequence of length 
+.B n
+, with
+character 
+.B i
+initialized to the result of 
+.B f i
+(in increasing
+index order)\&.
+.sp
+Raise 
+.B Invalid_argument
+if 
+.B n < 0
+or 
+.B n > 
+.B Sys\&.max_string_length
+\&.
+
+.sp
+
+.I val empty 
+: 
+.B bytes
+.sp
+A byte sequence of size 0\&.
+
+.sp
+
+.I val copy 
+: 
+.B bytes -> bytes
+.sp
+Return a new byte sequence that contains the same bytes as the
+argument\&.
+
+.sp
+
+.I val of_string 
+: 
+.B string -> bytes
+.sp
+Return a new byte sequence that contains the same bytes as the
+given string\&.
+
+.sp
+
+.I val to_string 
+: 
+.B bytes -> string
+.sp
+Return a new string that contains the same bytes as the given byte
+sequence\&.
+
+.sp
+
+.I val sub 
+: 
+.B bytes -> int -> int -> bytes
+.sp
+
+.B sub s start len
+returns a new byte sequence of length 
+.B len
+,
+containing the subsequence of 
+.B s
+that starts at position 
+.B start
+and has length 
+.B len
+\&.
+.sp
+Raise 
+.B Invalid_argument
+if 
+.B start
+and 
+.B len
+do not designate a
+valid range of 
+.B s
+\&.
+
+.sp
+
+.I val sub_string 
+: 
+.B bytes -> int -> int -> string
+.sp
+Same as 
+.B sub
+but return a string instead of a byte sequence\&.
+
+.sp
+
+.I val extend 
+: 
+.B bytes -> int -> int -> bytes
+.sp
+
+.B extend s left right
+returns a new byte sequence that contains
+the bytes of 
+.B s
+, with 
+.B left
+uninitialized bytes prepended and
+.B right
+uninitialized bytes appended to it\&. If 
+.B left
+or 
+.B right
+is negative, then bytes are removed (instead of appended) from
+the corresponding side of 
+.B s
+\&.
+.sp
+Raise 
+.B Invalid_argument
+if the result length is negative or
+longer than 
+.B Sys\&.max_string_length
+bytes\&.
+
+.sp
+
+.I val fill 
+: 
+.B bytes -> int -> int -> char -> unit
+.sp
+
+.B fill s start len c
+modifies 
+.B s
+in place, replacing 
+.B len
+characters with 
+.B c
+, starting at 
+.B start
+\&.
+.sp
+Raise 
+.B Invalid_argument
+if 
+.B start
+and 
+.B len
+do not designate a
+valid range of 
+.B s
+\&.
+
+.sp
+
+.I val blit 
+: 
+.B bytes -> int -> bytes -> int -> int -> unit
+.sp
+
+.B blit src srcoff dst dstoff len
+copies 
+.B len
+bytes from sequence
+.B src
+, starting at index 
+.B srcoff
+, to sequence 
+.B dst
+, starting at
+index 
+.B dstoff
+\&. It works correctly even if 
+.B src
+and 
+.B dst
+are the
+same byte sequence, and the source and destination intervals
+overlap\&.
+.sp
+Raise 
+.B Invalid_argument
+if 
+.B srcoff
+and 
+.B len
+do not
+designate a valid range of 
+.B src
+, or if 
+.B dstoff
+and 
+.B len
+do not designate a valid range of 
+.B dst
+\&.
+
+.sp
+
+.I val blit_string 
+: 
+.B string -> int -> bytes -> int -> int -> unit
+.sp
+
+.B blit src srcoff dst dstoff len
+copies 
+.B len
+bytes from string
+.B src
+, starting at index 
+.B srcoff
+, to byte sequence 
+.B dst
+,
+starting at index 
+.B dstoff
+\&.
+.sp
+Raise 
+.B Invalid_argument
+if 
+.B srcoff
+and 
+.B len
+do not
+designate a valid range of 
+.B src
+, or if 
+.B dstoff
+and 
+.B len
+do not designate a valid range of 
+.B dst
+\&.
+
+.sp
+
+.I val concat 
+: 
+.B bytes -> bytes list -> bytes
+.sp
+
+.B concat sep sl
+concatenates the list of byte sequences 
+.B sl
+,
+inserting the separator byte sequence 
+.B sep
+between each, and
+returns the result as a new byte sequence\&.
+.sp
+Raise 
+.B Invalid_argument
+if the result is longer than
+.B Sys\&.max_string_length
+bytes\&.
+
+.sp
+
+.I val cat 
+: 
+.B bytes -> bytes -> bytes
+.sp
+
+.B cat s1 s2
+concatenates 
+.B s1
+and 
+.B s2
+and returns the result
+as new byte sequence\&.
+.sp
+Raise 
+.B Invalid_argument
+if the result is longer than
+.B Sys\&.max_string_length
+bytes\&.
+
+.sp
+
+.I val iter 
+: 
+.B (char -> unit) -> bytes -> unit
+.sp
+
+.B iter f s
+applies function 
+.B f
+in turn to all the bytes of 
+.B s
+\&.
+It is equivalent to 
+.B f (get s 0); f (get s 1); \&.\&.\&.; f (get s
+.B     (length s \- 1)); ()
+\&.
+
+.sp
+
+.I val iteri 
+: 
+.B (int -> char -> unit) -> bytes -> unit
+.sp
+Same as 
+.B Bytes\&.iter
+, but the function is applied to the index of
+the byte as first argument and the byte itself as second
+argument\&.
+
+.sp
+
+.I val map 
+: 
+.B (char -> char) -> bytes -> bytes
+.sp
+
+.B map f s
+applies function 
+.B f
+in turn to all the bytes of 
+.B s
+(in increasing index order) and stores the resulting bytes in
+a new sequence that is returned as the result\&.
+
+.sp
+
+.I val mapi 
+: 
+.B (int -> char -> char) -> bytes -> bytes
+.sp
+
+.B mapi f s
+calls 
+.B f
+with each character of 
+.B s
+and its
+index (in increasing index order) and stores the resulting bytes
+in a new sequence that is returned as the result\&.
+
+.sp
+
+.I val trim 
+: 
+.B bytes -> bytes
+.sp
+Return a copy of the argument, without leading and trailing
+whitespace\&. The bytes regarded as whitespace are the ASCII
+characters 
+.B \&' \&'
+, 
+.B \&'\(rs012\&'
+, 
+.B \&'\(rsn\&'
+, 
+.B \&'\(rsr\&'
+, and 
+.B \&'\(rst\&'
+\&.
+
+.sp
+
+.I val escaped 
+: 
+.B bytes -> bytes
+.sp
+Return a copy of the argument, with special characters represented
+by escape sequences, following the lexical conventions of OCaml\&.
+All characters outside the ASCII printable range (32\&.\&.126) are
+escaped, as well as backslash and double\-quote\&.
+.sp
+Raise 
+.B Invalid_argument
+if the result is longer than
+.B Sys\&.max_string_length
+bytes\&.
+
+.sp
+
+.I val index 
+: 
+.B bytes -> char -> int
+.sp
+
+.B index s c
+returns the index of the first occurrence of byte 
+.B c
+in 
+.B s
+\&.
+.sp
+Raise 
+.B Not_found
+if 
+.B c
+does not occur in 
+.B s
+\&.
+
+.sp
+
+.I val index_opt 
+: 
+.B bytes -> char -> int option
+.sp
+
+.B index_opt s c
+returns the index of the first occurrence of byte 
+.B c
+in 
+.B s
+or 
+.B None
+if 
+.B c
+does not occur in 
+.B s
+\&.
+
+.sp
+.B "Since"
+4.05
+
+.sp
+
+.I val rindex 
+: 
+.B bytes -> char -> int
+.sp
+
+.B rindex s c
+returns the index of the last occurrence of byte 
+.B c
+in 
+.B s
+\&.
+.sp
+Raise 
+.B Not_found
+if 
+.B c
+does not occur in 
+.B s
+\&.
+
+.sp
+
+.I val rindex_opt 
+: 
+.B bytes -> char -> int option
+.sp
+
+.B rindex_opt s c
+returns the index of the last occurrence of byte 
+.B c
+in 
+.B s
+or 
+.B None
+if 
+.B c
+does not occur in 
+.B s
+\&.
+
+.sp
+.B "Since"
+4.05
+
+.sp
+
+.I val index_from 
+: 
+.B bytes -> int -> char -> int
+.sp
+
+.B index_from s i c
+returns the index of the first occurrence of
+byte 
+.B c
+in 
+.B s
+after position 
+.B i
+\&.  
+.B Bytes\&.index s c
+is
+equivalent to 
+.B Bytes\&.index_from s 0 c
+\&.
+.sp
+Raise 
+.B Invalid_argument
+if 
+.B i
+is not a valid position in 
+.B s
+\&.
+Raise 
+.B Not_found
+if 
+.B c
+does not occur in 
+.B s
+after position 
+.B i
+\&.
+
+.sp
+
+.I val index_from_opt 
+: 
+.B bytes -> int -> char -> int option
+.sp
+
+.B index_from _opts i c
+returns the index of the first occurrence of
+byte 
+.B c
+in 
+.B s
+after position 
+.B i
+or 
+.B None
+if 
+.B c
+does not occur in 
+.B s
+after position 
+.B i
+\&.
+.B Bytes\&.index_opt s c
+is equivalent to 
+.B Bytes\&.index_from_opt s 0 c
+\&.
+.sp
+Raise 
+.B Invalid_argument
+if 
+.B i
+is not a valid position in 
+.B s
+\&.
+
+.sp
+.B "Since"
+4.05
+
+.sp
+
+.I val rindex_from 
+: 
+.B bytes -> int -> char -> int
+.sp
+
+.B rindex_from s i c
+returns the index of the last occurrence of
+byte 
+.B c
+in 
+.B s
+before position 
+.B i+1
+\&.  
+.B rindex s c
+is equivalent
+to 
+.B rindex_from s (Bytes\&.length s \- 1) c
+\&.
+.sp
+Raise 
+.B Invalid_argument
+if 
+.B i+1
+is not a valid position in 
+.B s
+\&.
+Raise 
+.B Not_found
+if 
+.B c
+does not occur in 
+.B s
+before position 
+.B i+1
+\&.
+
+.sp
+
+.I val rindex_from_opt 
+: 
+.B bytes -> int -> char -> int option
+.sp
+
+.B rindex_from_opt s i c
+returns the index of the last occurrence
+of byte 
+.B c
+in 
+.B s
+before position 
+.B i+1
+or 
+.B None
+if 
+.B c
+does not
+occur in 
+.B s
+before position 
+.B i+1
+\&.  
+.B rindex_opt s c
+is equivalent to
+.B rindex_from s (Bytes\&.length s \- 1) c
+\&.
+.sp
+Raise 
+.B Invalid_argument
+if 
+.B i+1
+is not a valid position in 
+.B s
+\&.
+
+.sp
+.B "Since"
+4.05
+
+.sp
+
+.I val contains 
+: 
+.B bytes -> char -> bool
+.sp
+
+.B contains s c
+tests if byte 
+.B c
+appears in 
+.B s
+\&.
+
+.sp
+
+.I val contains_from 
+: 
+.B bytes -> int -> char -> bool
+.sp
+
+.B contains_from s start c
+tests if byte 
+.B c
+appears in 
+.B s
+after
+position 
+.B start
+\&.  
+.B contains s c
+is equivalent to 
+.B contains_from
+.B     s 0 c
+\&.
+.sp
+Raise 
+.B Invalid_argument
+if 
+.B start
+is not a valid position in 
+.B s
+\&.
+
+.sp
+
+.I val rcontains_from 
+: 
+.B bytes -> int -> char -> bool
+.sp
+
+.B rcontains_from s stop c
+tests if byte 
+.B c
+appears in 
+.B s
+before
+position 
+.B stop+1
+\&.
+.sp
+Raise 
+.B Invalid_argument
+if 
+.B stop < 0
+or 
+.B stop+1
+is not a valid
+position in 
+.B s
+\&.
+
+.sp
+
+.I val uppercase 
+: 
+.B bytes -> bytes
+.sp
+.B "Deprecated."
+Functions operating on Latin\-1 character set are deprecated\&.
+
+.sp
+Return a copy of the argument, with all lowercase letters
+translated to uppercase, including accented letters of the ISO
+Latin\-1 (8859\-1) character set\&.
+
+.sp
+
+.I val lowercase 
+: 
+.B bytes -> bytes
+.sp
+.B "Deprecated."
+Functions operating on Latin\-1 character set are deprecated\&.
+
+.sp
+Return a copy of the argument, with all uppercase letters
+translated to lowercase, including accented letters of the ISO
+Latin\-1 (8859\-1) character set\&.
+
+.sp
+
+.I val capitalize 
+: 
+.B bytes -> bytes
+.sp
+.B "Deprecated."
+Functions operating on Latin\-1 character set are deprecated\&.
+
+.sp
+Return a copy of the argument, with the first character set to uppercase,
+using the ISO Latin\-1 (8859\-1) character set\&.\&.
+
+.sp
+
+.I val uncapitalize 
+: 
+.B bytes -> bytes
+.sp
+.B "Deprecated."
+Functions operating on Latin\-1 character set are deprecated\&.
+
+.sp
+Return a copy of the argument, with the first character set to lowercase,
+using the ISO Latin\-1 (8859\-1) character set\&.\&.
+
+.sp
+
+.I val uppercase_ascii 
+: 
+.B bytes -> bytes
+.sp
+Return a copy of the argument, with all lowercase letters
+translated to uppercase, using the US\-ASCII character set\&.
+
+.sp
+.B "Since"
+4.03.0
+
+.sp
+
+.I val lowercase_ascii 
+: 
+.B bytes -> bytes
+.sp
+Return a copy of the argument, with all uppercase letters
+translated to lowercase, using the US\-ASCII character set\&.
+
+.sp
+.B "Since"
+4.03.0
+
+.sp
+
+.I val capitalize_ascii 
+: 
+.B bytes -> bytes
+.sp
+Return a copy of the argument, with the first character set to uppercase,
+using the US\-ASCII character set\&.
+
+.sp
+.B "Since"
+4.03.0
+
+.sp
+
+.I val uncapitalize_ascii 
+: 
+.B bytes -> bytes
+.sp
+Return a copy of the argument, with the first character set to lowercase,
+using the US\-ASCII character set\&.
+
+.sp
+.B "Since"
+4.03.0
+
+.sp
+.I type t 
+= 
+.B bytes
+
+.sp
+An alias for the type of byte sequences\&.
+
+.sp
+
+.I val compare 
+: 
+.B t -> t -> int
+.sp
+The comparison function for byte sequences, with the same
+specification as 
+.B Pervasives\&.compare
+\&.  Along with the type 
+.B t
+,
+this function 
+.B compare
+allows the module 
+.B Bytes
+to be passed as
+argument to the functors 
+.B Set\&.Make
+and 
+.B Map\&.Make
+\&.
+
+.sp
+
+.I val equal 
+: 
+.B t -> t -> bool
+.sp
+The equality function for byte sequences\&.
+
+.sp
+.B "Since"
+4.03.0
+
+.sp
+
+.PP
+
+.B === 
+.B Unsafe conversions (for advanced users)
+.B 
+.B 
+.B     This section describes unsafe, low\-level conversion functions
+.B     between bytes and string\&. They do not copy the internal data;
+.B     used improperly, they can break the immutability invariant on
+.B     strings provided by the \-safe\-string option\&. They are available for
+.B     expert library authors, but for most purposes you should use the
+.B     always\-correct Bytes\&.to_string and Bytes\&.of_string instead\&. ===
+
+.PP
+
+.I val unsafe_to_string 
+: 
+.B bytes -> string
+.sp
+Unsafely convert a byte sequence into a string\&.
+.sp
+To reason about the use of 
+.B unsafe_to_string
+, it is convenient to
+consider an "ownership" discipline\&. A piece of code that
+manipulates some data "owns" it; there are several disjoint ownership
+modes, including:
+.sp
+\-Unique ownership: the data may be accessed and mutated
+.sp
+\-Shared ownership: the data has several owners, that may only
+access it, not mutate it\&.
+
+Unique ownership is linear: passing the data to another piece of
+code means giving up ownership (we cannot write the
+data again)\&. A unique owner may decide to make the data shared
+(giving up mutation rights on it), but shared data may not become
+uniquely\-owned again\&.
+.sp
+
+.B unsafe_to_string s
+can only be used when the caller owns the byte
+sequence 
+.B s
+\-\- either uniquely or as shared immutable data\&. The
+caller gives up ownership of 
+.B s
+, and gains ownership of the
+returned string\&.
+.sp
+There are two valid use\-cases that respect this ownership
+discipline:
+.sp
+1\&. Creating a string by initializing and mutating a byte sequence
+that is never changed after initialization is performed\&.
+.sp
+
+.B 
+.B let string_init len f : string =
+.B   let s = Bytes\&.create len in
+.B   for i = 0 to len \- 1 do Bytes\&.set s i (f i) done;
+.B   Bytes\&.unsafe_to_string s
+.B    
+.sp
+This function is safe because the byte sequence 
+.B s
+will never be
+accessed or mutated after 
+.B unsafe_to_string
+is called\&. The
+.B string_init
+code gives up ownership of 
+.B s
+, and returns the
+ownership of the resulting string to its caller\&.
+.sp
+Note that it would be unsafe if 
+.B s
+was passed as an additional
+parameter to the function 
+.B f
+as it could escape this way and be
+mutated in the future \-\- 
+.B string_init
+would give up ownership of
+.B s
+to pass it to 
+.B f
+, and could not call 
+.B unsafe_to_string
+safely\&.
+.sp
+We have provided the 
+.B String\&.init
+, 
+.B String\&.map
+and
+.B String\&.mapi
+functions to cover most cases of building
+new strings\&. You should prefer those over 
+.B to_string
+or
+.B unsafe_to_string
+whenever applicable\&.
+.sp
+2\&. Temporarily giving ownership of a byte sequence to a function
+that expects a uniquely owned string and returns ownership back, so
+that we can mutate the sequence again after the call ended\&.
+.sp
+
+.B 
+.B let bytes_length (s : bytes) =
+.B   String\&.length (Bytes\&.unsafe_to_string s)
+.B    
+.sp
+In this use\-case, we do not promise that 
+.B s
+will never be mutated
+after the call to 
+.B bytes_length s
+\&. The 
+.B String\&.length
+function
+temporarily borrows unique ownership of the byte sequence
+(and sees it as a 
+.B string
+), but returns this ownership back to
+the caller, which may assume that 
+.B s
+is still a valid byte
+sequence after the call\&. Note that this is only correct because we
+know that 
+.B String\&.length
+does not capture its argument \-\- it could
+escape by a side\-channel such as a memoization combinator\&.
+.sp
+The caller may not mutate 
+.B s
+while the string is borrowed (it has
+temporarily given up ownership)\&. This affects concurrent programs,
+but also higher\-order functions: if 
+.B String\&.length
+returned
+a closure to be called later, 
+.B s
+should not be mutated until this
+closure is fully applied and returns ownership\&.
+
+.sp
+
+.I val unsafe_of_string 
+: 
+.B string -> bytes
+.sp
+Unsafely convert a shared string to a byte sequence that should
+not be mutated\&.
+.sp
+The same ownership discipline that makes 
+.B unsafe_to_string
+correct applies to 
+.B unsafe_of_string
+: you may use it if you were
+the owner of the 
+.B string
+value, and you will own the return
+.B bytes
+in the same mode\&.
+.sp
+In practice, unique ownership of string values is extremely
+difficult to reason about correctly\&. You should always assume
+strings are shared, never uniquely owned\&.
+.sp
+For example, string literals are implicitly shared by the
+compiler, so you never uniquely own them\&.
+.sp
+
+.B 
+.B let incorrect = Bytes\&.unsafe_of_string "hello"
+.B let s = Bytes\&.of_string "hello"
+.B     
+.sp
+The first declaration is incorrect, because the string literal
+.B "hello"
+could be shared by the compiler with other parts of the
+program, and mutating 
+.B incorrect
+is a bug\&. You must always use
+the second version, which performs a copy and is thus correct\&.
+.sp
+Assuming unique ownership of strings that are not string
+literals, but are (partly) built from string literals, is also
+incorrect\&. For example, mutating 
+.B unsafe_of_string ("foo" ^ s)
+could mutate the shared string 
+.B "foo"
+\-\- assuming a rope\-like
+representation of strings\&. More generally, functions operating on
+strings will assume shared ownership, they do not preserve unique
+ownership\&. It is thus incorrect to assume unique ownership of the
+result of 
+.B unsafe_of_string
+\&.
+.sp
+The only case we have reasonable confidence is safe is if the
+produced 
+.B bytes
+is shared \-\- used as an immutable byte
+sequence\&. This is possibly useful for incremental migration of
+low\-level programs that manipulate immutable sequences of bytes
+(for example 
+.B Marshal\&.from_bytes
+) and previously used the
+.B string
+type for this purpose\&.
+
+.sp

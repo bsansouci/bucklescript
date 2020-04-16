@@ -1,0 +1,30 @@
+.TH "Ast_helper.Val" 3 2020-04-16 OCamldoc "OCaml library"
+.SH NAME
+Ast_helper.Val \- Value declarations
+.SH Module
+Module   Ast_helper.Val
+.SH Documentation
+.sp
+Module
+.BI "Val"
+ : 
+.B sig  end
+
+.sp
+Value declarations
+
+.sp
+
+.sp
+.sp
+
+.I val mk 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs ->
+.B   ?docs:Docstrings.docs ->
+.B   ?prim:string list ->
+.B   Ast_helper.str -> Parsetree.core_type -> Parsetree.value_description
+.sp
+
+.sp

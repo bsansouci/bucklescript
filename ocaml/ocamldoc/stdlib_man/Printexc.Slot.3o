@@ -1,0 +1,128 @@
+.TH "Printexc.Slot" 3 2020-04-16 OCamldoc "OCaml library"
+.SH NAME
+Printexc.Slot \- no description
+.SH Module
+Module   Printexc.Slot
+.SH Documentation
+.sp
+Module
+.BI "Slot"
+ : 
+.B sig  end
+
+.sp
+.B "Since"
+4.02.0
+
+.sp
+
+.sp
+.sp
+.I type t 
+= 
+.B Printexc.backtrace_slot
+
+.sp
+
+.sp
+
+.I val is_raise 
+: 
+.B t -> bool
+.sp
+
+.B is_raise slot
+is 
+.B true
+when 
+.B slot
+refers to a raising
+point in the code, and 
+.B false
+when it comes from a simple
+function call\&.
+
+.sp
+.B "Since"
+4.02
+
+.sp
+
+.I val is_inline 
+: 
+.B t -> bool
+.sp
+
+.B is_inline slot
+is 
+.B true
+when 
+.B slot
+refers to a call
+that got inlined by the compiler, and 
+.B false
+when it comes from
+any other context\&.
+
+.sp
+.B "Since"
+4.04.0
+
+.sp
+
+.I val location 
+: 
+.B t -> Printexc.location option
+.sp
+
+.B location slot
+returns the location information of the slot,
+if available, and 
+.B None
+otherwise\&.
+.sp
+Some possible reasons for failing to return a location are as follow:
+.sp
+\-the slot corresponds to a compiler\-inserted raise
+.sp
+\-the slot corresponds to a part of the program that has not been
+compiled with debug information (
+.B \-g
+)
+
+
+.sp
+.B "Since"
+4.02
+
+.sp
+
+.I val format 
+: 
+.B int -> t -> string option
+.sp
+
+.B format pos slot
+returns the string representation of 
+.B slot
+as
+.B raw_backtrace_to_string
+would format it, assuming it is the
+.B pos
+\-th element of the backtrace: the 
+.B 0
+\-th element is
+pretty\-printed differently than the others\&.
+.sp
+Whole\-backtrace printing functions also skip some uninformative
+slots; in that case, 
+.B format pos slot
+returns 
+.B None
+\&.
+
+.sp
+.B "Since"
+4.02
+
+.sp

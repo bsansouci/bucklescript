@@ -1,0 +1,33 @@
+.TH "Ast_invariants" 3 2020-04-16 OCamldoc "OCaml library"
+.SH NAME
+Ast_invariants \- Check AST invariants
+.SH Module
+Module   Ast_invariants
+.SH Documentation
+.sp
+Module
+.BI "Ast_invariants"
+ : 
+.B sig  end
+
+.sp
+Check AST invariants
+
+.sp
+
+.sp
+.sp
+
+.I val structure 
+: 
+.B Parsetree.structure -> unit
+.sp
+
+.sp
+
+.I val signature 
+: 
+.B Parsetree.signature -> unit
+.sp
+
+.sp

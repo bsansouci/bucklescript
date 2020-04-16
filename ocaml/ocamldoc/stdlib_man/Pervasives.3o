@@ -1,0 +1,3108 @@
+.TH "Pervasives" 3 2020-04-16 OCamldoc "OCaml library"
+.SH NAME
+Pervasives \- The initially opened module.
+.SH Module
+Module   Pervasives
+.SH Documentation
+.sp
+Module
+.BI "Pervasives"
+ : 
+.B sig  end
+
+.sp
+The initially opened module\&.
+.sp
+This module provides the basic operations over the built\-in types
+(numbers, booleans, byte sequences, strings, exceptions, references,
+lists, arrays, input\-output channels, \&.\&.\&.)\&.
+.sp
+This module is automatically opened at the beginning of each compilation\&.
+All components of this module can therefore be referred by their short
+name, without prefixing them by 
+.B Pervasives
+\&.
+
+.sp
+
+.sp
+.sp
+
+.PP
+
+.B === 
+.B Exceptions
+.B  ===
+
+.PP
+
+.I val raise 
+: 
+.B exn -> 'a
+.sp
+Raise the given exception value
+
+.sp
+
+.I val raise_notrace 
+: 
+.B exn -> 'a
+.sp
+A faster version 
+.B raise
+which does not record the backtrace\&.
+
+.sp
+.B "Since"
+4.02.0
+
+.sp
+
+.I val invalid_arg 
+: 
+.B string -> 'a
+.sp
+Raise exception 
+.B Invalid_argument
+with the given string\&.
+
+.sp
+
+.I val failwith 
+: 
+.B string -> 'a
+.sp
+Raise exception 
+.B Failure
+with the given string\&.
+
+.sp
+
+.I exception Exit 
+
+.sp
+The 
+.B Exit
+exception is not raised by any library function\&.  It is
+provided for use in your programs\&.
+
+.sp
+
+.PP
+
+.B === 
+.B Comparisons
+.B  ===
+
+.PP
+
+.I val (=) 
+: 
+.B 'a -> 'a -> bool
+.sp
+
+.B e1 = e2
+tests for structural equality of 
+.B e1
+and 
+.B e2
+\&.
+Mutable structures (e\&.g\&. references and arrays) are equal
+if and only if their current contents are structurally equal,
+even if the two mutable objects are not the same physical object\&.
+Equality between functional values raises 
+.B Invalid_argument
+\&.
+Equality between cyclic data structures may not terminate\&.
+Left\-associative operator at precedence level 4/11\&.
+
+.sp
+
+.I val (<>) 
+: 
+.B 'a -> 'a -> bool
+.sp
+Negation of 
+.B Pervasives\&.(=)
+\&.
+Left\-associative operator at precedence level 4/11\&.
+
+.sp
+
+.I val (<) 
+: 
+.B 'a -> 'a -> bool
+.sp
+See 
+.B Pervasives\&.(>=)
+\&.
+Left\-associative operator at precedence level 4/11\&.
+
+.sp
+
+.I val (>) 
+: 
+.B 'a -> 'a -> bool
+.sp
+See 
+.B Pervasives\&.(>=)
+\&.
+Left\-associative operator at precedence level 4/11\&.
+
+.sp
+
+.I val (<=) 
+: 
+.B 'a -> 'a -> bool
+.sp
+See 
+.B Pervasives\&.(>=)
+\&.
+Left\-associative operator at precedence level 4/11\&.
+
+.sp
+
+.I val (>=) 
+: 
+.B 'a -> 'a -> bool
+.sp
+Structural ordering functions\&. These functions coincide with
+the usual orderings over integers, characters, strings, byte sequences
+and floating\-point numbers, and extend them to a
+total ordering over all types\&.
+The ordering is compatible with 
+.B ( = )
+\&. As in the case
+of 
+.B ( = )
+, mutable structures are compared by contents\&.
+Comparison between functional values raises 
+.B Invalid_argument
+\&.
+Comparison between cyclic structures may not terminate\&.
+Left\-associative operator at precedence level 4/11\&.
+
+.sp
+
+.I val compare 
+: 
+.B 'a -> 'a -> int
+.sp
+
+.B compare x y
+returns 
+.B 0
+if 
+.B x
+is equal to 
+.B y
+,
+a negative integer if 
+.B x
+is less than 
+.B y
+, and a positive integer
+if 
+.B x
+is greater than 
+.B y
+\&.  The ordering implemented by 
+.B compare
+is compatible with the comparison predicates 
+.B =
+, 
+.B <
+and 
+.B >
+defined above,  with one difference on the treatment of the float value
+.B Pervasives\&.nan
+\&.  Namely, the comparison predicates treat 
+.B nan
+as different from any other float value, including itself;
+while 
+.B compare
+treats 
+.B nan
+as equal to itself and less than any
+other float value\&.  This treatment of 
+.B nan
+ensures that 
+.B compare
+defines a total ordering relation\&.
+.sp
+
+.B compare
+applied to functional values may raise 
+.B Invalid_argument
+\&.
+.B compare
+applied to cyclic structures may not terminate\&.
+.sp
+The 
+.B compare
+function can be used as the comparison function
+required by the 
+.B Set\&.Make
+and 
+.B Map\&.Make
+functors, as well as
+the 
+.B List\&.sort
+and 
+.B Array\&.sort
+functions\&.
+
+.sp
+
+.I val min 
+: 
+.B 'a -> 'a -> 'a
+.sp
+Return the smaller of the two arguments\&.
+The result is unspecified if one of the arguments contains
+the float value 
+.B nan
+\&.
+
+.sp
+
+.I val max 
+: 
+.B 'a -> 'a -> 'a
+.sp
+Return the greater of the two arguments\&.
+The result is unspecified if one of the arguments contains
+the float value 
+.B nan
+\&.
+
+.sp
+
+.I val (==) 
+: 
+.B 'a -> 'a -> bool
+.sp
+
+.B e1 == e2
+tests for physical equality of 
+.B e1
+and 
+.B e2
+\&.
+On mutable types such as references, arrays, byte sequences, records with
+mutable fields and objects with mutable instance variables,
+.B e1 == e2
+is true if and only if physical modification of 
+.B e1
+also affects 
+.B e2
+\&.
+On non\-mutable types, the behavior of 
+.B ( == )
+is
+implementation\-dependent; however, it is guaranteed that
+.B e1 == e2
+implies 
+.B compare e1 e2 = 0
+\&.
+Left\-associative operator at precedence level 4/11\&.
+
+.sp
+
+.I val (!=) 
+: 
+.B 'a -> 'a -> bool
+.sp
+Negation of 
+.B Pervasives\&.(==)
+\&.
+Left\-associative operator at precedence level 4/11\&.
+
+.sp
+
+.PP
+
+.B === 
+.B Boolean operations
+.B  ===
+
+.PP
+
+.I val not 
+: 
+.B bool -> bool
+.sp
+The boolean negation\&.
+
+.sp
+
+.I val (&&) 
+: 
+.B bool -> bool -> bool
+.sp
+The boolean \&'and\&'\&. Evaluation is sequential, left\-to\-right:
+in 
+.B e1 && e2
+, 
+.B e1
+is evaluated first, and if it returns 
+.B false
+,
+.B e2
+is not evaluated at all\&.
+Right\-associative operator at precedence level 3/11\&.
+
+.sp
+
+.I val (&) 
+: 
+.B bool -> bool -> bool
+.sp
+.B "Deprecated."
+
+.B Pervasives\&.(&&)
+should be used instead\&.
+Right\-associative operator at precedence level 3/11\&.
+
+.sp
+
+.I val (||) 
+: 
+.B bool -> bool -> bool
+.sp
+The boolean \&'or\&'\&. Evaluation is sequential, left\-to\-right:
+in 
+.B e1 || e2
+, 
+.B e1
+is evaluated first, and if it returns 
+.B true
+,
+.B e2
+is not evaluated at all\&.
+Right\-associative operator at precedence level 2/11\&.
+
+.sp
+
+.I val (or) 
+: 
+.B bool -> bool -> bool
+.sp
+.B "Deprecated."
+
+.B Pervasives\&.(||)
+should be used instead\&.
+Right\-associative operator at precedence level 2/11\&.
+
+.sp
+
+.PP
+
+.B === 
+.B Debugging
+.B  ===
+
+.PP
+
+.I val __LOC__ 
+: 
+.B string
+.sp
+
+.B __LOC__
+returns the location at which this expression appears in
+the file currently being parsed by the compiler, with the standard
+error format of OCaml: "File %S, line %d, characters %d\-%d"\&.
+
+.sp
+.B "Since"
+4.02.0
+
+.sp
+
+.I val __FILE__ 
+: 
+.B string
+.sp
+
+.B __FILE__
+returns the name of the file currently being
+parsed by the compiler\&.
+
+.sp
+.B "Since"
+4.02.0
+
+.sp
+
+.I val __LINE__ 
+: 
+.B int
+.sp
+
+.B __LINE__
+returns the line number at which this expression
+appears in the file currently being parsed by the compiler\&.
+
+.sp
+.B "Since"
+4.02.0
+
+.sp
+
+.I val __MODULE__ 
+: 
+.B string
+.sp
+
+.B __MODULE__
+returns the module name of the file being
+parsed by the compiler\&.
+
+.sp
+.B "Since"
+4.02.0
+
+.sp
+
+.I val __POS__ 
+: 
+.B string * int * int * int
+.sp
+
+.B __POS__
+returns a tuple 
+.B (file,lnum,cnum,enum)
+, corresponding
+to the location at which this expression appears in the file
+currently being parsed by the compiler\&. 
+.B file
+is the current
+filename, 
+.B lnum
+the line number, 
+.B cnum
+the character position in
+the line and 
+.B enum
+the last character position in the line\&.
+
+.sp
+.B "Since"
+4.02.0
+
+.sp
+
+.I val __LOC_OF__ 
+: 
+.B 'a -> string * 'a
+.sp
+
+.B __LOC_OF__ expr
+returns a pair 
+.B (loc, expr)
+where 
+.B loc
+is the
+location of 
+.B expr
+in the file currently being parsed by the
+compiler, with the standard error format of OCaml: "File %S, line
+%d, characters %d\-%d"\&.
+
+.sp
+.B "Since"
+4.02.0
+
+.sp
+
+.I val __LINE_OF__ 
+: 
+.B 'a -> int * 'a
+.sp
+
+.B __LINE__ expr
+returns a pair 
+.B (line, expr)
+, where 
+.B line
+is the
+line number at which the expression 
+.B expr
+appears in the file
+currently being parsed by the compiler\&.
+
+.sp
+.B "Since"
+4.02.0
+
+.sp
+
+.I val __POS_OF__ 
+: 
+.B 'a -> (string * int * int * int) * 'a
+.sp
+
+.B __POS_OF__ expr
+returns a pair 
+.B (loc,expr)
+, where 
+.B loc
+is a
+tuple 
+.B (file,lnum,cnum,enum)
+corresponding to the location at
+which the expression 
+.B expr
+appears in the file currently being
+parsed by the compiler\&. 
+.B file
+is the current filename, 
+.B lnum
+the
+line number, 
+.B cnum
+the character position in the line and 
+.B enum
+the last character position in the line\&.
+
+.sp
+.B "Since"
+4.02.0
+
+.sp
+
+.PP
+
+.B === 
+.B Composition operators
+.B  ===
+
+.PP
+
+.I val (|>) 
+: 
+.B 'a -> ('a -> 'b) -> 'b
+.sp
+Reverse\-application operator: 
+.B x |> f |> g
+is exactly equivalent
+to 
+.B g (f (x))
+\&.
+Left\-associative operator at precedence level 4/11\&.
+
+.sp
+.B "Since"
+4.01
+
+.sp
+
+.I val (@@) 
+: 
+.B ('a -> 'b) -> 'a -> 'b
+.sp
+Application operator: 
+.B g @@ f @@ x
+is exactly equivalent to
+.B g (f (x))
+\&.
+Right\-associative operator at precedence level 5/11\&.
+
+.sp
+.B "Since"
+4.01
+
+.sp
+
+.PP
+
+.B === 
+.B Integer arithmetic
+.B  ===
+
+.PP
+
+.PP
+
+.B === Integers are 31 bits wide (or 63 bits on 64\-bit processors)\&.
+.B    All operations are taken modulo 2^{31} (or 2^{63})\&.
+.B    They do not fail on overflow\&. ===
+
+.PP
+
+.I val (~-) 
+: 
+.B int -> int
+.sp
+Unary negation\&. You can also write 
+.B \- e
+instead of 
+.B ~\- e
+\&.
+Unary operator at precedence level 9/11 for 
+.B \- e
+and 11/11 for 
+.B ~\- e
+\&.
+
+.sp
+
+.I val (~+) 
+: 
+.B int -> int
+.sp
+Unary addition\&. You can also write 
+.B + e
+instead of 
+.B ~+ e
+\&.
+Unary operator at precedence level 9/11 for 
+.B + e
+and 11/11 for 
+.B ~+ e
+\&.
+
+.sp
+.B "Since"
+3.12.0
+
+.sp
+
+.I val succ 
+: 
+.B int -> int
+.sp
+
+.B succ x
+is 
+.B x + 1
+\&.
+
+.sp
+
+.I val pred 
+: 
+.B int -> int
+.sp
+
+.B pred x
+is 
+.B x \- 1
+\&.
+
+.sp
+
+.I val (+) 
+: 
+.B int -> int -> int
+.sp
+Integer addition\&.
+Left\-associative operator at precedence level 6/11\&.
+
+.sp
+
+.I val (-) 
+: 
+.B int -> int -> int
+.sp
+Integer subtraction\&.
+Left\-associative operator at precedence level 6/11\&.
+
+.sp
+
+.I val ( * ) 
+: 
+.B int -> int -> int
+.sp
+Integer multiplication\&.
+Left\-associative operator at precedence level 7/11\&.
+
+.sp
+
+.I val (/) 
+: 
+.B int -> int -> int
+.sp
+Integer division\&.
+Raise 
+.B Division_by_zero
+if the second argument is 0\&.
+Integer division rounds the real quotient of its arguments towards zero\&.
+More precisely, if 
+.B x >= 0
+and 
+.B y > 0
+, 
+.B x / y
+is the greatest integer
+less than or equal to the real quotient of 
+.B x
+by 
+.B y
+\&.  Moreover,
+.B (\- x) / y = x / (\- y) = \- (x / y)
+\&.
+Left\-associative operator at precedence level 7/11\&.
+
+.sp
+
+.I val (mod) 
+: 
+.B int -> int -> int
+.sp
+Integer remainder\&.  If 
+.B y
+is not zero, the result
+of 
+.B x mod y
+satisfies the following properties:
+.B x = (x / y) * y + x mod y
+and
+.B abs(x mod y) <= abs(y) \- 1
+\&.
+If 
+.B y = 0
+, 
+.B x mod y
+raises 
+.B Division_by_zero
+\&.
+Note that 
+.B x mod y
+is negative only if 
+.B x < 0
+\&.
+Raise 
+.B Division_by_zero
+if 
+.B y
+is zero\&.
+Left\-associative operator at precedence level 7/11\&.
+
+.sp
+
+.I val abs 
+: 
+.B int -> int
+.sp
+Return the absolute value of the argument\&.  Note that this may be
+negative if the argument is 
+.B min_int
+\&.
+
+.sp
+
+.I val max_int 
+: 
+.B int
+.sp
+The greatest representable integer\&.
+
+.sp
+
+.I val min_int 
+: 
+.B int
+.sp
+The smallest representable integer\&.
+
+.sp
+
+.PP
+
+.B === 
+.B Bitwise operations
+.B  ===
+
+.PP
+
+.I val (land) 
+: 
+.B int -> int -> int
+.sp
+Bitwise logical and\&.
+Left\-associative operator at precedence level 7/11\&.
+
+.sp
+
+.I val (lor) 
+: 
+.B int -> int -> int
+.sp
+Bitwise logical or\&.
+Left\-associative operator at precedence level 7/11\&.
+
+.sp
+
+.I val (lxor) 
+: 
+.B int -> int -> int
+.sp
+Bitwise logical exclusive or\&.
+Left\-associative operator at precedence level 7/11\&.
+
+.sp
+
+.I val lnot 
+: 
+.B int -> int
+.sp
+Bitwise logical negation\&.
+
+.sp
+
+.I val (lsl) 
+: 
+.B int -> int -> int
+.sp
+
+.B n lsl m
+shifts 
+.B n
+to the left by 
+.B m
+bits\&.
+The result is unspecified if 
+.B m < 0
+or 
+.B m >= bitsize
+,
+where 
+.B bitsize
+is 
+.B 32
+on a 32\-bit platform and
+.B 64
+on a 64\-bit platform\&.
+Right\-associative operator at precedence level 8/11\&.
+
+.sp
+
+.I val (lsr) 
+: 
+.B int -> int -> int
+.sp
+
+.B n lsr m
+shifts 
+.B n
+to the right by 
+.B m
+bits\&.
+This is a logical shift: zeroes are inserted regardless of
+the sign of 
+.B n
+\&.
+The result is unspecified if 
+.B m < 0
+or 
+.B m >= bitsize
+\&.
+Right\-associative operator at precedence level 8/11\&.
+
+.sp
+
+.I val (asr) 
+: 
+.B int -> int -> int
+.sp
+
+.B n asr m
+shifts 
+.B n
+to the right by 
+.B m
+bits\&.
+This is an arithmetic shift: the sign bit of 
+.B n
+is replicated\&.
+The result is unspecified if 
+.B m < 0
+or 
+.B m >= bitsize
+\&.
+Right\-associative operator at precedence level 8/11\&.
+
+.sp
+
+.PP
+
+.B === 
+.B Floating\-point arithmetic
+.B 
+.B 
+.B    OCaml\&'s floating\-point numbers follow the
+.B    IEEE 754 standard, using double precision (64 bits) numbers\&.
+.B    Floating\-point operations never raise an exception on overflow,
+.B    underflow, division by zero, etc\&.  Instead, special IEEE numbers
+.B    are returned as appropriate, such as infinity for 1\&.0 /\&. 0\&.0,
+.B    neg_infinity for \-1\&.0 /\&. 0\&.0, and nan (\&'not a number\&')
+.B    for 0\&.0 /\&. 0\&.0\&.  These special numbers then propagate through
+.B    floating\-point computations as expected: for instance,
+.B    1\&.0 /\&. infinity is 0\&.0, and any arithmetic operation with nan
+.B    as argument returns nan as result\&. ===
+
+.PP
+
+.I val (~-.) 
+: 
+.B float -> float
+.sp
+Unary negation\&. You can also write 
+.B \-\&. e
+instead of 
+.B ~\-\&. e
+\&.
+Unary operator at precedence level 9/11 for 
+.B \-\&. e
+and 11/11 for 
+.B ~\-\&. e
+\&.
+
+.sp
+
+.I val (~+.) 
+: 
+.B float -> float
+.sp
+Unary addition\&. You can also write 
+.B +\&. e
+instead of 
+.B ~+\&. e
+\&.
+Unary operator at precedence level 9/11 for 
+.B +\&. e
+and 11/11 for 
+.B ~+\&. e
+\&.
+
+.sp
+.B "Since"
+3.12.0
+
+.sp
+
+.I val (+.) 
+: 
+.B float -> float -> float
+.sp
+Floating\-point addition\&.
+Left\-associative operator at precedence level 6/11\&.
+
+.sp
+
+.I val (-.) 
+: 
+.B float -> float -> float
+.sp
+Floating\-point subtraction\&.
+Left\-associative operator at precedence level 6/11\&.
+
+.sp
+
+.I val ( *. ) 
+: 
+.B float -> float -> float
+.sp
+Floating\-point multiplication\&.
+Left\-associative operator at precedence level 7/11\&.
+
+.sp
+
+.I val (/.) 
+: 
+.B float -> float -> float
+.sp
+Floating\-point division\&.
+Left\-associative operator at precedence level 7/11\&.
+
+.sp
+
+.I val ( ** ) 
+: 
+.B float -> float -> float
+.sp
+Exponentiation\&.
+Right\-associative operator at precedence level 8/11\&.
+
+.sp
+
+.I val sqrt 
+: 
+.B float -> float
+.sp
+Square root\&.
+
+.sp
+
+.I val exp 
+: 
+.B float -> float
+.sp
+Exponential\&.
+
+.sp
+
+.I val log 
+: 
+.B float -> float
+.sp
+Natural logarithm\&.
+
+.sp
+
+.I val log10 
+: 
+.B float -> float
+.sp
+Base 10 logarithm\&.
+
+.sp
+
+.I val expm1 
+: 
+.B float -> float
+.sp
+
+.B expm1 x
+computes 
+.B exp x \-\&. 1\&.0
+, giving numerically\-accurate results
+even if 
+.B x
+is close to 
+.B 0\&.0
+\&.
+
+.sp
+.B "Since"
+3.12.0
+
+.sp
+
+.I val log1p 
+: 
+.B float -> float
+.sp
+
+.B log1p x
+computes 
+.B log(1\&.0 +\&. x)
+(natural logarithm),
+giving numerically\-accurate results even if 
+.B x
+is close to 
+.B 0\&.0
+\&.
+
+.sp
+.B "Since"
+3.12.0
+
+.sp
+
+.I val cos 
+: 
+.B float -> float
+.sp
+Cosine\&.  Argument is in radians\&.
+
+.sp
+
+.I val sin 
+: 
+.B float -> float
+.sp
+Sine\&.  Argument is in radians\&.
+
+.sp
+
+.I val tan 
+: 
+.B float -> float
+.sp
+Tangent\&.  Argument is in radians\&.
+
+.sp
+
+.I val acos 
+: 
+.B float -> float
+.sp
+Arc cosine\&.  The argument must fall within the range 
+.B [\-1\&.0, 1\&.0]
+\&.
+Result is in radians and is between 
+.B 0\&.0
+and 
+.B pi
+\&.
+
+.sp
+
+.I val asin 
+: 
+.B float -> float
+.sp
+Arc sine\&.  The argument must fall within the range 
+.B [\-1\&.0, 1\&.0]
+\&.
+Result is in radians and is between 
+.B \-pi/2
+and 
+.B pi/2
+\&.
+
+.sp
+
+.I val atan 
+: 
+.B float -> float
+.sp
+Arc tangent\&.
+Result is in radians and is between 
+.B \-pi/2
+and 
+.B pi/2
+\&.
+
+.sp
+
+.I val atan2 
+: 
+.B float -> float -> float
+.sp
+
+.B atan2 y x
+returns the arc tangent of 
+.B y /\&. x
+\&.  The signs of 
+.B x
+and 
+.B y
+are used to determine the quadrant of the result\&.
+Result is in radians and is between 
+.B \-pi
+and 
+.B pi
+\&.
+
+.sp
+
+.I val hypot 
+: 
+.B float -> float -> float
+.sp
+
+.B hypot x y
+returns 
+.B sqrt(x *\&. x + y *\&. y)
+, that is, the length
+of the hypotenuse of a right\-angled triangle with sides of length
+.B x
+and 
+.B y
+, or, equivalently, the distance of the point 
+.B (x,y)
+to origin\&.  If one of 
+.B x
+or 
+.B y
+is infinite, returns 
+.B infinity
+even if the other is 
+.B nan
+\&.
+
+.sp
+.B "Since"
+4.00.0
+
+.sp
+
+.I val cosh 
+: 
+.B float -> float
+.sp
+Hyperbolic cosine\&.  Argument is in radians\&.
+
+.sp
+
+.I val sinh 
+: 
+.B float -> float
+.sp
+Hyperbolic sine\&.  Argument is in radians\&.
+
+.sp
+
+.I val tanh 
+: 
+.B float -> float
+.sp
+Hyperbolic tangent\&.  Argument is in radians\&.
+
+.sp
+
+.I val ceil 
+: 
+.B float -> float
+.sp
+Round above to an integer value\&.
+.B ceil f
+returns the least integer value greater than or equal to 
+.B f
+\&.
+The result is returned as a float\&.
+
+.sp
+
+.I val floor 
+: 
+.B float -> float
+.sp
+Round below to an integer value\&.
+.B floor f
+returns the greatest integer value less than or
+equal to 
+.B f
+\&.
+The result is returned as a float\&.
+
+.sp
+
+.I val abs_float 
+: 
+.B float -> float
+.sp
+
+.B abs_float f
+returns the absolute value of 
+.B f
+\&.
+
+.sp
+
+.I val copysign 
+: 
+.B float -> float -> float
+.sp
+
+.B copysign x y
+returns a float whose absolute value is that of 
+.B x
+and whose sign is that of 
+.B y
+\&.  If 
+.B x
+is 
+.B nan
+, returns 
+.B nan
+\&.
+If 
+.B y
+is 
+.B nan
+, returns either 
+.B x
+or 
+.B \-\&. x
+, but it is not
+specified which\&.
+
+.sp
+.B "Since"
+4.00.0
+
+.sp
+
+.I val mod_float 
+: 
+.B float -> float -> float
+.sp
+
+.B mod_float a b
+returns the remainder of 
+.B a
+with respect to
+.B b
+\&.  The returned value is 
+.B a \-\&. n *\&. b
+, where 
+.B n
+is the quotient 
+.B a /\&. b
+rounded towards zero to an integer\&.
+
+.sp
+
+.I val frexp 
+: 
+.B float -> float * int
+.sp
+
+.B frexp f
+returns the pair of the significant
+and the exponent of 
+.B f
+\&.  When 
+.B f
+is zero, the
+significant 
+.B x
+and the exponent 
+.B n
+of 
+.B f
+are equal to
+zero\&.  When 
+.B f
+is non\-zero, they are defined by
+.B f = x *\&. 2 ** n
+and 
+.B 0\&.5 <= x < 1\&.0
+\&.
+
+.sp
+
+.I val ldexp 
+: 
+.B float -> int -> float
+.sp
+
+.B ldexp x n
+returns 
+.B x *\&. 2 ** n
+\&.
+
+.sp
+
+.I val modf 
+: 
+.B float -> float * float
+.sp
+
+.B modf f
+returns the pair of the fractional and integral
+part of 
+.B f
+\&.
+
+.sp
+
+.I val float 
+: 
+.B int -> float
+.sp
+Same as 
+.B Pervasives\&.float_of_int
+\&.
+
+.sp
+
+.I val float_of_int 
+: 
+.B int -> float
+.sp
+Convert an integer to floating\-point\&.
+
+.sp
+
+.I val truncate 
+: 
+.B float -> int
+.sp
+Same as 
+.B Pervasives\&.int_of_float
+\&.
+
+.sp
+
+.I val int_of_float 
+: 
+.B float -> int
+.sp
+Truncate the given floating\-point number to an integer\&.
+The result is unspecified if the argument is 
+.B nan
+or falls outside the
+range of representable integers\&.
+
+.sp
+
+.I val infinity 
+: 
+.B float
+.sp
+Positive infinity\&.
+
+.sp
+
+.I val neg_infinity 
+: 
+.B float
+.sp
+Negative infinity\&.
+
+.sp
+
+.I val nan 
+: 
+.B float
+.sp
+A special floating\-point value denoting the result of an
+undefined operation such as 
+.B 0\&.0 /\&. 0\&.0
+\&.  Stands for
+\&'not a number\&'\&.  Any floating\-point operation with 
+.B nan
+as
+argument returns 
+.B nan
+as result\&.  As for floating\-point comparisons,
+.B =
+, 
+.B <
+, 
+.B <=
+, 
+.B >
+and 
+.B >=
+return 
+.B false
+and 
+.B <>
+returns 
+.B true
+if one or both of their arguments is 
+.B nan
+\&.
+
+.sp
+
+.I val max_float 
+: 
+.B float
+.sp
+The largest positive finite value of type 
+.B float
+\&.
+
+.sp
+
+.I val min_float 
+: 
+.B float
+.sp
+The smallest positive, non\-zero, non\-denormalized value of type 
+.B float
+\&.
+
+.sp
+
+.I val epsilon_float 
+: 
+.B float
+.sp
+The difference between 
+.B 1\&.0
+and the smallest exactly representable
+floating\-point number greater than 
+.B 1\&.0
+\&.
+
+.sp
+.I type fpclass 
+=
+ | FP_normal  (* Normal number, none of the below
+ *)
+ | FP_subnormal  (* Number very close to 0\&.0, has reduced precision
+ *)
+ | FP_zero  (* Number is 0\&.0 or \-0\&.0
+ *)
+ | FP_infinite  (* Number is positive or negative infinity
+ *)
+ | FP_nan  (* Not a number: result of an undefined operation
+ *)
+ 
+.sp
+The five classes of floating\-point numbers, as determined by
+the 
+.B Pervasives\&.classify_float
+function\&.
+
+.sp
+
+.I val classify_float 
+: 
+.B float -> fpclass
+.sp
+Return the class of the given floating\-point number:
+normal, subnormal, zero, infinite, or not a number\&.
+
+.sp
+
+.PP
+
+.B === 
+.B String operations
+.B 
+.B 
+.B    More string operations are provided in module String\&. ===
+
+.PP
+
+.I val (^) 
+: 
+.B string -> string -> string
+.sp
+String concatenation\&.
+Right\-associative operator at precedence level 5/11\&.
+
+.sp
+
+.PP
+
+.B === 
+.B Character operations
+.B 
+.B 
+.B    More character operations are provided in module Char\&. ===
+
+.PP
+
+.I val int_of_char 
+: 
+.B char -> int
+.sp
+Return the ASCII code of the argument\&.
+
+.sp
+
+.I val char_of_int 
+: 
+.B int -> char
+.sp
+Return the character with the given ASCII code\&.
+Raise 
+.B Invalid_argument "char_of_int"
+if the argument is
+outside the range 0\-\-255\&.
+
+.sp
+
+.PP
+
+.B === 
+.B Unit operations
+.B  ===
+
+.PP
+
+.I val ignore 
+: 
+.B 'a -> unit
+.sp
+Discard the value of its argument and return 
+.B ()
+\&.
+For instance, 
+.B ignore(f x)
+discards the result of
+the side\-effecting function 
+.B f
+\&.  It is equivalent to
+.B f x; ()
+, except that the latter may generate a
+compiler warning; writing 
+.B ignore(f x)
+instead
+avoids the warning\&.
+
+.sp
+
+.PP
+
+.B === 
+.B String conversion functions
+.B  ===
+
+.PP
+
+.I val string_of_bool 
+: 
+.B bool -> string
+.sp
+Return the string representation of a boolean\&. As the returned values
+may be shared, the user should not modify them directly\&.
+
+.sp
+
+.I val bool_of_string 
+: 
+.B string -> bool
+.sp
+Convert the given string to a boolean\&.
+Raise 
+.B Invalid_argument "bool_of_string"
+if the string is not
+.B "true"
+or 
+.B "false"
+\&.
+
+.sp
+
+.I val bool_of_string_opt 
+: 
+.B string -> bool option
+.sp
+Convert the given string to a boolean\&.
+Return 
+.B None
+if the string is not
+.B "true"
+or 
+.B "false"
+\&.
+
+.sp
+.B "Since"
+4.05
+
+.sp
+
+.I val string_of_int 
+: 
+.B int -> string
+.sp
+Return the string representation of an integer, in decimal\&.
+
+.sp
+
+.I val int_of_string 
+: 
+.B string -> int
+.sp
+Convert the given string to an integer\&.
+The string is read in decimal (by default, or if the string 
+begins with 
+.B 0u
+), in hexadecimal (if it begins with 
+.B 0x
+or
+.B 0X
+), in octal (if it begins with 
+.B 0o
+or 
+.B 0O
+), or in binary
+(if it begins with 
+.B 0b
+or 
+.B 0B
+)\&.
+.sp
+The 
+.B 0u
+prefix reads the input as an unsigned integer in the range
+.B [0, 2*max_int+1]
+\&.  If the input exceeds 
+.B Pervasives\&.max_int
+it is converted to the signed integer
+.B min_int + input \- max_int \- 1
+\&.
+.sp
+The 
+.B _
+(underscore) character can appear anywhere in the string
+and is ignored\&.
+Raise 
+.B Failure "int_of_string"
+if the given string is not
+a valid representation of an integer, or if the integer represented
+exceeds the range of integers representable in type 
+.B int
+\&.
+
+.sp
+
+.I val int_of_string_opt 
+: 
+.B string -> int option
+.sp
+Same as 
+.B int_of_string
+, but returns 
+.B None
+instead of raising\&.
+
+.sp
+.B "Since"
+4.05
+
+.sp
+
+.I val string_of_float 
+: 
+.B float -> string
+.sp
+Return the string representation of a floating\-point number\&.
+
+.sp
+
+.I val float_of_string 
+: 
+.B string -> float
+.sp
+Convert the given string to a float\&.  The string is read in decimal
+(by default) or in hexadecimal (marked by 
+.B 0x
+or 
+.B 0X
+)\&.
+The format of decimal floating\-point numbers is
+.B  [\-] dd\&.ddd (e|E) [+|\-] dd 
+, where 
+.B d
+stands for a decimal digit\&.
+The format of hexadecimal floating\-point numbers is
+.B  [\-] 0(x|X) hh\&.hhh (p|P) [+|\-] dd 
+, where 
+.B h
+stands for an
+hexadecimal digit and 
+.B d
+for a decimal digit\&.
+In both cases, at least one of the integer and fractional parts must be
+given; the exponent part is optional\&.
+The 
+.B _
+(underscore) character can appear anywhere in the string
+and is ignored\&.
+Depending on the execution platforms, other representations of
+floating\-point numbers can be accepted, but should not be relied upon\&.
+Raise 
+.B Failure "float_of_string"
+if the given string is not a valid
+representation of a float\&.
+
+.sp
+
+.I val float_of_string_opt 
+: 
+.B string -> float option
+.sp
+Same as 
+.B float_of_string
+, but returns 
+.B None
+instead of raising\&.
+
+.sp
+.B "Since"
+4.05
+
+.sp
+
+.PP
+
+.B === 
+.B Pair operations
+.B  ===
+
+.PP
+
+.I val fst 
+: 
+.B 'a * 'b -> 'a
+.sp
+Return the first component of a pair\&.
+
+.sp
+
+.I val snd 
+: 
+.B 'a * 'b -> 'b
+.sp
+Return the second component of a pair\&.
+
+.sp
+
+.PP
+
+.B === 
+.B List operations
+.B 
+.B 
+.B    More list operations are provided in module List\&. ===
+
+.PP
+
+.I val (@) 
+: 
+.B 'a list -> 'a list -> 'a list
+.sp
+List concatenation\&.  Not tail\-recursive (length of the first argument)\&.
+Right\-associative operator at precedence level 5/11\&.
+
+.sp
+
+.PP
+
+.B === 
+.B Input/output
+.B 
+.B     Note: all input/output functions can raise Sys_error when the system
+.B     calls they invoke fail\&. ===
+
+.PP
+.I type in_channel 
+
+.sp
+The type of input channel\&.
+
+.sp
+.I type out_channel 
+
+.sp
+The type of output channel\&.
+
+.sp
+
+.I val stdin 
+: 
+.B in_channel
+.sp
+The standard input for the process\&.
+
+.sp
+
+.I val stdout 
+: 
+.B out_channel
+.sp
+The standard output for the process\&.
+
+.sp
+
+.I val stderr 
+: 
+.B out_channel
+.sp
+The standard error output for the process\&.
+
+.sp
+
+.PP
+
+.B === 
+.B Output functions on standard output
+.B  ===
+
+.PP
+
+.I val print_char 
+: 
+.B char -> unit
+.sp
+Print a character on standard output\&.
+
+.sp
+
+.I val print_string 
+: 
+.B string -> unit
+.sp
+Print a string on standard output\&.
+
+.sp
+
+.I val print_bytes 
+: 
+.B bytes -> unit
+.sp
+Print a byte sequence on standard output\&.
+
+.sp
+.B "Since"
+4.02.0
+
+.sp
+
+.I val print_int 
+: 
+.B int -> unit
+.sp
+Print an integer, in decimal, on standard output\&.
+
+.sp
+
+.I val print_float 
+: 
+.B float -> unit
+.sp
+Print a floating\-point number, in decimal, on standard output\&.
+
+.sp
+
+.I val print_endline 
+: 
+.B string -> unit
+.sp
+Print a string, followed by a newline character, on
+standard output and flush standard output\&.
+
+.sp
+
+.I val print_newline 
+: 
+.B unit -> unit
+.sp
+Print a newline character on standard output, and flush
+standard output\&. This can be used to simulate line
+buffering of standard output\&.
+
+.sp
+
+.PP
+
+.B === 
+.B Output functions on standard error
+.B  ===
+
+.PP
+
+.I val prerr_char 
+: 
+.B char -> unit
+.sp
+Print a character on standard error\&.
+
+.sp
+
+.I val prerr_string 
+: 
+.B string -> unit
+.sp
+Print a string on standard error\&.
+
+.sp
+
+.I val prerr_bytes 
+: 
+.B bytes -> unit
+.sp
+Print a byte sequence on standard error\&.
+
+.sp
+.B "Since"
+4.02.0
+
+.sp
+
+.I val prerr_int 
+: 
+.B int -> unit
+.sp
+Print an integer, in decimal, on standard error\&.
+
+.sp
+
+.I val prerr_float 
+: 
+.B float -> unit
+.sp
+Print a floating\-point number, in decimal, on standard error\&.
+
+.sp
+
+.I val prerr_endline 
+: 
+.B string -> unit
+.sp
+Print a string, followed by a newline character on standard
+error and flush standard error\&.
+
+.sp
+
+.I val prerr_newline 
+: 
+.B unit -> unit
+.sp
+Print a newline character on standard error, and flush
+standard error\&.
+
+.sp
+
+.PP
+
+.B === 
+.B Input functions on standard input
+.B  ===
+
+.PP
+
+.I val read_line 
+: 
+.B unit -> string
+.sp
+Flush standard output, then read characters from standard input
+until a newline character is encountered\&. Return the string of
+all characters read, without the newline character at the end\&.
+
+.sp
+
+.I val read_int 
+: 
+.B unit -> int
+.sp
+Flush standard output, then read one line from standard input
+and convert it to an integer\&. Raise 
+.B Failure "int_of_string"
+if the line read is not a valid representation of an integer\&.
+
+.sp
+
+.I val read_int_opt 
+: 
+.B unit -> int option
+.sp
+Same as 
+.B read_int_opt
+, but returns 
+.B None
+instead of raising\&.
+
+.sp
+.B "Since"
+4.05
+
+.sp
+
+.I val read_float 
+: 
+.B unit -> float
+.sp
+Flush standard output, then read one line from standard input
+and convert it to a floating\-point number\&.
+The result is unspecified if the line read is not a valid
+representation of a floating\-point number\&.
+
+.sp
+
+.I val read_float_opt 
+: 
+.B unit -> float option
+.sp
+Flush standard output, then read one line from standard input
+and convert it to a floating\-point number\&.
+Returns 
+.B None
+if the line read is not a valid
+representation of a floating\-point number\&.
+
+.sp
+.B "Since"
+4.05.0
+
+.sp
+
+.PP
+
+.B === 
+.B General output functions
+.B  ===
+
+.PP
+.I type open_flag 
+=
+ | Open_rdonly  (* open for reading\&.
+ *)
+ | Open_wronly  (* open for writing\&.
+ *)
+ | Open_append  (* open for appending: always write at end of file\&.
+ *)
+ | Open_creat  (* create the file if it does not exist\&.
+ *)
+ | Open_trunc  (* empty the file if it already exists\&.
+ *)
+ | Open_excl  (* fail if Open_creat and the file already exists\&.
+ *)
+ | Open_binary  (* open in binary mode (no conversion)\&.
+ *)
+ | Open_text  (* open in text mode (may perform conversions)\&.
+ *)
+ | Open_nonblock  (* open in non\-blocking mode\&.
+ *)
+ 
+.sp
+Opening modes for 
+.B Pervasives\&.open_out_gen
+and
+.B Pervasives\&.open_in_gen
+\&.
+
+.sp
+
+.I val open_out 
+: 
+.B string -> out_channel
+.sp
+Open the named file for writing, and return a new output channel
+on that file, positioned at the beginning of the file\&. The
+file is truncated to zero length if it already exists\&. It
+is created if it does not already exists\&.
+
+.sp
+
+.I val open_out_bin 
+: 
+.B string -> out_channel
+.sp
+Same as 
+.B Pervasives\&.open_out
+, but the file is opened in binary mode,
+so that no translation takes place during writes\&. On operating
+systems that do not distinguish between text mode and binary
+mode, this function behaves like 
+.B Pervasives\&.open_out
+\&.
+
+.sp
+
+.I val open_out_gen 
+: 
+.B open_flag list -> int -> string -> out_channel
+.sp
+
+.B open_out_gen mode perm filename
+opens the named file for writing,
+as described above\&. The extra argument 
+.B mode
+specifies the opening mode\&. The extra argument 
+.B perm
+specifies
+the file permissions, in case the file must be created\&.
+.B Pervasives\&.open_out
+and 
+.B Pervasives\&.open_out_bin
+are special
+cases of this function\&.
+
+.sp
+
+.I val flush 
+: 
+.B out_channel -> unit
+.sp
+Flush the buffer associated with the given output channel,
+performing all pending writes on that channel\&.
+Interactive programs must be careful about flushing standard
+output and standard error at the right time\&.
+
+.sp
+
+.I val flush_all 
+: 
+.B unit -> unit
+.sp
+Flush all open output channels; ignore errors\&.
+
+.sp
+
+.I val output_char 
+: 
+.B out_channel -> char -> unit
+.sp
+Write the character on the given output channel\&.
+
+.sp
+
+.I val output_string 
+: 
+.B out_channel -> string -> unit
+.sp
+Write the string on the given output channel\&.
+
+.sp
+
+.I val output_bytes 
+: 
+.B out_channel -> bytes -> unit
+.sp
+Write the byte sequence on the given output channel\&.
+
+.sp
+.B "Since"
+4.02.0
+
+.sp
+
+.I val output 
+: 
+.B out_channel -> bytes -> int -> int -> unit
+.sp
+
+.B output oc buf pos len
+writes 
+.B len
+characters from byte sequence 
+.B buf
+,
+starting at offset 
+.B pos
+, to the given output channel 
+.B oc
+\&.
+Raise 
+.B Invalid_argument "output"
+if 
+.B pos
+and 
+.B len
+do not
+designate a valid range of 
+.B buf
+\&.
+
+.sp
+
+.I val output_substring 
+: 
+.B out_channel -> string -> int -> int -> unit
+.sp
+Same as 
+.B output
+but take a string as argument instead of
+a byte sequence\&.
+
+.sp
+.B "Since"
+4.02.0
+
+.sp
+
+.I val output_byte 
+: 
+.B out_channel -> int -> unit
+.sp
+Write one 8\-bit integer (as the single character with that code)
+on the given output channel\&. The given integer is taken modulo
+256\&.
+
+.sp
+
+.I val output_binary_int 
+: 
+.B out_channel -> int -> unit
+.sp
+Write one integer in binary format (4 bytes, big\-endian)
+on the given output channel\&.
+The given integer is taken modulo 2^{32\&.
+The only reliable way to read it back is through the
+.B Pervasives\&.input_binary_int
+function\&. The format is compatible across
+all machines for a given version of OCaml\&.
+
+.sp
+
+.I val output_value 
+: 
+.B out_channel -> 'a -> unit
+.sp
+Write the representation of a structured value of any type
+to a channel\&. Circularities and sharing inside the value
+are detected and preserved\&. The object can be read back,
+by the function 
+.B Pervasives\&.input_value
+\&. See the description of module
+.B Marshal
+for more information\&. 
+.B Pervasives\&.output_value
+is equivalent
+to 
+.B Marshal\&.to_channel
+with an empty list of flags\&.
+
+.sp
+
+.I val seek_out 
+: 
+.B out_channel -> int -> unit
+.sp
+
+.B seek_out chan pos
+sets the current writing position to 
+.B pos
+for channel 
+.B chan
+\&. This works only for regular files\&. On
+files of other kinds (such as terminals, pipes and sockets),
+the behavior is unspecified\&.
+
+.sp
+
+.I val pos_out 
+: 
+.B out_channel -> int
+.sp
+Return the current writing position for the given channel\&.  Does
+not work on channels opened with the 
+.B Open_append
+flag (returns
+unspecified results)\&.
+
+.sp
+
+.I val out_channel_length 
+: 
+.B out_channel -> int
+.sp
+Return the size (number of characters) of the regular file
+on which the given channel is opened\&.  If the channel is opened
+on a file that is not a regular file, the result is meaningless\&.
+
+.sp
+
+.I val close_out 
+: 
+.B out_channel -> unit
+.sp
+Close the given channel, flushing all buffered write operations\&.
+Output functions raise a 
+.B Sys_error
+exception when they are
+applied to a closed output channel, except 
+.B close_out
+and 
+.B flush
+,
+which do nothing when applied to an already closed channel\&.
+Note that 
+.B close_out
+may raise 
+.B Sys_error
+if the operating
+system signals an error when flushing or closing\&.
+
+.sp
+
+.I val close_out_noerr 
+: 
+.B out_channel -> unit
+.sp
+Same as 
+.B close_out
+, but ignore all errors\&.
+
+.sp
+
+.I val set_binary_mode_out 
+: 
+.B out_channel -> bool -> unit
+.sp
+
+.B set_binary_mode_out oc true
+sets the channel 
+.B oc
+to binary
+mode: no translations take place during output\&.
+.B set_binary_mode_out oc false
+sets the channel 
+.B oc
+to text
+mode: depending on the operating system, some translations
+may take place during output\&.  For instance, under Windows,
+end\-of\-lines will be translated from 
+.B \(rsn
+to 
+.B \(rsr\(rsn
+\&.
+This function has no effect under operating systems that
+do not distinguish between text mode and binary mode\&.
+
+.sp
+
+.PP
+
+.B === 
+.B General input functions
+.B  ===
+
+.PP
+
+.I val open_in 
+: 
+.B string -> in_channel
+.sp
+Open the named file for reading, and return a new input channel
+on that file, positioned at the beginning of the file\&.
+
+.sp
+
+.I val open_in_bin 
+: 
+.B string -> in_channel
+.sp
+Same as 
+.B Pervasives\&.open_in
+, but the file is opened in binary mode,
+so that no translation takes place during reads\&. On operating
+systems that do not distinguish between text mode and binary
+mode, this function behaves like 
+.B Pervasives\&.open_in
+\&.
+
+.sp
+
+.I val open_in_gen 
+: 
+.B open_flag list -> int -> string -> in_channel
+.sp
+
+.B open_in_gen mode perm filename
+opens the named file for reading,
+as described above\&. The extra arguments
+.B mode
+and 
+.B perm
+specify the opening mode and file permissions\&.
+.B Pervasives\&.open_in
+and 
+.B Pervasives\&.open_in_bin
+are special
+cases of this function\&.
+
+.sp
+
+.I val input_char 
+: 
+.B in_channel -> char
+.sp
+Read one character from the given input channel\&.
+Raise 
+.B End_of_file
+if there are no more characters to read\&.
+
+.sp
+
+.I val input_line 
+: 
+.B in_channel -> string
+.sp
+Read characters from the given input channel, until a
+newline character is encountered\&. Return the string of
+all characters read, without the newline character at the end\&.
+Raise 
+.B End_of_file
+if the end of the file is reached
+at the beginning of line\&.
+
+.sp
+
+.I val input 
+: 
+.B in_channel -> bytes -> int -> int -> int
+.sp
+
+.B input ic buf pos len
+reads up to 
+.B len
+characters from
+the given channel 
+.B ic
+, storing them in byte sequence 
+.B buf
+, starting at
+character number 
+.B pos
+\&.
+It returns the actual number of characters read, between 0 and
+.B len
+(inclusive)\&.
+A return value of 0 means that the end of file was reached\&.
+A return value between 0 and 
+.B len
+exclusive means that
+not all requested 
+.B len
+characters were read, either because
+no more characters were available at that time, or because
+the implementation found it convenient to do a partial read;
+.B input
+must be called again to read the remaining characters,
+if desired\&.  (See also 
+.B Pervasives\&.really_input
+for reading
+exactly 
+.B len
+characters\&.)
+Exception 
+.B Invalid_argument "input"
+is raised if 
+.B pos
+and 
+.B len
+do not designate a valid range of 
+.B buf
+\&.
+
+.sp
+
+.I val really_input 
+: 
+.B in_channel -> bytes -> int -> int -> unit
+.sp
+
+.B really_input ic buf pos len
+reads 
+.B len
+characters from channel 
+.B ic
+,
+storing them in byte sequence 
+.B buf
+, starting at character number 
+.B pos
+\&.
+Raise 
+.B End_of_file
+if the end of file is reached before 
+.B len
+characters have been read\&.
+Raise 
+.B Invalid_argument "really_input"
+if
+.B pos
+and 
+.B len
+do not designate a valid range of 
+.B buf
+\&.
+
+.sp
+
+.I val really_input_string 
+: 
+.B in_channel -> int -> string
+.sp
+
+.B really_input_string ic len
+reads 
+.B len
+characters from channel 
+.B ic
+and returns them in a new string\&.
+Raise 
+.B End_of_file
+if the end of file is reached before 
+.B len
+characters have been read\&.
+
+.sp
+.B "Since"
+4.02.0
+
+.sp
+
+.I val input_byte 
+: 
+.B in_channel -> int
+.sp
+Same as 
+.B Pervasives\&.input_char
+, but return the 8\-bit integer representing
+the character\&.
+Raise 
+.B End_of_file
+if an end of file was reached\&.
+
+.sp
+
+.I val input_binary_int 
+: 
+.B in_channel -> int
+.sp
+Read an integer encoded in binary format (4 bytes, big\-endian)
+from the given input channel\&. See 
+.B Pervasives\&.output_binary_int
+\&.
+Raise 
+.B End_of_file
+if an end of file was reached while reading the
+integer\&.
+
+.sp
+
+.I val input_value 
+: 
+.B in_channel -> 'a
+.sp
+Read the representation of a structured value, as produced
+by 
+.B Pervasives\&.output_value
+, and return the corresponding value\&.
+This function is identical to 
+.B Marshal\&.from_channel
+;
+see the description of module 
+.B Marshal
+for more information,
+in particular concerning the lack of type safety\&.
+
+.sp
+
+.I val seek_in 
+: 
+.B in_channel -> int -> unit
+.sp
+
+.B seek_in chan pos
+sets the current reading position to 
+.B pos
+for channel 
+.B chan
+\&. This works only for regular files\&. On
+files of other kinds, the behavior is unspecified\&.
+
+.sp
+
+.I val pos_in 
+: 
+.B in_channel -> int
+.sp
+Return the current reading position for the given channel\&.
+
+.sp
+
+.I val in_channel_length 
+: 
+.B in_channel -> int
+.sp
+Return the size (number of characters) of the regular file
+on which the given channel is opened\&.  If the channel is opened
+on a file that is not a regular file, the result is meaningless\&.
+The returned size does not take into account the end\-of\-line
+translations that can be performed when reading from a channel
+opened in text mode\&.
+
+.sp
+
+.I val close_in 
+: 
+.B in_channel -> unit
+.sp
+Close the given channel\&.  Input functions raise a 
+.B Sys_error
+exception when they are applied to a closed input channel,
+except 
+.B close_in
+, which does nothing when applied to an already
+closed channel\&.
+
+.sp
+
+.I val close_in_noerr 
+: 
+.B in_channel -> unit
+.sp
+Same as 
+.B close_in
+, but ignore all errors\&.
+
+.sp
+
+.I val set_binary_mode_in 
+: 
+.B in_channel -> bool -> unit
+.sp
+
+.B set_binary_mode_in ic true
+sets the channel 
+.B ic
+to binary
+mode: no translations take place during input\&.
+.B set_binary_mode_out ic false
+sets the channel 
+.B ic
+to text
+mode: depending on the operating system, some translations
+may take place during input\&.  For instance, under Windows,
+end\-of\-lines will be translated from 
+.B \(rsr\(rsn
+to 
+.B \(rsn
+\&.
+This function has no effect under operating systems that
+do not distinguish between text mode and binary mode\&.
+
+.sp
+
+.PP
+
+.B === 
+.B Operations on large files
+.B  ===
+
+.PP
+.I module LargeFile : 
+.B sig  end
+
+.sp
+Operations on large files\&.
+This sub\-module provides 64\-bit variants of the channel functions
+that manipulate file positions and file sizes\&.  By representing
+positions and sizes by 64\-bit integers (type 
+.B int64
+) instead of
+regular integers (type 
+.B int
+), these alternate functions allow
+operating on files whose sizes are greater than 
+.B max_int
+\&.
+
+.sp
+
+.PP
+
+.B === 
+.B References
+.B  ===
+
+.PP
+.I type 
+.B 'a
+.I ref 
+= {
+
+.B mutable 
+contents : 
+.B 'a
+;
+ }
+
+.sp
+The type of references (mutable indirection cells) containing
+a value of type 
+.B \&'a
+\&.
+
+.sp
+
+.I val ref 
+: 
+.B 'a -> 'a ref
+.sp
+Return a fresh reference containing the given value\&.
+
+.sp
+
+.I val (!) 
+: 
+.B 'a ref -> 'a
+.sp
+
+.B !r
+returns the current contents of reference 
+.B r
+\&.
+Equivalent to 
+.B fun r \-> r\&.contents
+\&.
+Unary operator at precedence level 11/11\&.
+
+.sp
+
+.I val (:=) 
+: 
+.B 'a ref -> 'a -> unit
+.sp
+
+.B r := a
+stores the value of 
+.B a
+in reference 
+.B r
+\&.
+Equivalent to 
+.B fun r v \-> r\&.contents <\- v
+\&.
+Right\-associative operator at precedence level 1/11\&.
+
+.sp
+
+.I val incr 
+: 
+.B int ref -> unit
+.sp
+Increment the integer contained in the given reference\&.
+Equivalent to 
+.B fun r \-> r := succ !r
+\&.
+
+.sp
+
+.I val decr 
+: 
+.B int ref -> unit
+.sp
+Decrement the integer contained in the given reference\&.
+Equivalent to 
+.B fun r \-> r := pred !r
+\&.
+
+.sp
+
+.PP
+
+.B === 
+.B Result type
+.B  ===
+
+.PP
+.I type 
+.B ('a, 'b)
+.I result 
+=
+ | Ok
+.B of 
+.B 'a
+ | Error
+.B of 
+.B 'b
+ 
+.sp
+.B "Since"
+4.03.0
+
+.sp
+
+.PP
+
+.B === 
+.B Operations on format strings
+.B  ===
+
+.PP
+
+.PP
+
+.B === Format strings are character strings with special lexical conventions
+.B   that defines the functionality of formatted input/output functions\&. Format
+.B   strings are used to read data with formatted input functions from module
+.B   Scanf and to print data with formatted output functions from modules
+.B   Printf and Format\&.
+.B 
+.B   Format strings are made of three kinds of entities:
+.B \- conversions specifications, introduced by the special character \&'%\&'
+.B     followed by one or more characters specifying what kind of argument to
+.B     read or print,
+.B \- formatting indications, introduced by the special character \&'@\&'
+.B     followed by one or more characters specifying how to read or print the
+.B     argument,
+.B \- plain characters that are regular characters with usual lexical
+.B     conventions\&. Plain characters specify string literals to be read in the
+.B     input or printed in the output\&.
+.B 
+.B   There is an additional lexical rule to escape the special characters \&'%\&'
+.B   and \&'@\&' in format strings: if a special character follows a \&'%\&'
+.B   character, it is treated as a plain character\&. In other words, "%%" is
+.B   considered as a plain \&'%\&' and "%@" as a plain \&'@\&'\&.
+.B 
+.B   For more information about conversion specifications and formatting
+.B   indications available, read the documentation of modules Scanf,
+.B   Printf and Format\&. ===
+
+.PP
+
+.PP
+
+.B === Format strings have a general and highly polymorphic type
+.B     (\&'a, \&'b, \&'c, \&'d, \&'e, \&'f) format6\&.
+.B     The two simplified types, format and format4 below are
+.B     included for backward compatibility with earlier releases of
+.B     OCaml\&.
+.B 
+.B     The meaning of format string type parameters is as follows:
+.B 
+.B \- \&'a is the type of the parameters of the format for formatted output
+.B       functions (printf\-style functions);
+.B       \&'a is the type of the values read by the format for formatted input
+.B       functions (scanf\-style functions)\&.
+.B 
+.B \- \&'b is the type of input source for formatted input functions and the
+.B       type of output target for formatted output functions\&.
+.B       For printf\-style functions from module Printf, \&'b is typically
+.B       out_channel;
+.B       for printf\-style functions from module Format, \&'b is typically
+.B       Format\&.formatter;
+.B       for scanf\-style functions from module Scanf, \&'b is typically
+.B       Scanf\&.Scanning\&.in_channel\&.
+.B 
+.B       Type argument \&'b is also the type of the first argument given to
+.B       user\&'s defined printing functions for %a and %t conversions,
+.B       and user\&'s defined reading functions for %r conversion\&.
+.B 
+.B \- \&'c is the type of the result of the %a and %t printing
+.B       functions, and also the type of the argument transmitted to the
+.B       first argument of kprintf\-style functions or to the
+.B       kscanf\-style functions\&.
+.B 
+.B \- \&'d is the type of parameters for the scanf\-style functions\&.
+.B 
+.B \- \&'e is the type of the receiver function for the scanf\-style functions\&.
+.B 
+.B \- \&'f is the final result type of a formatted input/output function
+.B       invocation: for the printf\-style functions, it is typically unit;
+.B       for the scanf\-style functions, it is typically the result type of the
+.B       receiver function\&.
+.B  ===
+
+.PP
+.I type 
+.B ('a, 'b, 'c, 'd, 'e, 'f)
+.I format6 
+= 
+.B ('a, 'b, 'c, 'd, 'e, 'f) CamlinternalFormatBasics.format6
+
+.sp
+
+.sp
+.I type 
+.B ('a, 'b, 'c, 'd)
+.I format4 
+= 
+.B ('a, 'b, 'c, 'c, 'c, 'd) format6
+
+.sp
+
+.sp
+.I type 
+.B ('a, 'b, 'c)
+.I format 
+= 
+.B ('a, 'b, 'c, 'c) format4
+
+.sp
+
+.sp
+
+.I val string_of_format 
+: 
+.B ('a, 'b, 'c, 'd, 'e, 'f) format6 -> string
+.sp
+Converts a format string into a string\&.
+
+.sp
+
+.I val format_of_string 
+: 
+.B ('a, 'b, 'c, 'd, 'e, 'f) format6 ->
+.B   ('a, 'b, 'c, 'd, 'e, 'f) format6
+.sp
+
+.B format_of_string s
+returns a format string read from the string
+literal 
+.B s
+\&.
+Note: 
+.B format_of_string
+can not convert a string argument that is not a
+literal\&. If you need this functionality, use the more general
+.B Scanf\&.format_from_string
+function\&.
+
+.sp
+
+.I val (^^) 
+: 
+.B ('a, 'b, 'c, 'd, 'e, 'f) format6 ->
+.B   ('f, 'b, 'c, 'e, 'g, 'h) format6 ->
+.B   ('a, 'b, 'c, 'd, 'g, 'h) format6
+.sp
+
+.B f1 ^^ f2
+catenates format strings 
+.B f1
+and 
+.B f2
+\&. The result is a
+format string that behaves as the concatenation of format strings 
+.B f1
+and
+.B f2
+: in case of formatted output, it accepts arguments from 
+.B f1
+, then
+arguments from 
+.B f2
+; in case of formatted input, it returns results from
+.B f1
+, then results from 
+.B f2
+\&.
+Right\-associative operator at precedence level 5/11\&.
+
+.sp
+
+.PP
+
+.B === 
+.B Program termination
+.B  ===
+
+.PP
+
+.I val exit 
+: 
+.B int -> 'a
+.sp
+Terminate the process, returning the given status code
+to the operating system: usually 0 to indicate no errors,
+and a small positive integer to indicate failure\&.
+All open output channels are flushed with 
+.B flush_all
+\&.
+An implicit 
+.B exit 0
+is performed each time a program
+terminates normally\&.  An implicit 
+.B exit 2
+is performed if the program
+terminates early because of an uncaught exception\&.
+
+.sp
+
+.I val at_exit 
+: 
+.B (unit -> unit) -> unit
+.sp
+Register the given function to be called at program termination
+time\&. The functions registered with 
+.B at_exit
+will be called when
+the program does any of the following:
+.sp
+\-executes 
+.B Pervasives\&.exit
+
+.sp
+\-terminates, either normally or because of an uncaught
+exception
+.sp
+\-executes the C function 
+.B caml_shutdown
+\&.
+The functions are called in \&'last in, first out\&' order: the
+function most recently added with 
+.B at_exit
+is called first\&.
+
+
+.sp

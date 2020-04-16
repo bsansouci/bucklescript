@@ -1,0 +1,208 @@
+.TH "Lexer" 3 2020-04-16 OCamldoc "OCaml library"
+.SH NAME
+Lexer \- no description
+.SH Module
+Module   Lexer
+.SH Documentation
+.sp
+Module
+.BI "Lexer"
+ : 
+.B sig  end
+
+.sp
+
+.sp
+
+.sp
+.sp
+
+.I val init 
+: 
+.B unit -> unit
+.sp
+
+.sp
+
+.I val token 
+: 
+.B Lexing.lexbuf -> Parser.token
+.sp
+
+.sp
+
+.I val skip_hash_bang 
+: 
+.B Lexing.lexbuf -> unit
+.sp
+
+.sp
+.I type directive_type 
+
+.sp
+
+.sp
+.I type error 
+=
+ | Illegal_character
+.B of 
+.B char
+ | Illegal_escape
+.B of 
+.B string
+ | Unterminated_comment
+.B of 
+.B Location.t
+ | Unterminated_string
+ | Unterminated_string_in_comment
+.B of 
+.B Location.t * Location.t
+ | Keyword_as_label
+.B of 
+.B string
+ | Invalid_literal
+.B of 
+.B string
+ | Invalid_directive
+.B of 
+.B string * string option
+ | Unterminated_paren_in_conditional
+ | Unterminated_if
+ | Unterminated_else
+ | Unexpected_token_in_conditional
+ | Expect_hash_then_in_conditional
+ | Illegal_semver
+.B of 
+.B string
+ | Unexpected_directive
+ | Conditional_expr_expected_type
+.B of 
+.B directive_type * directive_type
+ 
+.sp
+
+.sp
+
+.I exception Error 
+.B of 
+.B error * Location.t
+
+.sp
+
+.sp
+
+.I val report_error 
+: 
+.B Format.formatter -> error -> unit
+.sp
+
+.sp
+
+.I val in_comment 
+: 
+.B unit -> bool
+.sp
+
+.sp
+
+.I val in_string 
+: 
+.B unit -> bool
+.sp
+
+.sp
+
+.I val print_warnings 
+: 
+.B bool Pervasives.ref
+.sp
+
+.sp
+
+.I val handle_docstrings 
+: 
+.B bool Pervasives.ref
+.sp
+
+.sp
+
+.I val comments 
+: 
+.B unit -> (string * Location.t) list
+.sp
+
+.sp
+
+.I val token_with_comments 
+: 
+.B Lexing.lexbuf -> Parser.token
+.sp
+
+.sp
+
+.I val set_preprocessor 
+: 
+.B (unit -> unit) ->
+.B   ((Lexing.lexbuf -> Parser.token) -> Lexing.lexbuf -> Parser.token) -> unit
+.sp
+
+.sp
+
+.I val semver 
+: 
+.B Location.t -> string -> string -> bool
+.sp
+semantic version predicate
+
+.sp
+
+.I val filter_directive_from_lexbuf 
+: 
+.B Lexing.lexbuf -> (int * int) list
+.sp
+
+.sp
+
+.I val replace_directive_int 
+: 
+.B string -> int -> unit
+.sp
+
+.sp
+
+.I val replace_directive_string 
+: 
+.B string -> string -> unit
+.sp
+
+.sp
+
+.I val replace_directive_bool 
+: 
+.B string -> bool -> unit
+.sp
+
+.sp
+
+.I val remove_directive_built_in_value 
+: 
+.B string -> unit
+.sp
+
+.sp
+
+.I val define_key_value 
+: 
+.B string -> string -> bool
+.sp
+.B Returns
+false means failed to define
+
+.sp
+
+.I val list_variables 
+: 
+.B Format.formatter -> unit
+.sp
+
+.sp

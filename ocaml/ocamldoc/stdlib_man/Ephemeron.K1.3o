@@ -1,0 +1,289 @@
+.TH "Ephemeron.K1" 3 2020-04-16 OCamldoc "OCaml library"
+.SH NAME
+Ephemeron.K1 \- no description
+.SH Module
+Module   Ephemeron.K1
+.SH Documentation
+.sp
+Module
+.BI "K1"
+ : 
+.B sig  end
+
+.sp
+
+.sp
+
+.sp
+.sp
+.I type 
+.B ('k, 'd)
+.I t 
+
+.sp
+an ephemeron with one key
+
+.sp
+
+.I val create 
+: 
+.B unit -> ('k, 'd) t
+.sp
+
+.B Ephemeron\&.K1\&.create ()
+creates an ephemeron with one key\&. The
+data and the key are empty
+
+.sp
+
+.I val get_key 
+: 
+.B ('k, 'd) t -> 'k option
+.sp
+
+.B Ephemeron\&.K1\&.get_key eph
+returns 
+.B None
+if the key of 
+.B eph
+is
+empty, 
+.B Some x
+(where 
+.B x
+is the key) if it is full\&.
+
+.sp
+
+.I val get_key_copy 
+: 
+.B ('k, 'd) t -> 'k option
+.sp
+
+.B Ephemeron\&.K1\&.get_key_copy eph
+returns 
+.B None
+if the key of 
+.B eph
+is
+empty, 
+.B Some x
+(where 
+.B x
+is a (shallow) copy of the key) if
+it is full\&. This function has the same GC friendliness as 
+.B Weak\&.get_copy
+.sp
+If the element is a custom block it is not copied\&.
+
+.sp
+
+.I val set_key 
+: 
+.B ('k, 'd) t -> 'k -> unit
+.sp
+
+.B Ephemeron\&.K1\&.set_key eph el
+sets the key of 
+.B eph
+to be a
+(full) key to 
+.B el
+
+
+.sp
+
+.I val unset_key 
+: 
+.B ('k, 'd) t -> unit
+.sp
+
+.B Ephemeron\&.K1\&.unset_key eph el
+sets the key of 
+.B eph
+to be an
+empty key\&. Since there is only one key, the ephemeron starts
+behaving like a reference on the data\&.
+
+.sp
+
+.I val check_key 
+: 
+.B ('k, 'd) t -> bool
+.sp
+
+.B Ephemeron\&.K1\&.check_key eph
+returns 
+.B true
+if the key of the 
+.B eph
+is full, 
+.B false
+if it is empty\&. Note that even if
+.B Ephemeron\&.K1\&.check_key eph
+returns 
+.B true
+, a subsequent
+.B Ephemeron\&.K1\&.get_key
+.B eph
+can return 
+.B None
+\&.
+
+.sp
+
+.I val blit_key 
+: 
+.B ('k, 'a) t -> ('k, 'b) t -> unit
+.sp
+
+.B Ephemeron\&.K1\&.blit_key eph1 eph2
+sets the key of 
+.B eph2
+with
+the key of 
+.B eph1
+\&. Contrary to using 
+.B Ephemeron\&.K1\&.get_key
+followed by 
+.B Ephemeron\&.K1\&.set_key
+or 
+.B Ephemeron\&.K1\&.unset_key
+this function does not prevent the incremental GC from erasing
+the value in its current cycle\&.
+
+.sp
+
+.I val get_data 
+: 
+.B ('k, 'd) t -> 'd option
+.sp
+
+.B Ephemeron\&.K1\&.get_data eph
+returns 
+.B None
+if the data of 
+.B eph
+is
+empty, 
+.B Some x
+(where 
+.B x
+is the data) if it is full\&.
+
+.sp
+
+.I val get_data_copy 
+: 
+.B ('k, 'd) t -> 'd option
+.sp
+
+.B Ephemeron\&.K1\&.get_data_copy eph
+returns 
+.B None
+if the data of 
+.B eph
+is
+empty, 
+.B Some x
+(where 
+.B x
+is a (shallow) copy of the data) if
+it is full\&. This function has the same GC friendliness as 
+.B Weak\&.get_copy
+.sp
+If the element is a custom block it is not copied\&.
+
+.sp
+
+.I val set_data 
+: 
+.B ('k, 'd) t -> 'd -> unit
+.sp
+
+.B Ephemeron\&.K1\&.set_data eph el
+sets the data of 
+.B eph
+to be a
+(full) data to 
+.B el
+
+
+.sp
+
+.I val unset_data 
+: 
+.B ('k, 'd) t -> unit
+.sp
+
+.B Ephemeron\&.K1\&.unset_data eph el
+sets the key of 
+.B eph
+to be an
+empty key\&. The ephemeron starts behaving like a weak pointer\&.
+
+.sp
+
+.I val check_data 
+: 
+.B ('k, 'd) t -> bool
+.sp
+
+.B Ephemeron\&.K1\&.check_data eph
+returns 
+.B true
+if the data of the 
+.B eph
+is full, 
+.B false
+if it is empty\&. Note that even if
+.B Ephemeron\&.K1\&.check_data eph
+returns 
+.B true
+, a subsequent
+.B Ephemeron\&.K1\&.get_data
+.B eph
+can return 
+.B None
+\&.
+
+.sp
+
+.I val blit_data 
+: 
+.B ('a, 'd) t -> ('b, 'd) t -> unit
+.sp
+
+.B Ephemeron\&.K1\&.blit_data eph1 eph2
+sets the data of 
+.B eph2
+with
+the data of 
+.B eph1
+\&. Contrary to using 
+.B Ephemeron\&.K1\&.get_data
+followed by 
+.B Ephemeron\&.K1\&.set_data
+or 
+.B Ephemeron\&.K1\&.unset_data
+this function does not prevent the incremental GC from erasing
+the value in its current cycle\&.
+
+.sp
+.I module Make : 
+.B functor (H : Hashtbl.HashedType) -> sig  end
+
+.sp
+Functor building an implementation of a weak hash table
+
+.sp
+.I module MakeSeeded : 
+.B functor (H : Hashtbl.SeededHashedType) -> sig  end
+
+.sp
+Functor building an implementation of a weak hash table\&.
+The seed is similar to the one of 
+.B Hashtbl\&.MakeSeeded
+\&.
+
+.sp

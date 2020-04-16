@@ -1,0 +1,136 @@
+.TH "Ast_helper.Sig" 3 2020-04-16 OCamldoc "OCaml library"
+.SH NAME
+Ast_helper.Sig \- Signature items
+.SH Module
+Module   Ast_helper.Sig
+.SH Documentation
+.sp
+Module
+.BI "Sig"
+ : 
+.B sig  end
+
+.sp
+Signature items
+
+.sp
+
+.sp
+.sp
+
+.I val mk 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   Parsetree.signature_item_desc -> Parsetree.signature_item
+.sp
+
+.sp
+
+.I val value 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   Parsetree.value_description -> Parsetree.signature_item
+.sp
+
+.sp
+
+.I val type_ 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   Asttypes.rec_flag ->
+.B   Parsetree.type_declaration list -> Parsetree.signature_item
+.sp
+
+.sp
+
+.I val type_extension 
+: 
+.B ?loc:Ast_helper.loc -> Parsetree.type_extension -> Parsetree.signature_item
+.sp
+
+.sp
+
+.I val exception_ 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   Parsetree.extension_constructor -> Parsetree.signature_item
+.sp
+
+.sp
+
+.I val module_ 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   Parsetree.module_declaration -> Parsetree.signature_item
+.sp
+
+.sp
+
+.I val rec_module 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   Parsetree.module_declaration list -> Parsetree.signature_item
+.sp
+
+.sp
+
+.I val modtype 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   Parsetree.module_type_declaration -> Parsetree.signature_item
+.sp
+
+.sp
+
+.I val open_ 
+: 
+.B ?loc:Ast_helper.loc -> Parsetree.open_description -> Parsetree.signature_item
+.sp
+
+.sp
+
+.I val include_ 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   Parsetree.include_description -> Parsetree.signature_item
+.sp
+
+.sp
+
+.I val class_ 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   Parsetree.class_description list -> Parsetree.signature_item
+.sp
+
+.sp
+
+.I val class_type 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   Parsetree.class_type_declaration list -> Parsetree.signature_item
+.sp
+
+.sp
+
+.I val extension 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs -> Parsetree.extension -> Parsetree.signature_item
+.sp
+
+.sp
+
+.I val attribute 
+: 
+.B ?loc:Ast_helper.loc -> Parsetree.attribute -> Parsetree.signature_item
+.sp
+
+.sp
+
+.I val text 
+: 
+.B Docstrings.text -> Parsetree.signature_item list
+.sp
+
+.sp

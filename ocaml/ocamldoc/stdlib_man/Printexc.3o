@@ -1,0 +1,629 @@
+.TH "Printexc" 3 2020-04-16 OCamldoc "OCaml library"
+.SH NAME
+Printexc \- Facilities for printing exceptions and inspecting current call stack.
+.SH Module
+Module   Printexc
+.SH Documentation
+.sp
+Module
+.BI "Printexc"
+ : 
+.B sig  end
+
+.sp
+Facilities for printing exceptions and inspecting current call stack\&.
+
+.sp
+
+.sp
+.sp
+
+.I val to_string 
+: 
+.B exn -> string
+.sp
+
+.B Printexc\&.to_string e
+returns a string representation of
+the exception 
+.B e
+\&.
+
+.sp
+
+.I val print 
+: 
+.B ('a -> 'b) -> 'a -> 'b
+.sp
+
+.B Printexc\&.print fn x
+applies 
+.B fn
+to 
+.B x
+and returns the result\&.
+If the evaluation of 
+.B fn x
+raises any exception, the
+name of the exception is printed on standard error output,
+and the exception is raised again\&.
+The typical use is to catch and report exceptions that
+escape a function application\&.
+
+.sp
+
+.I val catch 
+: 
+.B ('a -> 'b) -> 'a -> 'b
+.sp
+
+.B Printexc\&.catch fn x
+is similar to 
+.B Printexc\&.print
+, but
+aborts the program with exit code 2 after printing the
+uncaught exception\&.  This function is deprecated: the runtime
+system is now able to print uncaught exceptions as precisely
+as 
+.B Printexc\&.catch
+does\&.  Moreover, calling 
+.B Printexc\&.catch
+makes it harder to track the location of the exception
+using the debugger or the stack backtrace facility\&.
+So, do not use 
+.B Printexc\&.catch
+in new code\&.
+
+.sp
+
+.I val print_backtrace 
+: 
+.B Pervasives.out_channel -> unit
+.sp
+
+.B Printexc\&.print_backtrace oc
+prints an exception backtrace
+on the output channel 
+.B oc
+\&.  The backtrace lists the program
+locations where the most\-recently raised exception was raised
+and where it was propagated through function calls\&.
+.sp
+If the call is not inside an exception handler, the returned
+backtrace is unspecified\&. If the call is after some
+exception\-catching code (before in the handler, or in a when\-guard
+during the matching of the exception handler), the backtrace may
+correspond to a later exception than the handled one\&.
+
+.sp
+.B "Since"
+3.11.0
+
+.sp
+
+.I val get_backtrace 
+: 
+.B unit -> string
+.sp
+
+.B Printexc\&.get_backtrace ()
+returns a string containing the
+same exception backtrace that 
+.B Printexc\&.print_backtrace
+would
+print\&. Same restriction usage than 
+.B Printexc\&.print_backtrace
+\&.
+
+.sp
+.B "Since"
+3.11.0
+
+.sp
+
+.I val record_backtrace 
+: 
+.B bool -> unit
+.sp
+
+.B Printexc\&.record_backtrace b
+turns recording of exception backtraces
+on (if 
+.B b = true
+) or off (if 
+.B b = false
+)\&.  Initially, backtraces
+are not recorded, unless the 
+.B b
+flag is given to the program
+through the 
+.B OCAMLRUNPARAM
+variable\&.
+
+.sp
+.B "Since"
+3.11.0
+
+.sp
+
+.I val backtrace_status 
+: 
+.B unit -> bool
+.sp
+
+.B Printexc\&.backtrace_status()
+returns 
+.B true
+if exception
+backtraces are currently recorded, 
+.B false
+if not\&.
+
+.sp
+.B "Since"
+3.11.0
+
+.sp
+
+.I val register_printer 
+: 
+.B (exn -> string option) -> unit
+.sp
+
+.B Printexc\&.register_printer fn
+registers 
+.B fn
+as an exception
+printer\&.  The printer should return 
+.B None
+or raise an exception
+if it does not know how to convert the passed exception, and 
+.B Some
+.B     s
+with 
+.B s
+the resulting string if it can convert the passed
+exception\&. Exceptions raised by the printer are ignored\&.
+.sp
+When converting an exception into a string, the printers will be invoked
+in the reverse order of their registrations, until a printer returns
+a 
+.B Some s
+value (if no such printer exists, the runtime will use a
+generic printer)\&.
+.sp
+When using this mechanism, one should be aware that an exception backtrace
+is attached to the thread that saw it raised, rather than to the exception
+itself\&. Practically, it means that the code related to 
+.B fn
+should not use
+the backtrace if it has itself raised an exception before\&.
+
+.sp
+.B "Since"
+3.11.2
+
+.sp
+
+.PP
+
+.B === 
+.B Raw backtraces
+.B  ===
+
+.PP
+.I type raw_backtrace 
+
+.sp
+The abstract type 
+.B raw_backtrace
+stores a backtrace in
+a low\-level format, instead of directly exposing them as string as
+the 
+.B get_backtrace()
+function does\&.
+.sp
+This allows delaying the formatting of backtraces to when they are
+actually printed, which may be useful if you record more
+backtraces than you print\&.
+.sp
+Raw backtraces cannot be marshalled\&. If you need marshalling, you
+should use the array returned by the 
+.B backtrace_slots
+function of
+the next section\&.
+
+.sp
+.B "Since"
+4.01.0
+
+.sp
+
+.I val get_raw_backtrace 
+: 
+.B unit -> raw_backtrace
+.sp
+
+.B Printexc\&.get_raw_backtrace ()
+returns the same exception
+backtrace that 
+.B Printexc\&.print_backtrace
+would print, but in
+a raw format\&. Same restriction usage than 
+.B Printexc\&.print_backtrace
+\&.
+
+.sp
+.B "Since"
+4.01.0
+
+.sp
+
+.I val print_raw_backtrace 
+: 
+.B Pervasives.out_channel -> raw_backtrace -> unit
+.sp
+Print a raw backtrace in the same format
+.B Printexc\&.print_backtrace
+uses\&.
+
+.sp
+.B "Since"
+4.01.0
+
+.sp
+
+.I val raw_backtrace_to_string 
+: 
+.B raw_backtrace -> string
+.sp
+Return a string from a raw backtrace, in the same format
+.B Printexc\&.get_backtrace
+uses\&.
+
+.sp
+.B "Since"
+4.01.0
+
+.sp
+
+.I val raise_with_backtrace 
+: 
+.B exn -> raw_backtrace -> 'a
+.sp
+Reraise the exception using the given raw_backtrace for the
+origin of the exception
+
+.sp
+.B "Since"
+4.05.0
+
+.sp
+
+.PP
+
+.B === 
+.B Current call stack
+.B  ===
+
+.PP
+
+.I val get_callstack 
+: 
+.B int -> raw_backtrace
+.sp
+
+.B Printexc\&.get_callstack n
+returns a description of the top of the
+call stack on the current program point (for the current thread),
+with at most 
+.B n
+entries\&.  (Note: this function is not related to
+exceptions at all, despite being part of the 
+.B Printexc
+module\&.)
+
+.sp
+.B "Since"
+4.01.0
+
+.sp
+
+.PP
+
+.B === 
+.B Uncaught exceptions
+.B  ===
+
+.PP
+
+.I val set_uncaught_exception_handler 
+: 
+.B (exn -> raw_backtrace -> unit) -> unit
+.sp
+
+.B Printexc\&.set_uncaught_exception_handler fn
+registers 
+.B fn
+as the handler
+for uncaught exceptions\&. The default handler prints the exception and
+backtrace on standard error output\&.
+.sp
+Note that when 
+.B fn
+is called all the functions registered with
+.B Pervasives\&.at_exit
+have already been called\&. Because of this you must
+make sure any output channel 
+.B fn
+writes on is flushed\&.
+.sp
+Also note that exceptions raised by user code in the interactive toplevel
+are not passed to this function as they are caught by the toplevel itself\&.
+.sp
+If 
+.B fn
+raises an exception, both the exceptions passed to 
+.B fn
+and raised
+by 
+.B fn
+will be printed with their respective backtrace\&.
+
+.sp
+.B "Since"
+4.02.0
+
+.sp
+
+.PP
+
+.B === 
+.B Manipulation of backtrace information
+.B 
+.B 
+.B     These functions are used to traverse the slots of a raw backtrace
+.B     and extract information from them in a programmer\-friendly format\&. ===
+
+.PP
+.I type backtrace_slot 
+
+.sp
+The abstract type 
+.B backtrace_slot
+represents a single slot of
+a backtrace\&.
+
+.sp
+.B "Since"
+4.02
+
+.sp
+
+.I val backtrace_slots 
+: 
+.B raw_backtrace -> backtrace_slot array option
+.sp
+Returns the slots of a raw backtrace, or 
+.B None
+if none of them
+contain useful information\&.
+.sp
+In the return array, the slot at index 
+.B 0
+corresponds to the most
+recent function call, raise, or primitive 
+.B get_backtrace
+call in
+the trace\&.
+.sp
+Some possible reasons for returning 
+.B None
+are as follow:
+.sp
+\-none of the slots in the trace come from modules compiled with
+debug information (
+.B \-g
+)
+.sp
+\-the program is a bytecode program that has not been linked with
+debug information enabled (
+.B ocamlc \-g
+)
+
+
+.sp
+.B "Since"
+4.02.0
+
+.sp
+.I type location 
+= {
+ filename : 
+.B string
+;
+ line_number : 
+.B int
+;
+ start_char : 
+.B int
+;
+ end_char : 
+.B int
+;
+ }
+
+.sp
+The type of location information found in backtraces\&. 
+.B start_char
+and 
+.B end_char
+are positions relative to the beginning of the
+line\&.
+
+.sp
+.B "Since"
+4.02
+
+.sp
+.I module Slot : 
+.B sig  end
+
+.sp
+.B "Since"
+4.02.0
+
+.sp
+
+.PP
+
+.B === 
+.B Raw backtrace slots
+.B  ===
+
+.PP
+.I type raw_backtrace_slot 
+
+.sp
+This type allows direct access to raw backtrace slots, without any
+conversion in an OCaml\-usable data\-structure\&. Being
+process\-specific, they must absolutely not be marshalled, and are
+unsafe to use for this reason (marshalling them may not fail, but
+un\-marshalling and using the result will result in
+undefined behavior)\&.
+.sp
+Elements of this type can still be compared and hashed: when two
+elements are equal, then they represent the same source location
+(the converse is not necessarily true in presence of inlining,
+for example)\&.
+
+.sp
+.B "Since"
+4.02.0
+
+.sp
+
+.I val raw_backtrace_length 
+: 
+.B raw_backtrace -> int
+.sp
+
+.B raw_backtrace_length bckt
+returns the number of slots in the
+backtrace 
+.B bckt
+\&.
+
+.sp
+.B "Since"
+4.02
+
+.sp
+
+.I val get_raw_backtrace_slot 
+: 
+.B raw_backtrace -> int -> raw_backtrace_slot
+.sp
+
+.B get_raw_backtrace_slot bckt pos
+returns the slot in position 
+.B pos
+in the
+backtrace 
+.B bckt
+\&.
+
+.sp
+.B "Since"
+4.02
+
+.sp
+
+.I val convert_raw_backtrace_slot 
+: 
+.B raw_backtrace_slot -> backtrace_slot
+.sp
+Extracts the user\-friendly 
+.B backtrace_slot
+from a low\-level
+.B raw_backtrace_slot
+\&.
+
+.sp
+.B "Since"
+4.02
+
+.sp
+
+.I val get_raw_backtrace_next_slot 
+: 
+.B raw_backtrace_slot -> raw_backtrace_slot option
+.sp
+
+.B get_raw_backtrace_next_slot slot
+returns the next slot inlined, if any\&.
+.sp
+Sample code to iterate over all frames (inlined and non\-inlined):
+.B 
+.B       (* Iterate over inlined frames *)
+.B       let rec iter_raw_backtrace_slot f slot =
+.B         f slot;
+.B         match get_raw_backtrace_next_slot slot with
+.B         | None \-> ()
+.B         | Some slot\&' \-> iter_raw_backtrace_slot f slot\&'
+.B 
+.B       (* Iterate over stack frames *)
+.B       let iter_raw_backtrace f bt =
+.B         for i = 0 to raw_backtrace_length bt \- 1 do
+.B           iter_raw_backtrace_slot f (get_raw_backtrace_slot bt i)
+.B         done
+.B     
+
+
+.sp
+.B "Since"
+4.04.0
+
+.sp
+
+.PP
+
+.B === 
+.B Exception slots
+.B  ===
+
+.PP
+
+.I val exn_slot_id 
+: 
+.B exn -> int
+.sp
+
+.B Printexc\&.exn_slot_id
+returns an integer which uniquely identifies
+the constructor used to create the exception value 
+.B exn
+(in the current runtime)\&.
+
+.sp
+.B "Since"
+4.02.0
+
+.sp
+
+.I val exn_slot_name 
+: 
+.B exn -> string
+.sp
+
+.B Printexc\&.exn_slot_name exn
+returns the internal name of the constructor
+used to create the exception value 
+.B exn
+\&.
+
+.sp
+.B "Since"
+4.02.0
+
+.sp

@@ -1,0 +1,26 @@
+.TH "Ast_helper.Cstr" 3 2020-04-16 OCamldoc "OCaml library"
+.SH NAME
+Ast_helper.Cstr \- Class structures
+.SH Module
+Module   Ast_helper.Cstr
+.SH Documentation
+.sp
+Module
+.BI "Cstr"
+ : 
+.B sig  end
+
+.sp
+Class structures
+
+.sp
+
+.sp
+.sp
+
+.I val mk 
+: 
+.B Parsetree.pattern -> Parsetree.class_field list -> Parsetree.class_structure
+.sp
+
+.sp

@@ -1,0 +1,53 @@
+.TH "MoreLabels.Hashtbl.SeededHashedType" 3 2020-04-16 OCamldoc "OCaml library"
+.SH NAME
+MoreLabels.Hashtbl.SeededHashedType \- no description
+.SH Module type
+Module type   MoreLabels.Hashtbl.SeededHashedType
+.SH Documentation
+.sp
+Module type
+.BI "SeededHashedType"
+ = 
+.B Hashtbl.SeededHashedType
+
+.sp
+
+.sp
+
+.sp
+.sp
+.I type t 
+
+.sp
+The type of the hashtable keys\&.
+
+.sp
+
+.I val equal 
+: 
+.B t -> t -> bool
+.sp
+The equality predicate used to compare keys\&.
+
+.sp
+
+.I val hash 
+: 
+.B int -> t -> int
+.sp
+A seeded hashing function on keys\&.  The first argument is
+the seed\&.  It must be the case that if 
+.B equal x y
+is true,
+then 
+.B hash seed x = hash seed y
+for any value of 
+.B seed
+\&.
+A suitable choice for 
+.B hash
+is the function 
+.B Hashtbl\&.seeded_hash
+below\&.
+
+.sp

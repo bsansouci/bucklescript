@@ -1,0 +1,96 @@
+.TH "Ast_helper.Mty" 3 2020-04-16 OCamldoc "OCaml library"
+.SH NAME
+Ast_helper.Mty \- Module type expressions
+.SH Module
+Module   Ast_helper.Mty
+.SH Documentation
+.sp
+Module
+.BI "Mty"
+ : 
+.B sig  end
+
+.sp
+Module type expressions
+
+.sp
+
+.sp
+.sp
+
+.I val mk 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs ->
+.B   Parsetree.module_type_desc -> Parsetree.module_type
+.sp
+
+.sp
+
+.I val attr 
+: 
+.B Parsetree.module_type -> Parsetree.attribute -> Parsetree.module_type
+.sp
+
+.sp
+
+.I val ident 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs -> Ast_helper.lid -> Parsetree.module_type
+.sp
+
+.sp
+
+.I val alias 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs -> Ast_helper.lid -> Parsetree.module_type
+.sp
+
+.sp
+
+.I val signature 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs -> Parsetree.signature -> Parsetree.module_type
+.sp
+
+.sp
+
+.I val functor_ 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs ->
+.B   Ast_helper.str ->
+.B   Parsetree.module_type option ->
+.B   Parsetree.module_type -> Parsetree.module_type
+.sp
+
+.sp
+
+.I val with_ 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs ->
+.B   Parsetree.module_type ->
+.B   Parsetree.with_constraint list -> Parsetree.module_type
+.sp
+
+.sp
+
+.I val typeof_ 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs -> Parsetree.module_expr -> Parsetree.module_type
+.sp
+
+.sp
+
+.I val extension 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs -> Parsetree.extension -> Parsetree.module_type
+.sp
+
+.sp

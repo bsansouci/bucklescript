@@ -1,0 +1,368 @@
+.TH "Ast_helper.Exp" 3 2020-04-16 OCamldoc "OCaml library"
+.SH NAME
+Ast_helper.Exp \- Expressions
+.SH Module
+Module   Ast_helper.Exp
+.SH Documentation
+.sp
+Module
+.BI "Exp"
+ : 
+.B sig  end
+
+.sp
+Expressions
+
+.sp
+
+.sp
+.sp
+
+.I val mk 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs -> Parsetree.expression_desc -> Parsetree.expression
+.sp
+
+.sp
+
+.I val attr 
+: 
+.B Parsetree.expression -> Parsetree.attribute -> Parsetree.expression
+.sp
+
+.sp
+
+.I val ident 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs -> Ast_helper.lid -> Parsetree.expression
+.sp
+
+.sp
+
+.I val constant 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs -> Parsetree.constant -> Parsetree.expression
+.sp
+
+.sp
+
+.I val let_ 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs ->
+.B   Asttypes.rec_flag ->
+.B   Parsetree.value_binding list -> Parsetree.expression -> Parsetree.expression
+.sp
+
+.sp
+
+.I val fun_ 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs ->
+.B   Asttypes.arg_label ->
+.B   Parsetree.expression option ->
+.B   Parsetree.pattern -> Parsetree.expression -> Parsetree.expression
+.sp
+
+.sp
+
+.I val function_ 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs -> Parsetree.case list -> Parsetree.expression
+.sp
+
+.sp
+
+.I val apply 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs ->
+.B   Parsetree.expression ->
+.B   (Asttypes.arg_label * Parsetree.expression) list -> Parsetree.expression
+.sp
+
+.sp
+
+.I val match_ 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs ->
+.B   Parsetree.expression -> Parsetree.case list -> Parsetree.expression
+.sp
+
+.sp
+
+.I val try_ 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs ->
+.B   Parsetree.expression -> Parsetree.case list -> Parsetree.expression
+.sp
+
+.sp
+
+.I val tuple 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs -> Parsetree.expression list -> Parsetree.expression
+.sp
+
+.sp
+
+.I val construct 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs ->
+.B   Ast_helper.lid -> Parsetree.expression option -> Parsetree.expression
+.sp
+
+.sp
+
+.I val variant 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs ->
+.B   Asttypes.label -> Parsetree.expression option -> Parsetree.expression
+.sp
+
+.sp
+
+.I val record 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs ->
+.B   (Ast_helper.lid * Parsetree.expression) list ->
+.B   Parsetree.expression option -> Parsetree.expression
+.sp
+
+.sp
+
+.I val field 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs ->
+.B   Parsetree.expression -> Ast_helper.lid -> Parsetree.expression
+.sp
+
+.sp
+
+.I val setfield 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs ->
+.B   Parsetree.expression ->
+.B   Ast_helper.lid -> Parsetree.expression -> Parsetree.expression
+.sp
+
+.sp
+
+.I val array 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs -> Parsetree.expression list -> Parsetree.expression
+.sp
+
+.sp
+
+.I val ifthenelse 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs ->
+.B   Parsetree.expression ->
+.B   Parsetree.expression -> Parsetree.expression option -> Parsetree.expression
+.sp
+
+.sp
+
+.I val sequence 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs ->
+.B   Parsetree.expression -> Parsetree.expression -> Parsetree.expression
+.sp
+
+.sp
+
+.I val while_ 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs ->
+.B   Parsetree.expression -> Parsetree.expression -> Parsetree.expression
+.sp
+
+.sp
+
+.I val for_ 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs ->
+.B   Parsetree.pattern ->
+.B   Parsetree.expression ->
+.B   Parsetree.expression ->
+.B   Asttypes.direction_flag -> Parsetree.expression -> Parsetree.expression
+.sp
+
+.sp
+
+.I val coerce 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs ->
+.B   Parsetree.expression ->
+.B   Parsetree.core_type option -> Parsetree.core_type -> Parsetree.expression
+.sp
+
+.sp
+
+.I val constraint_ 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs ->
+.B   Parsetree.expression -> Parsetree.core_type -> Parsetree.expression
+.sp
+
+.sp
+
+.I val send 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs ->
+.B   Parsetree.expression -> Ast_helper.str -> Parsetree.expression
+.sp
+
+.sp
+
+.I val new_ 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs -> Ast_helper.lid -> Parsetree.expression
+.sp
+
+.sp
+
+.I val setinstvar 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs ->
+.B   Ast_helper.str -> Parsetree.expression -> Parsetree.expression
+.sp
+
+.sp
+
+.I val override 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs ->
+.B   (Ast_helper.str * Parsetree.expression) list -> Parsetree.expression
+.sp
+
+.sp
+
+.I val letmodule 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs ->
+.B   Ast_helper.str ->
+.B   Parsetree.module_expr -> Parsetree.expression -> Parsetree.expression
+.sp
+
+.sp
+
+.I val letexception 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs ->
+.B   Parsetree.extension_constructor ->
+.B   Parsetree.expression -> Parsetree.expression
+.sp
+
+.sp
+
+.I val assert_ 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs -> Parsetree.expression -> Parsetree.expression
+.sp
+
+.sp
+
+.I val lazy_ 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs -> Parsetree.expression -> Parsetree.expression
+.sp
+
+.sp
+
+.I val poly 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs ->
+.B   Parsetree.expression -> Parsetree.core_type option -> Parsetree.expression
+.sp
+
+.sp
+
+.I val object_ 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs -> Parsetree.class_structure -> Parsetree.expression
+.sp
+
+.sp
+
+.I val newtype 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs ->
+.B   Ast_helper.str -> Parsetree.expression -> Parsetree.expression
+.sp
+
+.sp
+
+.I val pack 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs -> Parsetree.module_expr -> Parsetree.expression
+.sp
+
+.sp
+
+.I val open_ 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs ->
+.B   Asttypes.override_flag ->
+.B   Ast_helper.lid -> Parsetree.expression -> Parsetree.expression
+.sp
+
+.sp
+
+.I val extension 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs -> Parsetree.extension -> Parsetree.expression
+.sp
+
+.sp
+
+.I val unreachable 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs -> unit -> Parsetree.expression
+.sp
+
+.sp
+
+.I val case 
+: 
+.B Parsetree.pattern ->
+.B   ?guard:Parsetree.expression -> Parsetree.expression -> Parsetree.case
+.sp
+
+.sp

@@ -1,0 +1,190 @@
+.TH "Hashtbl.MakeSeeded" 3 2020-04-16 OCamldoc "OCaml library"
+.SH NAME
+Hashtbl.MakeSeeded \- Functor building an implementation of the hashtable structure.
+.SH Module
+Module   Hashtbl.MakeSeeded
+.SH Documentation
+.sp
+Module
+.BI "MakeSeeded"
+ : 
+.B functor (H : SeededHashedType) -> sig  end
+
+.sp
+Functor building an implementation of the hashtable structure\&.
+The functor 
+.B Hashtbl\&.MakeSeeded
+returns a structure containing
+a type 
+.B key
+of keys and a type 
+.B \&'a t
+of hash tables
+associating data of type 
+.B \&'a
+to keys of type 
+.B key
+\&.
+The operations perform similarly to those of the generic
+interface, but use the seeded hashing and equality functions
+specified in the functor argument 
+.B H
+instead of generic
+equality and hashing\&.  The 
+.B create
+operation of the
+result structure supports the 
+.B ~random
+optional parameter
+and returns randomized hash tables if 
+.B ~random:true
+is passed
+or if randomization is globally on (see 
+.B Hashtbl\&.randomize
+)\&.
+
+.sp
+.B "Since"
+4.00.0
+
+.sp
+.B "Parameters:"
+.sp
+"H"
+
+.B Hashtbl.SeededHashedType
+
+
+
+
+
+.sp
+.sp
+.I type key 
+
+.sp
+
+.sp
+.I type 
+.B 'a
+.I t 
+
+.sp
+
+.sp
+
+.I val create 
+: 
+.B ?random:bool -> int -> 'a t
+.sp
+
+.sp
+
+.I val clear 
+: 
+.B 'a t -> unit
+.sp
+
+.sp
+
+.I val reset 
+: 
+.B 'a t -> unit
+.sp
+
+.sp
+
+.I val copy 
+: 
+.B 'a t -> 'a t
+.sp
+
+.sp
+
+.I val add 
+: 
+.B 'a t -> key -> 'a -> unit
+.sp
+
+.sp
+
+.I val remove 
+: 
+.B 'a t -> key -> unit
+.sp
+
+.sp
+
+.I val find 
+: 
+.B 'a t -> key -> 'a
+.sp
+
+.sp
+
+.I val find_opt 
+: 
+.B 'a t -> key -> 'a option
+.sp
+.B "Since"
+4.05.0
+
+.sp
+
+.I val find_all 
+: 
+.B 'a t -> key -> 'a list
+.sp
+
+.sp
+
+.I val replace 
+: 
+.B 'a t -> key -> 'a -> unit
+.sp
+
+.sp
+
+.I val mem 
+: 
+.B 'a t -> key -> bool
+.sp
+
+.sp
+
+.I val iter 
+: 
+.B (key -> 'a -> unit) -> 'a t -> unit
+.sp
+
+.sp
+
+.I val filter_map_inplace 
+: 
+.B (key -> 'a -> 'a option) -> 'a t -> unit
+.sp
+.B "Since"
+4.03.0
+
+.sp
+
+.I val fold 
+: 
+.B (key -> 'a -> 'b -> 'b) -> 'a t -> 'b -> 'b
+.sp
+
+.sp
+
+.I val length 
+: 
+.B 'a t -> int
+.sp
+
+.sp
+
+.I val stats 
+: 
+.B 'a t -> Hashtbl.statistics
+.sp
+
+.sp

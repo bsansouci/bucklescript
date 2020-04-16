@@ -1,0 +1,50 @@
+.TH "CamlinternalMod" 3 2020-04-16 OCamldoc "OCaml library"
+.SH NAME
+CamlinternalMod \- Run-time support for recursive modules.
+.SH Module
+Module   CamlinternalMod
+.SH Documentation
+.sp
+Module
+.BI "CamlinternalMod"
+ : 
+.B sig  end
+
+.sp
+Run\-time support for recursive modules\&.
+All functions in this module are for system use only, not for the
+casual user\&.
+
+.sp
+
+.sp
+.sp
+.I type shape 
+=
+ | Function
+ | Lazy
+ | Class
+ | Module
+.B of 
+.B shape array
+ | Value
+.B of 
+.B Obj.t
+ 
+.sp
+
+.sp
+
+.I val init_mod 
+: 
+.B string * int * int -> shape -> Obj.t
+.sp
+
+.sp
+
+.I val update_mod 
+: 
+.B shape -> Obj.t -> Obj.t -> unit
+.sp
+
+.sp

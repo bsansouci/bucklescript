@@ -1,0 +1,292 @@
+.TH "Scanf.Scanning" 3 2020-04-16 OCamldoc "OCaml library"
+.SH NAME
+Scanf.Scanning \- no description
+.SH Module
+Module   Scanf.Scanning
+.SH Documentation
+.sp
+Module
+.BI "Scanning"
+ : 
+.B sig  end
+
+.sp
+
+.sp
+
+.sp
+.sp
+.I type in_channel 
+
+.sp
+The notion of input channel for the 
+.B Scanf
+module:
+those channels provide all the machinery necessary to read from any source
+of characters, including a 
+.B Pervasives\&.in_channel
+value\&.
+A Scanf\&.Scanning\&.in_channel value is also called a formatted input
+channel or equivalently a scanning buffer\&.
+The type 
+.B Scanf\&.Scanning\&.scanbuf
+below is an alias for 
+.B Scanning\&.in_channel
+\&.
+
+.sp
+.B "Since"
+3.12.0
+
+.sp
+.I type scanbuf 
+= 
+.B in_channel
+
+.sp
+The type of scanning buffers\&. A scanning buffer is the source from which a
+formatted input function gets characters\&. The scanning buffer holds the
+current state of the scan, plus a function to get the next char from the
+input, and a token buffer to store the string matched so far\&.
+.sp
+Note: a scanning action may often require to examine one character in
+advance; when this \&'lookahead\&' character does not belong to the token
+read, it is stored back in the scanning buffer and becomes the next
+character yet to be read\&.
+
+.sp
+
+.I val stdin 
+: 
+.B in_channel
+.sp
+The standard input notion for the 
+.B Scanf
+module\&.
+.B Scanning\&.stdin
+is the 
+.B Scanf\&.Scanning\&.in_channel
+formatted input channel
+attached to 
+.B Pervasives\&.stdin
+\&.
+.sp
+Note: in the interactive system, when input is read from
+.B Pervasives\&.stdin
+, the newline character that triggers evaluation is
+part of the input; thus, the scanning specifications must properly skip
+this additional newline character (for instance, simply add a 
+.B \&'\(rsn\&'
+as
+the last character of the format string)\&.
+
+.sp
+.B "Since"
+3.12.0
+
+.sp
+.I type file_name 
+= 
+.B string
+
+.sp
+A convenient alias to designate a file name\&.
+
+.sp
+.B "Since"
+4.00.0
+
+.sp
+
+.I val open_in 
+: 
+.B file_name -> in_channel
+.sp
+
+.B Scanning\&.open_in fname
+returns a 
+.B Scanf\&.Scanning\&.in_channel
+formatted input
+channel for bufferized reading in text mode from file 
+.B fname
+\&.
+.sp
+Note:
+.B open_in
+returns a formatted input channel that efficiently reads
+characters in large chunks; in contrast, 
+.B from_channel
+below returns
+formatted input channels that must read one character at a time, leading
+to a much slower scanning rate\&.
+
+.sp
+.B "Since"
+3.12.0
+
+.sp
+
+.I val open_in_bin 
+: 
+.B file_name -> in_channel
+.sp
+
+.B Scanning\&.open_in_bin fname
+returns a 
+.B Scanf\&.Scanning\&.in_channel
+formatted
+input channel for bufferized reading in binary mode from file 
+.B fname
+\&.
+
+.sp
+.B "Since"
+3.12.0
+
+.sp
+
+.I val close_in 
+: 
+.B in_channel -> unit
+.sp
+Closes the 
+.B Pervasives\&.in_channel
+associated with the given
+.B Scanf\&.Scanning\&.in_channel
+formatted input channel\&.
+
+.sp
+.B "Since"
+3.12.0
+
+.sp
+
+.I val from_file 
+: 
+.B file_name -> in_channel
+.sp
+An alias for 
+.B Scanf\&.Scanning\&.open_in
+above\&.
+
+.sp
+
+.I val from_file_bin 
+: 
+.B string -> in_channel
+.sp
+An alias for 
+.B Scanf\&.Scanning\&.open_in_bin
+above\&.
+
+.sp
+
+.I val from_string 
+: 
+.B string -> in_channel
+.sp
+
+.B Scanning\&.from_string s
+returns a 
+.B Scanf\&.Scanning\&.in_channel
+formatted
+input channel which reads from the given string\&.
+Reading starts from the first character in the string\&.
+The end\-of\-input condition is set when the end of the string is reached\&.
+
+.sp
+
+.I val from_function 
+: 
+.B (unit -> char) -> in_channel
+.sp
+
+.B Scanning\&.from_function f
+returns a 
+.B Scanf\&.Scanning\&.in_channel
+formatted
+input channel with the given function as its reading method\&.
+.sp
+When scanning needs one more character, the given function is called\&.
+.sp
+When the function has no more character to provide, it must signal an
+end\-of\-input condition by raising the exception 
+.B End_of_file
+\&.
+
+.sp
+
+.I val from_channel 
+: 
+.B Pervasives.in_channel -> in_channel
+.sp
+
+.B Scanning\&.from_channel ic
+returns a 
+.B Scanf\&.Scanning\&.in_channel
+formatted
+input channel which reads from the regular 
+.B Pervasives\&.in_channel
+input
+channel 
+.B ic
+argument\&.
+Reading starts at current reading position of 
+.B ic
+\&.
+
+.sp
+
+.I val end_of_input 
+: 
+.B in_channel -> bool
+.sp
+
+.B Scanning\&.end_of_input ic
+tests the end\-of\-input condition of the given
+.B Scanf\&.Scanning\&.in_channel
+formatted input channel\&.
+
+.sp
+
+.I val beginning_of_input 
+: 
+.B in_channel -> bool
+.sp
+
+.B Scanning\&.beginning_of_input ic
+tests the beginning of input condition
+of the given 
+.B Scanf\&.Scanning\&.in_channel
+formatted input channel\&.
+
+.sp
+
+.I val name_of_input 
+: 
+.B in_channel -> string
+.sp
+
+.B Scanning\&.name_of_input ic
+returns the name of the character source
+for the given 
+.B Scanf\&.Scanning\&.in_channel
+formatted input channel\&.
+
+.sp
+.B "Since"
+3.09.0
+
+.sp
+
+.I val stdib 
+: 
+.B in_channel
+.sp
+A deprecated alias for 
+.B Scanf\&.Scanning\&.stdin
+, the scanning buffer reading from
+.B Pervasives\&.stdin
+\&.
+
+.sp

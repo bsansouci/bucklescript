@@ -1,0 +1,174 @@
+.TH "Bigarray.Array0" 3 2020-04-16 OCamldoc "OCaml library"
+.SH NAME
+Bigarray.Array0 \- Zero-dimensional arrays.
+.SH Module
+Module   Bigarray.Array0
+.SH Documentation
+.sp
+Module
+.BI "Array0"
+ : 
+.B sig  end
+
+.sp
+Zero\-dimensional arrays\&. The 
+.B Array0
+structure provides operations
+similar to those of 
+.B Bigarray\&.Genarray
+, but specialized to the case
+of zero\-dimensional arrays that only contain a single scalar value\&.
+Statically knowing the number of dimensions of the array allows
+faster operations, and more precise static type\-checking\&.
+
+.sp
+.B "Since"
+4.05.0
+
+.sp
+
+.sp
+.sp
+.I type 
+.B ('a, 'b, 'c)
+.I t 
+
+.sp
+The type of zero\-dimensional big arrays whose elements have
+OCaml type 
+.B \&'a
+, representation kind 
+.B \&'b
+, and memory layout 
+.B \&'c
+\&.
+
+.sp
+
+.I val create 
+: 
+.B ('a, 'b) Bigarray.kind ->
+.B   'c Bigarray.layout -> ('a, 'b, 'c) t
+.sp
+
+.B Array0\&.create kind layout
+returns a new bigarray of zero dimension\&.
+.B kind
+and 
+.B layout
+determine the array element kind and the array
+layout as described for 
+.B Bigarray\&.Genarray\&.create
+\&.
+
+.sp
+
+.I val kind 
+: 
+.B ('a, 'b, 'c) t -> ('a, 'b) Bigarray.kind
+.sp
+Return the kind of the given big array\&.
+
+.sp
+
+.I val layout 
+: 
+.B ('a, 'b, 'c) t -> 'c Bigarray.layout
+.sp
+Return the layout of the given big array\&.
+
+.sp
+
+.I val change_layout 
+: 
+.B ('a, 'b, 'c) t ->
+.B   'd Bigarray.layout -> ('a, 'b, 'd) t
+.sp
+
+.B Array0\&.change_layout a layout
+returns a big array with the
+specified 
+.B layout
+, sharing the data with 
+.B a
+\&. No copying of elements
+is involved: the new array and the original array share the same
+storage space\&.
+
+.sp
+.B "Since"
+4.06.0
+
+.sp
+
+.I val size_in_bytes 
+: 
+.B ('a, 'b, 'c) t -> int
+.sp
+
+.B size_in_bytes a
+is 
+.B a
+\&'s 
+.B Bigarray\&.kind_size_in_bytes
+\&.
+
+.sp
+
+.I val get 
+: 
+.B ('a, 'b, 'c) t -> 'a
+.sp
+
+.B Array0\&.get a
+returns the only element in 
+.B a
+\&.
+
+.sp
+
+.I val set 
+: 
+.B ('a, 'b, 'c) t -> 'a -> unit
+.sp
+
+.B Array0\&.set a x v
+stores the value 
+.B v
+in 
+.B a
+\&.
+
+.sp
+
+.I val blit 
+: 
+.B ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> unit
+.sp
+Copy the first big array to the second big array\&.
+See 
+.B Bigarray\&.Genarray\&.blit
+for more details\&.
+
+.sp
+
+.I val fill 
+: 
+.B ('a, 'b, 'c) t -> 'a -> unit
+.sp
+Fill the given big array with the given value\&.
+See 
+.B Bigarray\&.Genarray\&.fill
+for more details\&.
+
+.sp
+
+.I val of_value 
+: 
+.B ('a, 'b) Bigarray.kind ->
+.B   'c Bigarray.layout -> 'a -> ('a, 'b, 'c) t
+.sp
+Build a zero\-dimensional big array initialized from the
+given value\&.
+
+.sp

@@ -1,0 +1,175 @@
+.TH "Ephemeron.Kn" 3 2020-04-16 OCamldoc "OCaml library"
+.SH NAME
+Ephemeron.Kn \- no description
+.SH Module
+Module   Ephemeron.Kn
+.SH Documentation
+.sp
+Module
+.BI "Kn"
+ : 
+.B sig  end
+
+.sp
+
+.sp
+
+.sp
+.sp
+.I type 
+.B ('k, 'd)
+.I t 
+
+.sp
+an ephemeron with an arbitrary number of keys
+of the same type
+
+.sp
+
+.I val create 
+: 
+.B int -> ('k, 'd) t
+.sp
+Same as 
+.B Ephemeron\&.K1\&.create
+
+
+.sp
+
+.I val get_key 
+: 
+.B ('k, 'd) t -> int -> 'k option
+.sp
+Same as 
+.B Ephemeron\&.K1\&.get_key
+
+
+.sp
+
+.I val get_key_copy 
+: 
+.B ('k, 'd) t -> int -> 'k option
+.sp
+Same as 
+.B Ephemeron\&.K1\&.get_key_copy
+
+
+.sp
+
+.I val set_key 
+: 
+.B ('k, 'd) t -> int -> 'k -> unit
+.sp
+Same as 
+.B Ephemeron\&.K1\&.set_key
+
+
+.sp
+
+.I val unset_key 
+: 
+.B ('k, 'd) t -> int -> unit
+.sp
+Same as 
+.B Ephemeron\&.K1\&.unset_key
+
+
+.sp
+
+.I val check_key 
+: 
+.B ('k, 'd) t -> int -> bool
+.sp
+Same as 
+.B Ephemeron\&.K1\&.check_key
+
+
+.sp
+
+.I val blit_key 
+: 
+.B ('k, 'a) t ->
+.B   int -> ('k, 'b) t -> int -> int -> unit
+.sp
+Same as 
+.B Ephemeron\&.K1\&.blit_key
+
+
+.sp
+
+.I val get_data 
+: 
+.B ('k, 'd) t -> 'd option
+.sp
+Same as 
+.B Ephemeron\&.K1\&.get_data
+
+
+.sp
+
+.I val get_data_copy 
+: 
+.B ('k, 'd) t -> 'd option
+.sp
+Same as 
+.B Ephemeron\&.K1\&.get_data_copy
+
+
+.sp
+
+.I val set_data 
+: 
+.B ('k, 'd) t -> 'd -> unit
+.sp
+Same as 
+.B Ephemeron\&.K1\&.set_data
+
+
+.sp
+
+.I val unset_data 
+: 
+.B ('k, 'd) t -> unit
+.sp
+Same as 
+.B Ephemeron\&.K1\&.unset_data
+
+
+.sp
+
+.I val check_data 
+: 
+.B ('k, 'd) t -> bool
+.sp
+Same as 
+.B Ephemeron\&.K1\&.check_data
+
+
+.sp
+
+.I val blit_data 
+: 
+.B ('k, 'd) t -> ('k, 'd) t -> unit
+.sp
+Same as 
+.B Ephemeron\&.K1\&.blit_data
+
+
+.sp
+.I module Make : 
+.B functor (H : Hashtbl.HashedType) -> sig  end
+
+.sp
+Functor building an implementation of a weak hash table
+
+.sp
+.I module MakeSeeded : 
+.B functor (H : Hashtbl.SeededHashedType) -> sig  end
+
+.sp
+Functor building an implementation of a weak hash table\&.
+The seed is similar to the one of 
+.B Hashtbl\&.MakeSeeded
+\&.
+
+.sp

@@ -1,0 +1,66 @@
+.TH "Ast_helper.Te" 3 2020-04-16 OCamldoc "OCaml library"
+.SH NAME
+Ast_helper.Te \- Type extensions
+.SH Module
+Module   Ast_helper.Te
+.SH Documentation
+.sp
+Module
+.BI "Te"
+ : 
+.B sig  end
+
+.sp
+Type extensions
+
+.sp
+
+.sp
+.sp
+
+.I val mk 
+: 
+.B ?attrs:Ast_helper.attrs ->
+.B   ?docs:Docstrings.docs ->
+.B   ?params:(Parsetree.core_type * Asttypes.variance) list ->
+.B   ?priv:Asttypes.private_flag ->
+.B   Ast_helper.lid ->
+.B   Parsetree.extension_constructor list -> Parsetree.type_extension
+.sp
+
+.sp
+
+.I val constructor 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs ->
+.B   ?docs:Docstrings.docs ->
+.B   ?info:Docstrings.info ->
+.B   Ast_helper.str ->
+.B   Parsetree.extension_constructor_kind -> Parsetree.extension_constructor
+.sp
+
+.sp
+
+.I val decl 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs ->
+.B   ?docs:Docstrings.docs ->
+.B   ?info:Docstrings.info ->
+.B   ?args:Parsetree.constructor_arguments ->
+.B   ?res:Parsetree.core_type -> Ast_helper.str -> Parsetree.extension_constructor
+.sp
+
+.sp
+
+.I val rebind 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs ->
+.B   ?docs:Docstrings.docs ->
+.B   ?info:Docstrings.info ->
+.B   Ast_helper.str -> Ast_helper.lid -> Parsetree.extension_constructor
+.sp
+
+.sp

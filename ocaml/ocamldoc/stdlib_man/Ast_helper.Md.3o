@@ -1,0 +1,30 @@
+.TH "Ast_helper.Md" 3 2020-04-16 OCamldoc "OCaml library"
+.SH NAME
+Ast_helper.Md \- Module declarations
+.SH Module
+Module   Ast_helper.Md
+.SH Documentation
+.sp
+Module
+.BI "Md"
+ : 
+.B sig  end
+
+.sp
+Module declarations
+
+.sp
+
+.sp
+.sp
+
+.I val mk 
+: 
+.B ?loc:Ast_helper.loc ->
+.B   ?attrs:Ast_helper.attrs ->
+.B   ?docs:Docstrings.docs ->
+.B   ?text:Docstrings.text ->
+.B   Ast_helper.str -> Parsetree.module_type -> Parsetree.module_declaration
+.sp
+
+.sp

@@ -1,0 +1,45 @@
+.TH "Spacetime.Snapshot" 3 2020-04-16 OCamldoc "OCaml library"
+.SH NAME
+Spacetime.Snapshot \- no description
+.SH Module
+Module   Spacetime.Snapshot
+.SH Documentation
+.sp
+Module
+.BI "Snapshot"
+ : 
+.B sig  end
+
+.sp
+
+.sp
+
+.sp
+.sp
+
+.I val take 
+: 
+.B ?time:float -> Spacetime.Series.t -> unit
+.sp
+
+.B take series
+takes a snapshot of the profiling annotations on the values
+in the minor and major heaps, together with GC stats, and write the
+result to the 
+.B series
+file\&.  This function triggers a minor GC but does
+not allocate any memory itself\&.
+If the optional 
+.B time
+is specified, it will be used instead of the
+result of 
+.B Sys\&.time
+as the timestamp of the snapshot\&.  Such 
+.B time
+s
+should start from zero and be monotonically increasing\&.  This parameter
+is intended to be used so that snapshots can be correlated against wall
+clock time (which is not supported in the standard library) rather than
+elapsed CPU time\&.
+
+.sp
