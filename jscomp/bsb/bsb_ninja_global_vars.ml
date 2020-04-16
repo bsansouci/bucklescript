@@ -65,5 +65,7 @@ let ocaml_dependencies = "ocaml_dependencies"
 let bsb_helper_verbose = "bsb_helper_verbose"
 let dev_includes = "dev_includes"
 let maybe_refmt_ppx = "maybe_refmt_ppx"
-let external_deps_for_linking = "external_deps_for_linking"
+let external_deps = "external_deps"
+let root_project_dir = "root_project_dir"
+let all_sources_mlast = "all_sources_mlast"
 #end

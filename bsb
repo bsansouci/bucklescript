@@ -12,6 +12,7 @@ var os = require('os');
 var path = require('path')
 var bsconfig = 'bsconfig.json'
 var bsb_exe = path.join(__dirname,process.platform,'bsb.exe')
+var ninja_exe  = path.join(__dirname,process.platform,'ninja.exe')
 
 var LAST_SUCCESS_BUILD_STAMP = 0
 process.env.BSB_PROJECT_ROOT=process.cwd()
@@ -105,6 +106,11 @@ Please pick a different one using the \`-ws [host:]port\` flag from bsb.`)
 }
 
 
+var per_proj_dir = false
+var root_proj_dir = false
+var bsc_dir = false
+var backend = "bytecode"
+var run_ninja = false
 
 /**
  * @type {string[]}
@@ -134,15 +140,38 @@ for (var i = 2; i < process_argv.length; ++i) {
         }
         dlog(`WebSocket host & port number: ${webSocketHost}:${webSocketPort}`)
         useWebSocket = true
+     } else if (current === "-run-ninja") {
+        run_ninja = true
+     } else if (current === '-w') {
+        watch_mode = true
     } else {
         delegate_args.push(current)
-        if (current === '-w') {
-            watch_mode = true
-        } else if (current === "-verbose") {
+        if (current === "-verbose") {
             verbose = true
-
+        } else if (current === "-project-dir") {
+            per_proj_dir = true
+        } else if (current === "-root-project-dir") {
+            root_proj_dir = true
+        } else if (current === "-bsc-dir") {
+            bsc_dir = true
+        } else if (current === "-backend") {
+            backend = process_argv[i + 1]
         }
     }
+}
+
+
+if (!per_proj_dir) {
+    delegate_args.push("-project-dir");
+    delegate_args.push(process.cwd());
+}
+if (!root_proj_dir) {
+    delegate_args.push("-root-project-dir");
+    delegate_args.push(process.cwd());
+}
+if (!bsc_dir) {
+    delegate_args.push("-bsc-dir");
+    delegate_args.push(path.join(process.cwd(), "node_modules", "bs-platform", process.platform));
 }
 
 
@@ -165,6 +194,9 @@ if(
 // The following process atm only spawned `bsb.exe` directly
 try {
     child_process.execFileSync(bsb_exe, delegate_args, { stdio: 'inherit' })
+    if (run_ninja) {
+        child_process.execFileSync(ninja_exe, ["-C", path.join(process.cwd(), "lib", "bs-" + backend)], { stdio: 'inherit' })
+    } 
 } catch (e) {
     if (e.code === "ENOENT") {
         // when bsb is actually not found
@@ -263,7 +295,7 @@ if (watch_mode) {
             return true
         }
     }
-    var sourcedirs = path.join('lib', 'bs', '.sourcedirs.json')
+    var sourcedirs = path.join('lib', 'bs-' + backend, '.sourcedirs.json')
     var watch_generated = []
 
     function watch_build(watch_config) {
@@ -398,9 +430,24 @@ if (watch_mode) {
                 dlog(`Rebuilding since ${reasons_to_rebuild}`)
             }
             reasons_to_rebuild = [];
+            console.log("hey");
             var p = child_process
-                .spawn(bsb_exe, [], { stdio: ['inherit', 'inherit', 'pipe'] });
-            p.on('exit', build_finished_callback)
+                .spawn(bsb_exe, delegate_args, { stdio: ['inherit', 'inherit', 'pipe'] });
+            p.on('exit', function(code, signal) {
+                if (code != 0 && run_ninja) error_output("Error running bsb", 'Error')
+
+                if (code == 0 && run_ninja) {
+                    var p = child_process
+                        .spawn(ninja_exe, ["-C", path.join(process.cwd(), "lib", "bs-" + backend)], { stdio: ['inherit', 'inherit', 'pipe'] });
+                    p.on('exit', build_finished_callback)
+                    p.stderr
+                        .setEncoding('utf8')
+                        // @ts-ignore
+                        .on('data', function (s) { error_output(s, 'ninja: error') })
+                } else {
+                    build_finished_callback(code, signal)
+                }
+            })
             p.stderr
                 .setEncoding('utf8')
                 // @ts-ignore

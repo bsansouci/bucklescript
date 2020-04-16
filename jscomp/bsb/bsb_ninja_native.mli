@@ -39,6 +39,7 @@ val handle_file_groups :
   backend:Bsb_config_types.compilation_kind_t ->
   dependency_info:Bsb_dependency_info.t ->
   root_project_dir:string ->
+  build_library:string option ->
   config:Bsb_config_types.t ->
   Bsb_file_groups.file_groups ->
   string option ->

@@ -30,4 +30,4 @@ val main_entries : Bsb_config_types.entries_t list
 
 val ocaml_flags : string list
 
-val ocaml_dependencies : string list
+val filter_otherlibs : string -> bool

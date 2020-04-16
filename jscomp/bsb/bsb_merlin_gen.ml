@@ -80,7 +80,7 @@ let output_merlin_namespace buffer ns=
   match ns with 
   | None -> ()
   | Some x -> 
-    let lib_artifacts_dir = Lazy.force Bsb_global_backend.lib_artifacts_dir in
+    let lib_artifacts_dir = !Bsb_global_backend.lib_artifacts_dir in
     Buffer.add_string buffer merlin_b ; 
     Buffer.add_string buffer lib_artifacts_dir ; 
     Buffer.add_string buffer merlin_flg ; 
@@ -90,15 +90,14 @@ let output_merlin_namespace buffer ns=
 let bsc_flg_to_merlin_ocamlc_flg bsc_flags  =
   merlin_flg ^ 
   String.concat Ext_string.single_space 
-    (List.filter (fun x -> not (Ext_string.starts_with x bs_flg_prefix )) @@ 
-    if Lazy.force Bsb_global_backend.backend = Bsb_config_types.Js then Literals.dash_nostdlib::bsc_flags else bsc_flags)
+    (List.filter (fun x -> not (Ext_string.starts_with x bs_flg_prefix )) @@ bsc_flags)
 
 (* No need for [-warn-error] in merlin  *)     
 let warning_to_merlin_flg (warning: Bsb_warning.t ) : string=     
   merlin_flg ^ Bsb_warning.to_merlin_string warning
 
 
-let merlin_file_gen ~per_proj_dir:(per_proj_dir:string)
+let merlin_file_gen ~per_proj_dir:(per_proj_dir:string) ~bsc_dir
     ({file_groups = res_files ; 
       generate_merlin;
       ppx_files;
@@ -139,14 +138,14 @@ let merlin_file_gen ~per_proj_dir:(per_proj_dir:string)
           let fmt : _ format = 
             if Ext_sys.is_windows_or_cygwin then
               "\"%s -as-ppx \"" 
-            else  "'%s -as-ppx '"  in Printf.sprintf fmt Bsb_global_paths.vendor_bsc
+            else  "'%s -as-ppx '"  in Printf.sprintf fmt (Bsb_global_paths.vendor_bsc bsc_dir)
         | Some opt ->
           let fmt : _ format = 
             if Ext_sys.is_windows_or_cygwin then
               "\"%s -as-ppx -bs-jsx %d\"" 
             else  "'%s -as-ppx -bs-jsx %d'" 
           in 
-          Printf.sprintf fmt  Bsb_global_paths.vendor_bsc
+          Printf.sprintf fmt  (Bsb_global_paths.vendor_bsc bsc_dir)
             (match opt with Jsx_v2 -> 2 | Jsx_v3 -> 3)
        )
       );    
@@ -179,7 +178,7 @@ let merlin_file_gen ~per_proj_dir:(per_proj_dir:string)
         Buffer.add_string buffer merlin_b;
         Buffer.add_string buffer path ;
       );
-    let lib_artifacts_dir = Lazy.force Bsb_global_backend.lib_artifacts_dir in
+    let lib_artifacts_dir = !Bsb_global_backend.lib_artifacts_dir in
     Ext_list.iter res_files.files (fun x -> 
         if not (Bsb_file_groups.is_empty x) then 
           begin

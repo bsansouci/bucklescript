@@ -1,139 +1,34 @@
-(* Copyright (C) 2015-2016 Bloomberg Finance L.P.
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * In addition to the permissions granted to you by the LGPL, you may combine
- * or link a "work that uses the Library" with a publicly distributed version
- * of this file to produce a combined library or application, then distribute
- * that combined work under the terms of your choosing, with no requirement
- * to comply with the obligations normally placed on you by section 4 of the
- * LGPL version 3 (or the corresponding section of a later version of the LGPL
- * should you choose to use a later version).
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *)
+let ( // ) = Ext_path.combine
 
-let () =  Bsb_log.setup () 
+let collect_dependency_info ~root_project_dir = 
+  let dependency_info : Bsb_dependency_info.t = {
+    static_libraries = [];
+    all_external_deps = [];
+    all_c_linker_flags = [];
+    all_otherlibs = [];
+  } in
 
-let force_regenerate = ref false
+  Bsb_build_util.walk_all_deps root_project_dir
+    (fun {top; proj_dir} ->
+      if not top then begin
+        (* TODO: only read the one field we want to read *)
+        let config = Bsb_config_parse.interpret_json 
+          ~toplevel_package_specs:None
+          ~per_proj_dir:proj_dir in
+        (* TODO: double check this order *)
+        let lib_artifacts_dir = proj_dir // !Bsb_global_backend.lib_artifacts_dir in
+        dependency_info.static_libraries <- (List.map (fun lib -> lib_artifacts_dir // lib) config.static_libraries) @ dependency_info.static_libraries;
+        dependency_info.all_c_linker_flags <- (Bsb_config_types.(config.c_linker_flags)) @ dependency_info.all_c_linker_flags;
+        dependency_info.all_external_deps <- proj_dir // !Bsb_global_backend.lib_ocaml_dir :: dependency_info.all_external_deps;
+        (* Dedup otherlibs *)
+        (* TODO: check this order *)
+        dependency_info.all_otherlibs <- (List.filter (fun lib1 -> (List.find_opt (fun lib2 -> lib2 = lib1) dependency_info.all_otherlibs) = None ) config.otherlibs) @ dependency_info.all_otherlibs;
+      end;
+  );
+  dependency_info.all_external_deps <- List.rev dependency_info.all_external_deps;
+  (* dependency_info.all_otherlibs <- List.filter (fun lib1 -> (List.find_opt (fun lib2 -> lib2 = lib1) dependency_info.all_otherlibs) = None ) dependency_info.all_otherlibs; *)
+  dependency_info
 
-let current_theme = ref "basic"
-let set_theme s = current_theme := s 
-let generate_theme_with_path = ref None
-let regen = "-regen"
-let separator = "--"
-let watch_mode = ref false
-let make_world = ref false 
-let do_install = ref false
-let set_make_world () = make_world := true
-let bs_version_string = Bs_version.version
-
-let print_version_string () = 
-  print_string bs_version_string;
-  print_newline (); 
-  exit 0 
-
-let bsb_main_flags : (string * Arg.spec * string) list=
-  [
-    "-v", Arg.Unit print_version_string, 
-    " Print version and exit";
-    "-version", Arg.Unit print_version_string, 
-    " Print version and exit";
-    "-verbose", Arg.Unit Bsb_log.verbose,
-    " Set the output(from bsb) to be verbose";
-    "-w", Arg.Set watch_mode,
-    " Watch mode" ;     
-    "-clean-world", Arg.Unit (fun _ -> 
-        Bsb_clean.clean_bs_deps  Bsb_global_paths.cwd),
-    " Clean all bs dependencies";
-    "-clean", Arg.Unit (fun _ -> 
-        Bsb_clean.clean_self  Bsb_global_paths.cwd),
-    " Clean only current project";
-    "-make-world", Arg.Unit set_make_world,
-    " Build all dependencies and itself ";
-    "-install", Arg.Set do_install,
-    " Install public interface files into lib/ocaml";
-    "-init", Arg.String (fun path -> generate_theme_with_path := Some path),
-    " Init sample project to get started. Note (`bsb -init sample` will create a sample project while `bsb -init .` will reuse current directory)";
-    "-theme", Arg.String set_theme,
-    " The theme for project initialization, default is basic(https://github.com/bucklescript/bucklescript/tree/master/jscomp/bsb/templates)";
-    
-    regen, Arg.Set force_regenerate,
-    " (internal) Always regenerate build.ninja no matter bsconfig.json is changed or not (for debugging purpose)";
-    "-themes", Arg.Unit Bsb_theme_init.list_themes,
-    " List all available themes";
-    "-where",
-    Arg.Unit (fun _ -> 
-        print_endline (Filename.dirname Sys.executable_name)),
-    " Show where bsb.exe is located";
-(** Below flags are only for bsb script, it is not available for bsb.exe 
-  we make it at this time to make `bsb -help` easier
-*)
-    "-ws", Arg.Bool ignore, 
-    " [host:]port specify a websocket number (and optionally, a host). When a build finishes, we send a message to that port. For tools that listen on build completion.";
-#if BS_NATIVE then
-     "-backend", Arg.String (fun s -> 
-         match s with
-         | "js"       -> Bsb_global_backend.backend_ref := Some Bsb_config_types.Js
-         | "native"   -> Bsb_global_backend.backend_ref := Some Bsb_config_types.Native
-         | "bytecode" -> Bsb_global_backend.backend_ref := Some Bsb_config_types.Bytecode
-         | _ -> failwith "-backend should be one of: 'js', 'bytecode' or 'native'."
-       ),
-     " Builds the entries specified in the bsconfig that match the given backend. Can be either 'js', 'bytecode' or 'native'.";
-#end
-  ]
-
-
-(*Note that [keepdepfile] only makes sense when combined with [deps] for optimization*)
-
-(**  Invariant: it has to be the last command of [bsb] *)
-let exec_command_then_exit  command =
-  Bsb_log.info "@{<info>CMD:@} %s@." command;
-  exit (Sys.command command ) 
-
-(* Execute the underlying ninja build call, then exit (as opposed to keep watching) *)
-let ninja_command_exit   ninja_args  =
-  let ninja_args_len = Array.length ninja_args in
-  let lib_artifacts_dir = Lazy.force Bsb_global_backend.lib_artifacts_dir in
-  if Ext_sys.is_windows_or_cygwin then
-    let path_ninja = Filename.quote Bsb_global_paths.vendor_ninja in 
-    exec_command_then_exit 
-      (if ninja_args_len = 0 then      
-         Ext_string.inter3
-           path_ninja "-C" lib_artifacts_dir
-       else   
-         let args = 
-           Array.append 
-             [| path_ninja ; "-C"; lib_artifacts_dir|]
-             ninja_args in 
-         Ext_string.concat_array Ext_string.single_space args)
-  else
-    let ninja_common_args = [|"ninja.exe"; "-C"; lib_artifacts_dir |] in 
-    let args = 
-      if ninja_args_len = 0 then ninja_common_args else 
-        Array.append ninja_common_args ninja_args in 
-    Bsb_log.info_args args ;      
-    Unix.execvp Bsb_global_paths.vendor_ninja args      
-
-
-
-(**
-   Cache files generated:
-   - .bsdircache in project root dir
-   - .bsdeps in builddir
-
-   What will happen, some flags are really not good
-   ninja -C _build
-*)
 let usage = "Usage : bsb.exe <bsb-options> -- <ninja_options>\n\
              For ninja options, try ninja -h \n\
              ninja will be loaded either by just running `bsb.exe' or `bsb.exe .. -- ..`\n\
@@ -143,194 +38,76 @@ let usage = "Usage : bsb.exe <bsb-options> -- <ninja_options>\n\
 let handle_anonymous_arg arg =
   raise (Arg.Bad ("Unknown arg \"" ^ arg ^ "\""))
 
+let per_proj_dir = ref None
+let lib_artifacts_dir = ref None
+let root_project_dir = ref None
+let bsc_dir = ref None
+let build_library = ref None
 
-let program_exit () =
-  exit 0
+let bsb_main_flags : (string * Arg.spec * string) list = [
+  "-bsc-dir", Arg.String (fun s ->
+    bsc_dir := Some s
+  ),
+  "Internal";
+  "-root-project-dir", Arg.String (fun s ->
+    root_project_dir := Some s
+  ),
+  "Internal";
+  "-lib-artifacts-dir", Arg.String (fun s ->
+    lib_artifacts_dir := Some s
+  ),
+  "Internal";
+  "-project-dir", Arg.String (fun s ->
+    per_proj_dir := Some s
+  ),
+  "Internal";
 
-let install_target config_opt =
-  let config =
-    match config_opt with
-    | None ->
-      let config = 
-        Bsb_config_parse.interpret_json
-          ~toplevel_package_specs:None
-          ~per_proj_dir:Bsb_global_paths.cwd in
-      let _ = Ext_list.iter config.file_groups.files (fun group -> 
-          let check_file = match group.public with
-            | Export_all -> fun _ -> true
-            | Export_none -> fun _ -> false
-            | Export_set set ->  
-              fun module_name ->
-                Set_string.mem set module_name in
-          Map_string.iter group.sources 
-            (fun  module_name module_info -> 
-               if check_file module_name then 
-                 begin Hash_set_string.add config.files_to_install module_info.name_sans_extension end
-            )) in 
-      config
-    | Some config -> config in
-  Bsb_world.install_targets Bsb_global_paths.cwd config
+  "-verbose", Arg.Unit Bsb_log.verbose,
+  " Set the output(from bsb-native) to be verbose";
 
-(* see discussion #929, if we catch the exception, we don't have stacktrace... *)
+  "-backend", Arg.String (fun s -> 
+      match s with
+      | "native"   -> Bsb_global_backend.set_backend Bsb_config_types.Native
+      | "bytecode" -> Bsb_global_backend.set_backend Bsb_config_types.Bytecode
+      | _ -> failwith "-backend should be one of: 'js', 'bytecode' or 'native'."
+    ),
+  " Builds the entries in the bsconfig which match the given backend.";
+
+  "-build-library", Arg.String (fun main_file -> build_library := Some(main_file)),
+  " Builds a static library given a main module name. Outputs a cmxa/cma file depending on -backend.";
+
+  "-w", Arg.Unit (fun () -> exit 0 ),
+  " Watch mode";
+]
+
+
 let () =
-  let cwd = Bsb_global_paths.cwd in
-#if BS_NATIVE then
-  let ocaml_dir = Bsb_global_paths.ocaml_dir in
-#end
-  try begin 
-    match Sys.argv with 
-#if BS_NATIVE then
-    (* Both of those are equivalent and the watcher will always pass in the `-backend` flag. *)
-    | [| _; "-backend"; _ |] 
-#end
-    | [| _ |] ->  (* specialize this path [bsb.exe] which is used in watcher *)
-#if BS_NATIVE then
-      if Array.length Sys.argv = 3 then begin match Array.get Sys.argv 2 with
-        | "js"       -> Bsb_global_backend.backend_ref := Some Bsb_config_types.Js
-        | "native"   -> Bsb_global_backend.backend_ref := Some Bsb_config_types.Native
-        | "bytecode" -> Bsb_global_backend.backend_ref := Some Bsb_config_types.Bytecode
-        | _ -> failwith "-backend should be one of: 'js', 'bytecode' or 'native'."
-      end;
-      let main_config = 
-        Bsb_config_parse.interpret_json ~toplevel_package_specs:None ~per_proj_dir:cwd in
-      Bsb_ninja_regen.regenerate_ninja
-        ~dependency_info:None
-        ~is_top_level:true
-        ~root_project_dir:cwd
-        ~main_config
-        ~ocaml_dir
-        ~toplevel_package_specs:None 
-        ~forced:false
-        ~per_proj_dir:cwd  |> ignore;
-#else
-      Bsb_ninja_regen.regenerate_ninja 
-        ~toplevel_package_specs:None 
-        ~forced:false 
-        ~per_proj_dir:Bsb_global_paths.cwd  |> ignore;
-#end
-      ninja_command_exit  [||] 
-    | argv -> 
-      begin
-        match Ext_array.find_and_split argv Ext_string.equal separator with
-        | `No_split
-          ->
-          begin
-            Arg.parse bsb_main_flags handle_anonymous_arg usage;
-            (* first, check whether we're in boilerplate generation mode, aka -init foo -theme bar *)
-            match !generate_theme_with_path with
-            | Some path -> Bsb_theme_init.init_sample_project ~cwd:Bsb_global_paths.cwd ~theme:!current_theme path
-            | None -> 
-              (* [-make-world] should never be combined with [-package-specs] *)
-              let make_world = !make_world in 
-              let force_regenerate = !force_regenerate in
-              let do_install = !do_install in 
-              if not make_world && not force_regenerate && not do_install then
-                (* [regenerate_ninja] is not triggered in this case
-                   There are several cases we wish ninja will not be triggered.
-                   [bsb -clean-world]
-                   [bsb -regen ]
-                *)
-                (if !watch_mode then 
-                    program_exit ()) (* bsb -verbose hit here *)
-              else
-#if BS_NATIVE then
-                (let main_config = 
-                  Bsb_config_parse.interpret_json 
-                    ~toplevel_package_specs:None 
-                    ~per_proj_dir:cwd in
-                let config_opt = Some main_config in
-                let dependency_info = if make_world then begin
-                  Some (Bsb_world.make_world_deps cwd config_opt [||] ~root_project_dir:cwd)
-                end else None in
-                (* don't regenerate files when we only run [bsb -clean-world] *)
-                Bsb_ninja_regen.regenerate_ninja 
-                  ~dependency_info 
-                  ~is_top_level:true
-                  ~root_project_dir:cwd
-                  ~toplevel_package_specs:None 
-                  ~forced:force_regenerate
-                  ~main_config
-                  ~ocaml_dir
-                  ~per_proj_dir:cwd |> ignore;
-#else
-                (let config_opt = 
-                   Bsb_ninja_regen.regenerate_ninja 
-                     ~toplevel_package_specs:None 
-                     ~forced:force_regenerate ~per_proj_dir:Bsb_global_paths.cwd   in
-                 if make_world then begin
-                   ignore @@ Bsb_world.make_world_deps Bsb_global_paths.cwd config_opt [||] ~root_project_dir:cwd;
-                 end;
-#end
-                 if !watch_mode then begin
-                   program_exit ()
-                   (* ninja is not triggered in this case
-                      There are several cases we wish ninja will not be triggered.
-                      [bsb -clean-world]
-                      [bsb -regen ]
-                   *)
-                 end else if make_world then begin
-                   ninja_command_exit [||] 
-                 end else if do_install then begin
-                   install_target config_opt
-                 end)
-          end
-        | `Split (bsb_args,ninja_args)
-          -> (* -make-world all dependencies fall into this category *)
-          begin
-            Arg.parse_argv bsb_args bsb_main_flags handle_anonymous_arg usage ;
-#if BS_NATIVE then
+  Arg.parse bsb_main_flags handle_anonymous_arg usage;
 
-            let main_config = 
-              Bsb_config_parse.interpret_json 
-                ~toplevel_package_specs:None 
-                ~per_proj_dir:cwd in
-            let config_opt = Some main_config in
-            (* [-make-world] should never be combined with [-package-specs] *)
-            let dependency_info = if !make_world then 
-              Some (Bsb_world.make_world_deps cwd config_opt ninja_args ~root_project_dir:cwd)
-            else None in
-              Bsb_ninja_regen.regenerate_ninja 
-              ~dependency_info
-              ~is_top_level:true
-              ~root_project_dir:cwd
-              ~toplevel_package_specs:None 
-              ~forced:!force_regenerate
-              ~main_config
-              ~ocaml_dir
-              ~per_proj_dir:cwd |> ignore;
-#else
-            let config_opt = 
-              Bsb_ninja_regen.regenerate_ninja 
-                ~toplevel_package_specs:None 
-                ~per_proj_dir:Bsb_global_paths.cwd 
-                ~forced:!force_regenerate in
-            (* [-make-world] should never be combined with [-package-specs] *)
-            if !make_world then
-              ignore @@ Bsb_world.make_world_deps Bsb_global_paths.cwd config_opt ninja_args ~root_project_dir:cwd;
-#end
-            if !do_install then
-              install_target config_opt;
-            if !watch_mode then program_exit ()
-            else ninja_command_exit  ninja_args 
-          end
-      end
-  end
-  with 
-  | Bsb_exception.Error e ->
-    Bsb_exception.print Format.err_formatter e ;
-    Format.pp_print_newline Format.err_formatter ();
-    exit 2
-  | Ext_json_parse.Error (start,_,e) -> 
-    Format.fprintf Format.err_formatter
-      "File %S, line %d\n\
-       @{<error>Error:@} %a@."
-      start.pos_fname start.pos_lnum
-      Ext_json_parse.report_error e ;
-    exit 2
-  | Arg.Bad s 
-  | Sys_error s -> 
-    Format.fprintf Format.err_formatter
-      "@{<error>Error:@} %s@."
-      s ;
-    exit 2
-  | e -> Ext_pervasives.reraise e 
+  let per_proj_dir = match !per_proj_dir with
+    | None -> failwith "-project-dir was not set"
+    | Some per_proj_dir -> per_proj_dir
+  in
+  let root_project_dir = match !root_project_dir with
+    | None -> failwith "-root-project-dir was not set"
+    | Some root_project_dir -> root_project_dir
+  in
+  let bsc_dir = match !bsc_dir with
+    | None -> failwith "-bsc-dir was not set"
+    | Some bsc_dir -> bsc_dir
+  in
+  let build_library = !build_library in
+
+  let config = 
+    Bsb_config_parse.interpret_json 
+      ~toplevel_package_specs:None
+      ~per_proj_dir in
+
+  let toplevel = per_proj_dir = root_project_dir in       
+  let dependency_info = if toplevel then collect_dependency_info ~root_project_dir
+    else { Bsb_dependency_info.all_external_deps = []; static_libraries=[]; all_c_linker_flags=[]; all_otherlibs=[]; } in
+
+  Bsb_merlin_gen.merlin_file_gen ~per_proj_dir ~bsc_dir config;       
+  let ocaml_dir = Bsb_global_paths_native.ocaml_dir in
+  Bsb_ninja_gen.output_ninja_and_namespace_map 
+      ~per_proj_dir ~build_library  ~toplevel ~dependency_info ~ocaml_dir ~root_project_dir ~bsc_dir config ; 

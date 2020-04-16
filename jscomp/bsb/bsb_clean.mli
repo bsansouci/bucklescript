@@ -28,8 +28,10 @@
 
 val clean_bs_deps : 
   string -> 
+  string -> 
   unit
 
 val clean_self : 
+  string -> 
   string -> 
   unit

@@ -22,7 +22,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *)
 
-let cwd = Sys.getcwd ()
+(* let cwd = Sys.getcwd () *)
 
 
 (**
@@ -45,29 +45,14 @@ let cwd = Sys.getcwd ()
    Only the latter need be adapted based on project root  
 *)
 
-let bsc_dir  = 
-  Filename.dirname 
-    (Ext_path.normalize_absolute_path 
-       (Ext_path.combine cwd  Sys.executable_name))
+(* TODO: Is this hacky? *)
+(* let bsc_dir  =  Sys.argv.(4) *)
 
-let vendor_bsc =        
+let vendor_bsc bsc_dir =        
   Filename.concat bsc_dir  "bsc.exe"
 
 
-let vendor_ninja = 
+let vendor_ninja bsc_dir = 
     Filename.concat bsc_dir "ninja.exe"      
-
-let vendor_bsdep =     
-  Filename.concat bsc_dir "bsb_helper.exe"
-
-
   
-;; assert (Sys.file_exists bsc_dir)       
-
-let ocaml_version = "4.06.1"
-
-let ocaml_dir =
-  Filename.(concat (concat (dirname bsc_dir) "native") ocaml_version)
-
-let ocaml_lib_dir =
-  Filename.(concat (concat ocaml_dir "lib") "ocaml")
+(* ;; assert (Sys.file_exists bsc_dir)        *)

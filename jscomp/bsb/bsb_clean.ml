@@ -26,10 +26,10 @@
 let (//) = Ext_path.combine
 
 
-let ninja_clean  proj_dir =
+let ninja_clean bsc_dir proj_dir =
   try
-    let cmd = Bsb_global_paths.vendor_ninja in
-    let lib_artifacts_dir = Lazy.force Bsb_global_backend.lib_artifacts_dir in
+    let cmd = Bsb_global_paths.vendor_ninja bsc_dir in
+    let lib_artifacts_dir = !Bsb_global_backend.lib_artifacts_dir in
     let cwd = proj_dir // lib_artifacts_dir in
     if Sys.file_exists cwd then
       let eid =
@@ -39,7 +39,7 @@ let ninja_clean  proj_dir =
   with  e ->
     Bsb_log.warn "@{<warning>ninja clean failed@} : %s @." (Printexc.to_string e)
 
-let clean_bs_garbage proj_dir =
+let clean_bs_garbage bsc_dir proj_dir =
   Bsb_log.info "@{<info>Cleaning:@} in %s@." proj_dir ;
   let try_remove x =
     let x = proj_dir // x in
@@ -47,18 +47,18 @@ let clean_bs_garbage proj_dir =
       Bsb_unix.remove_dir_recursive x  in
   try
     Bsb_parse_sources.clean_re_js proj_dir; (* clean re.js files*)
-    ninja_clean  proj_dir ;
+    ninja_clean bsc_dir proj_dir ;
     Ext_list.iter Bsb_config.all_lib_artifacts try_remove ;
   with
     e ->
     Bsb_log.warn "@{<warning>Failed@} to clean due to %s" (Printexc.to_string e)
 
 
-let clean_bs_deps  proj_dir =
+let clean_bs_deps bsc_dir proj_dir =
   Bsb_build_util.walk_all_deps  proj_dir  (fun pkg_cxt ->
       (* whether top or not always do the cleaning *)
-      clean_bs_garbage  pkg_cxt.proj_dir
+      clean_bs_garbage bsc_dir pkg_cxt.proj_dir
     )
 
-let clean_self  proj_dir = 
-    clean_bs_garbage  proj_dir
+let clean_self bsc_dir proj_dir = 
+    clean_bs_garbage bsc_dir proj_dir

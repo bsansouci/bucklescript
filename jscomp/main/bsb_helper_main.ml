@@ -35,6 +35,11 @@ let add_ocaml_dependencies s =
 
 let main_module = ref None
 
+let clibs = ref []
+let add_clib file = clibs := file :: !clibs 
+
+let build_library = ref None
+
 let set_main_module modulename =
   main_module := Some (Ext_string.capitalize_ascii modulename)
 
@@ -78,7 +83,8 @@ let link link_byte_or_native =
        ~warnings:!warnings
        ~warn_error:!warn_error
        ~verbose:!verbose
-       ~cwd:Bsb_global_paths.cwd
+       ~cwd:(Sys.getcwd ())
+       ~clibs:(List.rev !clibs)
   end
 let pack link_byte_or_native =
    Bsb_helper_packer.pack
@@ -89,7 +95,8 @@ let pack link_byte_or_native =
      ~warnings:!warnings
      ~warn_error:!warn_error
      ~verbose:!verbose
-     ~cwd:Bsb_global_paths.cwd
+     ~build_library:!build_library
+     ~cwd:(Sys.getcwd ())
 #end  
 let () =
   Bsb_helper_arg.parse_exn [
@@ -170,6 +177,12 @@ let () =
 
     "-verbose", ( Unit (fun v -> verbose := true)),
     " Turn on verbose Maude.";
+
+    "-add-clib", (String add_clib),
+    " adds a .a library file to be linked into the final executable";
+
+    "-build-library", (String (fun v -> build_library := Some v)),
+    " Create a library file with all the object files from the given entry point."
 #end    
   ] anonymous usage;
   (* arrange with mlast comes first *)

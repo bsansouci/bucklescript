@@ -36,7 +36,7 @@ let module_of_filename filename =
   | exception Not_found -> str
   | len -> String.sub str 0 len
 
-let pack pack_byte_or_native ~batch_files ~includes ~namespace ~warnings ~warn_error ~verbose ~cwd =
+let pack pack_byte_or_native ~batch_files ~includes ~namespace ~warnings ~warn_error ~verbose ~build_library ~cwd =
   let suffix_object_files, suffix_library_files, compiler, nested = begin match pack_byte_or_native with
   | PackBytecode -> Literals.suffix_cmo, Literals.suffix_cma , "ocamlc", "bytecode"
   | PackNative   -> Literals.suffix_cmx, Literals.suffix_cmxa, "ocamlopt", "native"
@@ -58,18 +58,34 @@ let pack pack_byte_or_native ~batch_files ~includes ~namespace ~warnings ~warn_e
         (Bsb_helper_extract.read_dependency_graph_from_mlast_file (module_name ^ suffix))
         )    
   in
-  let domain =
-    Map_string.fold dependency_graph Set_string.empty 
-      (fun k _ acc -> Set_string.add acc k)
-      in
-  let sorted_tasks = Bsb_helper_dep_graph.sort_files_by_dependencies ~domain dependency_graph in
-  let all_object_files = Queue.fold
-    (fun acc v -> match Map_string.find_opt module_to_filepath v with
-      | Some file -> (file ^ suffix_object_files) :: acc
-      | None -> failwith @@ "build.ninja is missing the file '" ^ v ^ "' that was used in the project. Try force-regenerating but this shouldn't happen."
-      )
-    []
-    sorted_tasks in
+  let all_object_files = match build_library with
+  | None -> 
+    let domain =
+      Map_string.fold dependency_graph Set_string.empty 
+        (fun k _ acc -> Set_string.add acc k)
+        in
+    let sorted_tasks = Bsb_helper_dep_graph.sort_files_by_dependencies ~domain dependency_graph in
+    List.rev (Queue.fold
+      (fun acc v -> match Map_string.find_opt module_to_filepath v with
+        | Some file -> (file ^ suffix_object_files) :: acc
+        | None -> failwith @@ "build.ninja is missing the file '" ^ v ^ "' that was used in the project. Try force-regenerating but this shouldn't happen."
+        )
+      []
+      sorted_tasks)
+  | Some build_library -> 
+    let tasks = Bsb_helper_dep_graph.simple_collect_from_main dependency_graph build_library in
+    let namespace = match namespace with 
+      | None -> ""
+      | Some namespace -> "-" ^ namespace
+    in
+    List.rev (Queue.fold
+        (fun acc v -> match Map_string.find_opt module_to_filepath v with
+          | Some file -> (file ^ namespace ^ suffix_object_files) :: acc
+          | None -> Bsb_exception.missing_object_file v
+          )
+        []
+        tasks)
+  in
   let warning_command = if String.length warnings > 0 then
     "-w" :: warnings :: []
   else [] in 
@@ -77,17 +93,14 @@ let pack pack_byte_or_native ~batch_files ~includes ~namespace ~warnings ~warn_e
     "-warn-error" :: warn_error :: warning_command
   else warning_command in
 
-  (* This list will be reversed so we append the otherlibs object files at the end, and they'll end at the beginning. *)
   if all_object_files <> [] then
     let includes = Ext_list.fold_left includes [] (fun acc dir -> "-I" :: dir :: acc)  in
-    let otherlibs = Bsb_helper_dep_graph.get_otherlibs_dependencies dependency_graph suffix_library_files in
     let all_object_files = match namespace with
       | None -> all_object_files
       | Some namespace -> (namespace ^ suffix_object_files) :: all_object_files 
     in
-    let all_object_files = List.rev (all_object_files @ otherlibs) in
-    let compiler_extension = if Ext_sys.is_windows_or_cygwin then ".opt.exe" else ".opt" in
-    let local_compiler = Bsb_global_paths.ocaml_dir // "bin" // compiler ^ compiler_extension in
+    let compiler_extension = ".opt.exe" in
+    let local_compiler = Bsb_global_paths_native.ocaml_dir // "bin" // compiler ^ compiler_extension in
     
     let super_errors = if false then ["-bs-super-errors"] else [] in
     let list_of_args = (local_compiler :: "-a" :: "-g" ::

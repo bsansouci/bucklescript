@@ -35,6 +35,7 @@ val link : link_t ->
   warn_error:string ->
   verbose:bool ->
   cwd: string ->
+  clibs: string list ->
   unit
 #end
 

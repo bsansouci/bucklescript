@@ -22,13 +22,12 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *)
 
-#if BS_NATIVE then
 
 type compile_target_t = Native | Bytecode
 
 let (//) = Ext_path.combine
 
-
+let get_install_path p = ".." // (Filename.basename !Bsb_global_backend.lib_ocaml_dir) // (Filename.basename p)
 
 
 
@@ -180,7 +179,15 @@ let emit_module_build
     ~inputs:[output_mlast_simple]
     ~implicit_deps
     ~order_only_deps:[output_d]
-    ~rule
+    ~rule;
+  (* Copying rules around *)
+  List.iter (fun input -> 
+    Bsb_ninja_targets.output_build oc
+      ~outputs:[get_install_path input]
+      ~inputs:[input]
+      ~rule:rules.copy_resources
+  ) [output_cmx_or_cmo; output_cmi ]
+  
 
 
 
@@ -229,10 +236,11 @@ let link oc
   ~file_groups
   ~namespace
   ~dependency_info:(dependency_info : Bsb_dependency_info.t)
+  ~static_libraries
+  ~c_linker_flags
   ~rules:(rules : Bsb_ninja_rule.builtin)
   ~root_project_dir =
   let buildable_entries = List.filter (fun entry -> match (backend, entry) with
-  | Bsb_config_types.Js, Bsb_config_types.JsTarget _
   | Bsb_config_types.Native, Bsb_config_types.NativeTarget _
   | Bsb_config_types.Bytecode, Bsb_config_types.BytecodeTarget _ -> true
   | _, _ -> false
@@ -244,7 +252,9 @@ let link oc
      *)
     let output, rule_name, library_file_name, suffix_cmo_or_cmx, main_module_name =
       begin match entry with
-      | Bsb_config_types.JsTarget _ -> assert false
+      | Bsb_config_types.JsTarget _ -> 
+        (* This target will be filtered out above. *)
+        assert false
       | Bsb_config_types.BytecodeTarget main_module_name ->
         root_project_dir // (Ext_string.lowercase_ascii main_module_name) ^ ".exe",
         rules.linking_bytecode,
@@ -258,54 +268,50 @@ let link oc
         Literals.suffix_cmx,
         main_module_name
       end in
-    let (all_mlast_files, all_cmo_or_cmx_files, all_cmi_files) =
-      List.fold_left (fun acc (group : Bsb_file_groups.file_group) ->
-        Map_string.fold group.sources acc (fun _ (v : Bsb_db.module_info) (all_mlast_files, all_cmo_or_cmx_files, all_cmi_files) ->
-          let input = v.name_sans_extension in
-          let namespacedName = Ext_namespace_encode.make ?ns:namespace input in
-          begin match v.info with
-            | Ml
-            | Ml_mli ->
-              ((input ^ Literals.suffix_mlast_simple)   :: all_mlast_files,
-                (namespacedName ^ suffix_cmo_or_cmx)   :: all_cmo_or_cmx_files,
-                (namespacedName ^ Literals.suffix_cmi) :: all_cmi_files)
-            | Mli -> 
-              (all_mlast_files,
-                all_cmo_or_cmx_files,
-                (namespacedName ^ Literals.suffix_cmi) :: all_cmi_files)
-          end
-        )
-      ) ([], [], []) file_groups
+
+    let rec get_main_module_path (groups : Bsb_file_groups.file_group list) = match groups with
+    | [] -> Ext_fmt.failwithf ~loc:__LOC__ "Could not find main module %s in sources." main_module_name
+    | group :: rest ->
+      begin match Map_string.find_opt group.sources main_module_name with 
+      | None -> get_main_module_path rest
+      | Some file -> file.name_sans_extension ^ suffix_cmo_or_cmx
+      end
     in
-    let shadows = [{
+    let static_libraries = static_libraries @ dependency_info.static_libraries in
+
+     let shadows = [{
         Bsb_ninja_targets.key = "main_module";
         op = Bsb_ninja_targets.Overwrite main_module_name
+      }; {
+        key = "static_libraries";
+        (* TODO: might need some escaping here. *)
+        op = Bsb_ninja_targets.Overwrite (String.concat Ext_string.single_space (Ext_list.flat_map c_linker_flags  (fun x -> ["-add-clib"; "-ccopt"; "-add-clib" ; x]))  ^ " " ^ (Bsb_build_util.flag_concat "-add-clib" static_libraries))
       }] in
       let external_deps_lib =
           List.map
             (fun dep -> (Bytes.unsafe_to_string (Bytes.escaped (Bytes.unsafe_of_string dep))) // library_file_name)
             dependency_info.all_external_deps
       in
+      let main_module_path = get_main_module_path file_groups in
       Bsb_ninja_targets.output_build oc
         ~outputs:[output]
-        ~inputs:all_mlast_files
-        ~implicit_deps:(external_deps_lib @ (List.map (fun str -> Bytes.unsafe_to_string (Bytes.escaped (Bytes.unsafe_of_string str))) (all_cmi_files @ all_cmo_or_cmx_files)))
+        ~inputs:[]
+        ~implicit_deps:(main_module_path :: external_deps_lib @ (List.map (fun str -> Bytes.unsafe_to_string (Bytes.escaped (Bytes.unsafe_of_string str))) static_libraries))
         ~shadows
         ~rule:rule_name;
   ) buildable_entries
 
 
-  let pack oc ~entries ~backend ~file_groups ~namespace ~rules:(rules : Bsb_ninja_rule.builtin) =
+  let pack oc ~entries ~backend ~file_groups ~namespace ~rules:(rules : Bsb_ninja_rule.builtin) ?build_library () =
      let output_cma_or_cmxa, rule_name, suffix_cmo_or_cmx =
        begin match backend with
        (* These cases could benefit from a better error message. *)
-       | Bsb_config_types.Js       -> assert false
        | Bsb_config_types.Bytecode ->
-         Literals.library_file ^ Literals.suffix_cma ,
+         [Literals.library_file ^ Literals.suffix_cma] ,
          rules.build_cma_library ,
          Literals.suffix_cmo
        | Bsb_config_types.Native   ->
-         Literals.library_file ^ Literals.suffix_cmxa,
+         [Literals.library_file ^ Literals.suffix_cmxa; Literals.library_file ^ Literals.suffix_a],
          rules.build_cmxa_library,
          Literals.suffix_cmx
      end in
@@ -327,13 +333,25 @@ let link oc
        )
        ([], [])
        file_groups in
+    let shadows = match build_library with
+    | None -> []
+    | Some build_library -> {
+        Bsb_ninja_targets.key = "build_library";
+        op = Overwrite ("-build-library " ^ build_library)
+      } :: []
+    in
      (* In the case that a library is just an interface file, we don't do anything *)
      if List.length all_cmo_or_cmx_files > 0 then begin
        Bsb_ninja_targets.output_build oc
-         ~outputs:[output_cma_or_cmxa]
+         ~outputs:output_cma_or_cmxa
          ~inputs:all_cmo_or_cmx_files
          ~implicit_deps:all_cmi_files
+         ~shadows
          ~rule:rule_name;
+      List.iter (fun x -> Bsb_ninja_targets.output_build oc
+         ~outputs:[get_install_path x]
+         ~inputs:[x]
+         ~rule:rules.copy_resources) output_cma_or_cmxa
      end
 
 let handle_file_groups
@@ -348,6 +366,7 @@ let handle_file_groups
     ~backend
     ~dependency_info
     ~root_project_dir
+    ~build_library
     ~config:(config: Bsb_config_types.t)
     (file_groups  :  Bsb_file_groups.file_groups)
     namespace   =
@@ -364,16 +383,22 @@ let handle_file_groups
        namespace
     );
   if toplevel then
-    link oc
-      ~entries:config.entries
-      ~backend
-      ~file_groups
-      ~namespace
-      ~dependency_info
-      ~rules
-      ~root_project_dir
+    match build_library with
+    | None -> 
+      let c_linker_flags = dependency_info.Bsb_dependency_info.all_c_linker_flags @ config.c_linker_flags in
+      link oc
+        ~entries:config.entries
+        ~backend
+        ~file_groups
+        ~namespace
+        ~dependency_info
+        ~rules
+        ~root_project_dir
+        ~static_libraries:config.static_libraries
+        ~c_linker_flags
+    | Some build_library ->
+      pack oc ~entries:config.entries ~backend ~file_groups ~namespace ~rules ~build_library ()
   else
-    pack oc ~entries:config.entries ~backend ~file_groups ~namespace ~rules
+    pack oc ~entries:config.entries ~backend ~file_groups ~namespace ~rules ()
 
 
-#end

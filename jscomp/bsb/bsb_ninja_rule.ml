@@ -166,7 +166,7 @@ let make_custom_rules
       Buffer.add_string buf " $postbuild";
     Buffer.contents buf
   in   
-  let mk_ast ~(has_pp : bool) ~has_ppx ~has_reason_react_jsx ~gen_simple : string =
+  let mk_ast ~(has_pp : bool) ~has_ppx ~has_reason_react_jsx : string =
     Buffer.clear buf ; 
     Buffer.add_string buf "$bsc  $warnings -color always";
     (match refmt with 
@@ -187,19 +187,17 @@ let make_custom_rules
     );
     if has_ppx then 
       Buffer.add_string buf " $ppx_flags"; 
-    if gen_simple then
-      Buffer.add_string buf " -bs-simple-binary-ast";
+    Buffer.add_string buf " -bs-simple-binary-ast";
     Buffer.add_string buf " $bsc_flags -o $out -bs-syntax-only -bs-binary-ast $in";   
     Buffer.contents buf
   in  
-  let gen_simple = Lazy.force Bsb_global_backend.backend <> Bsb_config_types.Js in
   let build_ast =
     define
-      ~command:(mk_ast ~has_pp ~has_ppx ~has_reason_react_jsx:false ~gen_simple)
+      ~command:(mk_ast ~has_pp ~has_ppx ~has_reason_react_jsx:false)
       "build_ast" in
   let build_ast_from_re =
     define
-      ~command:(mk_ast ~has_pp ~has_ppx ~has_reason_react_jsx:true ~gen_simple)
+      ~command:(mk_ast ~has_pp ~has_ppx ~has_reason_react_jsx:true)
       "build_ast_from_re" in 
  
   let copy_resources =    
@@ -210,8 +208,7 @@ let make_custom_rules
         else "cp $in $out"
       )
       "copy_resource" in
-  let native_arg = match Lazy.force Bsb_global_backend.backend with 
-    | Js -> ""
+  let native_arg = match !Bsb_global_backend.backend with 
     | Native -> " -MD-native"
     | Bytecode -> " -MD-bytecode" 
   in
@@ -268,7 +265,7 @@ let make_custom_rules
       | `bytecode -> Buffer.add_string buf "$ocamlc"
       | `native -> Buffer.add_string buf "$ocamlopt"
     end;
-    Buffer.add_string buf " $g_lib_incls $dev_includes $ocaml_flags -I $g_stdlib_incl_ocaml -o $out $warnings -no-alias-deps -c -intf-suffix .mliast_simple";
+    Buffer.add_string buf " $g_lib_incls $dev_includes $ocaml_flags -I $g_stdlib_incl_ocaml $external_deps -o $out $warnings -no-alias-deps -c -intf-suffix .mliast_simple";
     if cmi then
       Buffer.add_string buf " -intf $in"
     else
@@ -327,16 +324,16 @@ let make_custom_rules
 
   let mk_helper ~action =
     Buffer.clear buf ; 
-    Buffer.add_string buf "$bsdep $bsb_helper_verbose $ocaml_dependencies $warnings $g_ns";
+    Buffer.add_string buf "$bsdep $bsb_helper_verbose $ocaml_dependencies $warnings $g_ns $build_library";
     begin match action with
       | `link_bytecode ->
-        Buffer.add_string buf " -bs-main $main_module $external_deps_for_linking $in -link-bytecode $out"
+        Buffer.add_string buf " -bs-main $main_module $external_deps $static_libraries $all_sources_mlast $in -link-bytecode $out"
       | `link_native ->
-        Buffer.add_string buf " -bs-main $main_module $external_deps_for_linking $in -link-native $out"
+        Buffer.add_string buf " -bs-main $main_module $external_deps $static_libraries $all_sources_mlast $in -link-native $out"
       | `pack_bytecode ->
-        Buffer.add_string buf " $in -pack-bytecode-library"
+        Buffer.add_string buf " $all_sources_mlast $in -pack-bytecode-library"
       | `pack_native ->
-        Buffer.add_string buf " $in -pack-native-library"
+        Buffer.add_string buf " $all_sources_mlast $in -pack-native-library"
     end;
     Buffer.contents buf
   in

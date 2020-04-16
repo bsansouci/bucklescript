@@ -29,6 +29,12 @@
 *)
 type t  
 
+val print_rule :  out_channel -> 
+  description:string  ->
+  ?restat : unit  ->
+  ?dyndep: string ->
+  command:string ->   
+  string -> unit
 
 val get_name : t  -> out_channel -> string
 

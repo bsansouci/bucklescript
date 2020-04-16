@@ -32,4 +32,6 @@ let main_entries = []
 
 let ocaml_flags = ["-g"; "-bin-annot"; "-color"; "always"]
 
-let ocaml_dependencies = ["unix"; "bigarray"; ]
+let filter_otherlibs s = match s with 
+  | "unix" | "bigarray" | "str" | "nums" | "threads" | "dynlink" | "compiler-libs" -> true
+  | _ -> false

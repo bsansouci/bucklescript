@@ -32,5 +32,7 @@ val output_ninja_and_namespace_map :
   dependency_info:Bsb_dependency_info.t ->
   ocaml_dir:string ->
   root_project_dir:string ->
+  build_library: string option ->
+  bsc_dir: string ->
 #end
   Bsb_config_types.t -> unit 

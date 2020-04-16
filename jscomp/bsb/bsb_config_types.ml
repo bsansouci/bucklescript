@@ -33,7 +33,7 @@ type dependencies = dependency list
 (* `string` is a path to the entrypoint *)
 type entries_t = JsTarget of string | NativeTarget of string | BytecodeTarget of string
 
-type compilation_kind_t = Js | Bytecode | Native
+type compilation_kind_t = Bytecode | Native
 
 type reason_react_jsx = 
   | Jsx_v2
@@ -81,5 +81,10 @@ type t =
     cut_generators : bool; (* note when used as a dev mode, we will always ignore it *)
     bs_suffix : bool ; (* true means [.bs.js] we should pass [-bs-suffix] flag *)
     gentype_config : gentype_config option;
-    number_of_dev_groups : int
+    number_of_dev_groups : int;
+
+    static_libraries: string list;
+    c_linker_flags: string list;
+    otherlibs: string list;
+    dev_otherlibs: string list;
   }

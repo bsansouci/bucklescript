@@ -32,6 +32,7 @@ val pack : pack_t ->
   warnings: string -> 
   warn_error: string ->
   verbose: bool ->
+  build_library: string option ->
   cwd:string ->
   unit
 #end

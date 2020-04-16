@@ -30,7 +30,7 @@ let resolve_package cwd  package_name =
   let x =  Bsb_pkg.resolve_bs_package ~cwd package_name  in
   {
     Bsb_config_types.package_name ;
-    package_install_path = x // (Lazy.force Bsb_global_backend.lib_ocaml_dir)
+    package_install_path = x // !Bsb_global_backend.lib_ocaml_dir
   }
 
 type json_map = Ext_json_types.t Map_string.t
@@ -75,13 +75,6 @@ let extract_main_entries (map :json_map) =
     | Some (Arr {content = s}) -> entries := extract_entries s
     | _ -> ()
   end; 
-  if !Bsb_global_backend.backend_ref = None then 
-    begin match !entries with
-      | []
-      | (Bsb_config_types.JsTarget _) :: _       -> Bsb_global_backend.backend_ref := Some Bsb_config_types.Js
-      | (Bsb_config_types.NativeTarget _) :: _   -> Bsb_global_backend.backend_ref := Some Bsb_config_types.Native
-      | (Bsb_config_types.BytecodeTarget _) :: _ -> Bsb_global_backend.backend_ref := Some Bsb_config_types.Bytecode
-    end;
   !entries
 #else 
 let extract_main_entries (_ :json_map) = []  
@@ -180,7 +173,7 @@ let check_stdlib (map : json_map) cwd (*built_in_package*) =
         check_version_exit map stdlib_path;
         Some {
             Bsb_config_types.package_name = current_package;
-            package_install_path = stdlib_path // (Lazy.force Bsb_global_backend.lib_ocaml_dir);
+            package_install_path = stdlib_path // !Bsb_global_backend.lib_ocaml_dir;
           }
 
       | _ -> assert false 
@@ -311,11 +304,12 @@ let extract_generators (map : json_map) =
   
 
 let extract_dependencies (map : json_map) cwd (field : string )
-  : Bsb_config_types.dependencies =   
+  : (string list * Bsb_config_types.dependencies) =   
   match Map_string.find_opt map field with 
-  | None -> []
+  | None -> ([], [])
   | Some (Arr ({content = s})) -> 
-    Ext_list.map (Bsb_build_util.get_list_string s) (fun s -> resolve_package cwd (Bsb_pkg_types.string_as_package s))
+    let (otherlibs, l) = List.partition (Bsb_default.filter_otherlibs) (Bsb_build_util.get_list_string s) in
+    (otherlibs, (Ext_list.map l (fun s -> resolve_package cwd (Bsb_pkg_types.string_as_package s))))
   | Some config -> 
     Bsb_exception.config_error config 
       (field ^ " expect an array")
@@ -378,6 +372,12 @@ let extract_js_post_build (map : json_map) cwd : string option =
   |> ignore ;
   !js_post_build_cmd
 
+let extract_static_libraries (map: json_map) =
+  match Map_string.find_opt map Bsb_build_schemas.static_libraries with 
+  | None -> []
+  | Some (Arr ({content = s})) -> Bsb_build_util.get_list_string s
+  | Some config -> Bsb_exception.config_error config (Bsb_build_schemas.static_libraries ^ " expect an array")
+
 (** ATT: make sure such function is re-entrant. 
     With a given [cwd] it works anywhere*)
 let interpret_json 
@@ -428,13 +428,19 @@ let interpret_json
         else 
           Some (Bsb_build_util.resolve_bsb_magic_file ~cwd:per_proj_dir ~desc:Bsb_build_schemas.pp_flags p).path
       ) in 
+    let static_libraries = extract_static_libraries map in
+    let c_linker_flags = begin match Map_string.find_opt map Bsb_build_schemas.c_linker_flags with 
+    | None -> []
+    | Some (Arr ({content = s})) -> Bsb_build_util.get_list_string s
+    | Some config -> Bsb_exception.config_error config (Bsb_build_schemas.c_linker_flags ^ " expect an array")
+    end in
     let reason_react_jsx = extract_reason_react_jsx map in 
-    let bs_dependencies = extract_dependencies map per_proj_dir Bsb_build_schemas.bs_dependencies in 
+    let (otherlibs, bs_dependencies) = extract_dependencies map per_proj_dir Bsb_build_schemas.bs_dependencies in 
     let toplevel = toplevel_package_specs = None in 
-    let bs_dev_dependencies = 
+    let (dev_otherlibs, bs_dev_dependencies) = 
       if toplevel then 
         extract_dependencies map per_proj_dir Bsb_build_schemas.bs_dev_dependencies
-      else [] in 
+      else ([], []) in 
     begin match Map_string.find_opt map Bsb_build_schemas.sources with 
       | Some sources -> 
         let cut_generators = 
@@ -459,6 +465,8 @@ let interpret_json
           pp_file = pp_flags ;          
           bs_dependencies ;
           bs_dev_dependencies ;
+          otherlibs;
+          dev_otherlibs;
           (*
             reference for quoting
              {[
@@ -484,6 +492,8 @@ let interpret_json
           generators = extract_generators map ; 
           cut_generators ;
           number_of_dev_groups;   
+          static_libraries;
+          c_linker_flags;
         }
       | None -> 
           Bsb_exception.invalid_spec

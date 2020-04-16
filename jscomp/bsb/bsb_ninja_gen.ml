@@ -99,6 +99,8 @@ let output_ninja_and_namespace_map
     ~dependency_info
     ~ocaml_dir         
     ~root_project_dir
+    ~build_library
+    ~bsc_dir
 #end
     ({
       bs_suffix;
@@ -113,7 +115,7 @@ let output_ninja_and_namespace_map
       refmt;
       js_post_build_cmd;
       package_specs;
-      file_groups = { files = bs_file_groups};
+      file_groups = { files = bs_file_groups} ;
       files_to_install;
       built_in_dependency;
       reason_react_jsx;
@@ -123,47 +125,49 @@ let output_ninja_and_namespace_map
       gentype_config; 
       number_of_dev_groups;
       entries;
+      otherlibs;
     } as _config : Bsb_config_types.t) : unit 
   =
-  let lib_artifacts_dir = Lazy.force Bsb_global_backend.lib_artifacts_dir in
+  let lib_artifacts_dir = !Bsb_global_backend.lib_artifacts_dir in
   let cwd_lib_bs = per_proj_dir // lib_artifacts_dir in 
   
   
 #if BS_NATIVE then
-  let backend = Lazy.force Bsb_global_backend.backend in
+  let backend = !Bsb_global_backend.backend in
   
-  if backend <> Bsb_config_types.Js then begin
-    let has_any_entry = List.exists (function
-      | Bsb_config_types.JsTarget       _ -> backend = Bsb_config_types.Js
-      | Bsb_config_types.NativeTarget   _ -> backend = Bsb_config_types.Native
-      | Bsb_config_types.BytecodeTarget _ -> backend = Bsb_config_types.Bytecode
-    ) entries in
-    if not has_any_entry && toplevel then begin
-      Bsb_exception.missing_entry (Lazy.force Bsb_global_backend.backend_string);
-    end
+  let has_any_entry = List.exists (function
+    | Bsb_config_types.JsTarget       _ -> false
+    | Bsb_config_types.NativeTarget   _ -> backend = Bsb_config_types.Native
+    | Bsb_config_types.BytecodeTarget _ -> backend = Bsb_config_types.Bytecode
+  ) entries in
+  if not has_any_entry && toplevel then begin
+    Bsb_exception.missing_entry (!Bsb_global_backend.backend_string);
   end;
 
-
-  let g_stdlib_incl_ocaml = Bsb_global_paths.ocaml_lib_dir in
+  let otherlibs = dependency_info.Bsb_dependency_info.all_otherlibs @ otherlibs in
+  let g_stdlib_incl_ocaml = Bsb_global_paths_native.ocaml_lib_dir in
   let ocaml_flags = String.concat Ext_string.single_space Bsb_default.ocaml_flags in
   let ocaml_flags = (List.fold_left (fun acc v ->
      match v with
      | "threads"       -> "-thread " ^ acc
      | "compiler-libs" -> ("-I " ^ (g_stdlib_incl_ocaml // "compiler-libs")) ^ acc
      | _ -> acc
-   ) ocaml_flags Bsb_default.ocaml_dependencies) in
+   ) ocaml_flags otherlibs) in
   let ocaml_dependencies =
     String.concat
       Ext_string.single_space
-      (List.map (Ext_string.inter2 "-add-ocaml-dependency") Bsb_default.ocaml_dependencies) in
+      (List.map (Ext_string.inter2 "-add-ocaml-dependency") otherlibs) in
   let bsb_helper_verbose = if !Bsb_log.log_level = Bsb_log.Debug then "-verbose" else "" in
   let ocamlc = "ocamlc" in
   let ocamlopt = "ocamlopt" in
-  let exe = if Ext_sys.is_windows_or_cygwin then ".exe" else "" in
 #end
 
   let ppx_flags = Bsb_build_util.ppx_flags ppx_files in
   let oc = open_out_bin (cwd_lib_bs // Literals.build_ninja) in          
+  let bsc_flags =
+    (Printf.sprintf
+      "-bs-D JS=false -bs-D %s=true" (String.uppercase_ascii !Bsb_global_backend.backend_string)) ::
+      bsc_flags in
   let g_pkg_flg , g_ns_flg, ns = 
     match namespace with
     | None -> 
@@ -175,6 +179,19 @@ let output_ninja_and_namespace_map
       ,
       Ext_string.inter2 "-bs-ns" s,
       s in
+
+  let all_sources_mlast =
+      List.fold_left (fun acc (group : Bsb_file_groups.file_group) ->
+        Map_string.fold group.sources acc (fun _ (v : Bsb_db.module_info) all_sources_mlast ->
+          let input = v.name_sans_extension in
+          begin match v.info with
+            | Ml
+            | Ml_mli -> (input ^ Literals.suffix_mlast_simple) :: all_sources_mlast
+            | Mli -> all_sources_mlast
+          end
+        )
+      ) [] bs_file_groups
+    in
   let () = 
     Ext_option.iter pp_file (fun flag ->
         Bsb_ninja_targets.output_kv Bsb_ninja_global_vars.pp_flags
@@ -190,9 +207,9 @@ let output_ninja_and_namespace_map
         Bsb_ninja_global_vars.g_pkg_flg, g_pkg_flg ; 
         Bsb_ninja_global_vars.src_root_dir, per_proj_dir (* TODO: need check its integrity -- allow relocate or not? *);
         (* The path to [bsc.exe] independent of config  *)
-        Bsb_ninja_global_vars.bsc, (Ext_filename.maybe_quote Bsb_global_paths.vendor_bsc);
+        Bsb_ninja_global_vars.bsc, (Ext_filename.maybe_quote (Bsb_global_paths.vendor_bsc bsc_dir));
         (* The path to [bsb_heler.exe] *)
-        Bsb_ninja_global_vars.bsdep, (Ext_filename.maybe_quote Bsb_global_paths.vendor_bsdep) ;
+        Bsb_ninja_global_vars.bsdep, (Ext_filename.maybe_quote Bsb_global_paths_native.vendor_bsdep) ;
         Bsb_ninja_global_vars.warnings, Bsb_warning.to_bsb_string ~toplevel warning ;
         Bsb_ninja_global_vars.bsc_flags, (get_bsc_flags bsc_flags) ;
         Bsb_ninja_global_vars.ppx_flags, ppx_flags;
@@ -201,10 +218,12 @@ let output_ninja_and_namespace_map
         Bsb_ninja_global_vars.g_stdlib_incl_ocaml, g_stdlib_incl_ocaml;
         Bsb_ninja_global_vars.ocaml_flags, ocaml_flags;
         Bsb_ninja_global_vars.ocaml_dependencies, ocaml_dependencies;
-        Bsb_ninja_global_vars.ocamlc, (ocaml_dir // "bin" // ocamlc ^ ".opt" ^ exe);
-        Bsb_ninja_global_vars.ocamlopt, (ocaml_dir // "bin" // ocamlopt ^ ".opt" ^ exe);
+        Bsb_ninja_global_vars.ocamlc, (ocaml_dir // "bin" // ocamlc ^ ".opt.exe");
+        Bsb_ninja_global_vars.ocamlopt, (ocaml_dir // "bin" // ocamlopt ^ ".opt.exe");
         Bsb_ninja_global_vars.bsb_helper_verbose, bsb_helper_verbose;
-        Bsb_ninja_global_vars.external_deps_for_linking, Bsb_build_util.flag_concat "-I" dependency_info.Bsb_dependency_info.all_external_deps;
+        Bsb_ninja_global_vars.external_deps, Bsb_build_util.flag_concat "-I" dependency_info.Bsb_dependency_info.all_external_deps;
+        Bsb_ninja_global_vars.root_project_dir, root_project_dir;
+        Bsb_ninja_global_vars.all_sources_mlast, String.concat Ext_string.single_space all_sources_mlast;
 #end
 
         Bsb_ninja_global_vars.g_dpkg_incls, 
@@ -272,34 +291,11 @@ let output_ninja_and_namespace_map
   
   emit_bsc_lib_includes bs_dependencies bsc_lib_dirs external_includes namespace oc;
   output_static_resources static_resources rules.copy_resources oc ;
-  begin match Lazy.force Bsb_global_backend.backend with
-  | Bsb_config_types.Js       ->
-    (** Generate build statement for each file *)        
-    Ext_list.iter bs_file_groups 
-      (fun files_per_dir ->
-        Bsb_ninja_file_groups.handle_files_per_dir oc  
-          ~bs_suffix     
-          ~rules
-          ~js_post_build_cmd 
-          ~package_specs 
-          ~files_to_install    
-          ~namespace files_per_dir)
-    ;
+  
+  (* Add custom rules for compiling C and stuff *)
+  Bsb_ninja_rule.print_rule oc ~description:"Building C code" ~command:"gcc -c $in -I $g_stdlib_incl_ocaml $extra_args -o $out" "cc";
+  Bsb_ninja_rule.print_rule oc ~description:"Packing C code" ~command:"ar rcs $out $extra_args $in" "ar";
 
-  Ext_option.iter  namespace (fun ns -> 
-      let namespace_dir =     
-        per_proj_dir // lib_artifacts_dir  in
-      Bsb_namespace_map_gen.output 
-        ~dir:namespace_dir ns
-        bs_file_groups; 
-      Bsb_ninja_targets.output_build oc 
-        ~outputs:[ns ^ Literals.suffix_cmi]
-        ~inputs:[ns ^ Literals.suffix_mlmap]
-        ~rule:rules.build_package
-    );
-  | Bsb_config_types.Native
-  | Bsb_config_types.Bytecode ->
-#if BS_NATIVE then
     let (compile_target, rule) =
       if backend = Bsb_config_types.Bytecode then
         Bsb_ninja_native.Bytecode, rules.build_package_build_cmi_bytecode
@@ -317,6 +313,7 @@ let output_ninja_and_namespace_map
       ~backend
       ~dependency_info
       ~root_project_dir
+      ~build_library
       ~config:_config
       bs_file_groups
       namespace;
@@ -337,8 +334,28 @@ let output_ninja_and_namespace_map
         ~shadows:[{ Bsb_ninja_targets.key = Bsb_ninja_global_vars.warnings; op = Append ("-w -49") }]
         ~rule;
     );
-#else
-    failwith "Not implemented."
-#end
+  if root_project_dir = per_proj_dir then begin
+    let entries_to_build = begin match build_library with
+    | None -> 
+      Ext_list.filter_map entries (function
+        | Bsb_config_types.NativeTarget   main_module_name when backend = Bsb_config_types.Native ->
+          Some (root_project_dir // (Ext_string.lowercase_ascii main_module_name) ^ ".exe")
+        | Bsb_config_types.BytecodeTarget main_module_name when backend = Bsb_config_types.Bytecode ->
+          Some (root_project_dir // (Ext_string.lowercase_ascii main_module_name) ^ ".exe")
+        | _ -> None
+      )
+    | Some _index ->  []
+    end in
+    if List.length entries_to_build > 0 then begin
+      output_string oc "default ";
+      output_string oc (String.concat Ext_string.single_space entries_to_build);
+      output_string oc "\n";
+    end
+  end;
+  let user_defined_build_ninja = per_proj_dir // "build.ninja" in
+  if Sys.file_exists user_defined_build_ninja then begin
+    output_string oc "subninja ";
+    output_string oc user_defined_build_ninja;
+    output_string oc "\n";
   end;
   close_out oc

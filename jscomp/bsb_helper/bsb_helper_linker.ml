@@ -36,10 +36,10 @@ let module_of_filename filename =
   | exception Not_found -> str
   | len -> String.sub str 0 len
 
-let link link_byte_or_native ~main_module ~batch_files ~includes ~ocaml_dependencies ~namespace ~warnings ~warn_error ~verbose ~cwd =
-  let suffix_object_files, suffix_library_files, compiler, output_file = begin match link_byte_or_native with
-  | LinkBytecode output_file -> Literals.suffix_cmo, Literals.suffix_cma , "ocamlc"  , output_file
-  | LinkNative output_file   -> Literals.suffix_cmx, Literals.suffix_cmxa, "ocamlopt", output_file
+let link link_byte_or_native ~main_module ~batch_files ~includes ~ocaml_dependencies ~namespace ~warnings ~warn_error ~verbose ~cwd ~clibs =
+  let suffix_object_files, suffix_library_files, compiler, output_file, add_custom = begin match link_byte_or_native with
+  | LinkBytecode output_file -> Literals.suffix_cmo, Literals.suffix_cma , "ocamlc"  , output_file, true
+  | LinkNative output_file   -> Literals.suffix_cmx, Literals.suffix_cmxa, "ocamlopt", output_file, false
   end in
   (* Map used to track the path to the files as the dependency_graph that we're going to read from the mlast file only contains module names *)
   let module_to_filepath = Ext_list.fold_left batch_files Map_string.empty
@@ -49,7 +49,28 @@ let link link_byte_or_native ~main_module ~batch_files ~includes ~ocaml_dependen
       (Ext_filename.chop_extension_maybe v)
       )    
   in
-  let dependency_graph = Ext_list.fold_left batch_files Map_string.empty
+  let rec get_dep_graph (stack_of_things: string list) dependency_graph =
+    match stack_of_things with 
+    | [] -> dependency_graph
+    | module_name :: rest_of_things ->
+    if Map_string.mem dependency_graph module_name then
+      get_dep_graph rest_of_things dependency_graph
+    else
+      begin match Map_string.find_opt module_to_filepath module_name with
+      | Some file -> 
+        let suffix = if Sys.file_exists (module_name ^ Literals.suffix_mlast)
+          then Literals.suffix_mlast
+          else Literals.suffix_reast in
+        let new_dependencies = Bsb_helper_extract.read_dependency_graph_from_mlast_file (file ^ suffix) in
+        let dependency_graph = Map_string.add dependency_graph
+          (Ext_filename.module_name module_name)
+          new_dependencies in
+        get_dep_graph (Set_string.elements new_dependencies @ rest_of_things) dependency_graph
+      | None -> get_dep_graph rest_of_things dependency_graph
+      end
+    in
+    let dependency_graph = get_dep_graph [main_module]  Map_string.empty in
+  (* let dependency_graph = Ext_list.fold_left batch_files Map_string.empty
     (fun m file ->
       let module_name = module_of_filename file in
       let suffix = if Sys.file_exists (module_name ^ Literals.suffix_mlast) then Literals.suffix_mlast
@@ -58,13 +79,13 @@ let link link_byte_or_native ~main_module ~batch_files ~includes ~ocaml_dependen
         (Ext_filename.module_name module_name)
         (Bsb_helper_extract.read_dependency_graph_from_mlast_file (module_name ^ suffix))
         )    
-  in
+  in *)
   let ocaml_dependencies =
     List.fold_left (fun acc v -> 
       match v with
       | "threads" -> 
-      "-thread" :: (Bsb_global_paths.ocaml_dir // "lib" // "ocaml" // "threads" // "threads" ^ suffix_library_files) :: acc
-      | v -> (Bsb_global_paths.ocaml_dir // "lib" // "ocaml" // v ^ suffix_library_files) :: acc
+      "-thread" :: (Bsb_global_paths_native.ocaml_dir // "lib" // "ocaml" // "threads" // "threads" ^ suffix_library_files) :: acc
+      | v -> (Bsb_global_paths_native.ocaml_dir // "lib" // "ocaml" // v ^ suffix_library_files) :: acc
       ) [] ocaml_dependencies in
   let warning_command = if String.length warnings > 0 then
   "-w" :: warnings :: []
@@ -90,11 +111,17 @@ let link link_byte_or_native ~main_module ~batch_files ~includes ~ocaml_dependen
       (fun acc dir ->
         (Ext_path.combine dir (Literals.library_file ^ suffix_library_files)) :: acc)
     in
+    let clibs = if add_custom && clibs <> [] then
+      "-custom" :: clibs
+    else
+      clibs
+    in
     (* This list will be reversed so we append the otherlibs object files at the end, and they'll end at the beginning. *)
-    let otherlibs = Bsb_helper_dep_graph.get_otherlibs_dependencies dependency_graph suffix_library_files in
-    let all_object_files = ocaml_dependencies @ library_files @ List.rev (list_of_object_files @ otherlibs) in
-    let compiler_extension = if Ext_sys.is_windows_or_cygwin then ".opt.exe" else ".opt" in
-    let local_compiler = Bsb_global_paths.ocaml_dir // "bin" // compiler ^ compiler_extension in
+    (* let otherlibs = Bsb_helper_dep_graph.get_otherlibs_dependencies dependency_graph suffix_library_files in *)
+    let all_object_files = ocaml_dependencies @ library_files @ List.rev (list_of_object_files) @ clibs in
+    (* let compiler_extension = if Ext_sys.is_windows_or_cygwin then ".opt.exe" else ".opt" in *)
+    let compiler_extension = ".opt.exe" in
+    let local_compiler = Bsb_global_paths_native.ocaml_dir // "bin" // compiler ^ compiler_extension in
     let super_errors = if false then ["-bs-super-errors"] else [] in
     let list_of_args = (local_compiler :: "-g" ::
       warning_command) @ super_errors @ "-o" :: output_file :: all_object_files in
