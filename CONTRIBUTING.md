@@ -406,7 +406,7 @@ custom styles located in `docs/api_static`.
 In release mode, assuming you have NodeJS and OCaml compiler with the right version installed:
 
 ```sh
-node scripts/install.js
+./darwin/ninja.exe -C jscomp -f snapshot.ninja && node scripts/install.js
 ```
 
 The build process will generate configure file with correct `LIBDIR` path,

@@ -2,12 +2,6 @@
   "devDependencies": {
     "mocha": "^6.2.2"
   },
-  "bin": {
-    "bsb": "bsb",
-    "bsc": "bsc",
-    "bsrefmt": "bsrefmt",
-    "bstracing": "lib/bstracing"
-  },
   "scripts": {
     "test": "node scripts/ciTest.js  -all",
     "test-theme": "node scripts/ciTest.js -theme",
@@ -16,7 +10,7 @@
     "postinstall": "node scripts/install.js"
   },
   "name": "bs-platform-native",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "bucklescript plugin to compile to bytecode/native",
   "repository": {
     "type": "git",
