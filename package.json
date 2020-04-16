@@ -16,30 +16,15 @@
     "postinstall": "node scripts/install.js"
   },
   "name": "bs-platform-native",
-  "version": "7.2.0-dev.4",
-  "description": "bucklescript compiler, ocaml standard libary by bucklescript and its required runtime support",
+  "version": "0.0.1",
+  "description": "bucklescript plugin to compile to bytecode/native",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/bucklescript/bucklescript.git"
+    "url": "git+https://github.com/bsansouci/bucklescript.git"
   },
-  "keywords": [
-    "ocaml",
-    "bucklescript",
-    "stdlib",
-    "functional programming"
-  ],
-  "author": {
-    "name": "Hongbo Zhang"
-  },
-  "maintainers": [
-    {
-      "name": "hongbo_zhang",
-      "email": "bobzhang1988@gmail.com"
-    }
-  ],
   "license": "SEE LICENSE IN LICENSE",
   "bugs": {
-    "url": "https://github.com/bucklescript/bucklescript/issues"
+    "url": "https://github.com/bsansouci/bucklescript/issues"
   },
-  "homepage": "https://github.com/bucklescript/bucklescript#readme"
+  "homepage": "https://github.com/bsansouci/bucklescript#readme"
 }
