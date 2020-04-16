@@ -25,7 +25,7 @@ rule cc
 build ../${process.platform}/bsb$ext:  cc $INCL/bsb.mli $INCL/bsb.ml
     flags = $flags -unboxed-types unix.cmxa str.cmxa
 build ../${process.platform}/bsb_helper$ext:  cc $INCL/bsb_helper.mli $INCL/bsb_helper.ml
-    flags = $flags  -unboxed-types -w -a
+    flags = $flags  -unboxed-types unix.cmxa -w -a
 build ../${process.platform}/refmt$ext: cc $INCL/refmt_main3.mli $INCL/refmt_main3.ml
     flags = $flags  -w -40-30 -no-alias-deps -I +compiler-libs ocamlcommon.cmxa 
 build ../${process.platform}/bsc$ext: cc $INCL/whole_compiler.mli $INCL/whole_compiler.ml    
