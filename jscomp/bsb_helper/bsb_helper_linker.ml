@@ -22,7 +22,6 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *)
 
-#if BS_NATIVE then
 type link_t = LinkBytecode of string | LinkNative of string
 
 let ( // ) = Ext_path.combine
@@ -131,4 +130,3 @@ let link link_byte_or_native ~main_module ~batch_files ~includes ~ocaml_dependen
     Unix.execvp local_compiler (Array.of_list (list_of_args))
   end else
     failwith @@ "No " ^ suffix_object_files ^ " to link. Hint: is the main module in the entries array right?"
-#end

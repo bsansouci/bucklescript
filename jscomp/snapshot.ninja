@@ -18,18 +18,18 @@ SNAP=../lib/$snapshot_path
 build snapshot: phony  $SNAP/whole_compiler.ml   $SNAP/bsb_helper.ml $SNAP/bsb.ml $SNAP/bspp.ml $SNAP/unstable/all_ounit_tests.ml
 
 build $SNAP/whole_compiler.ml: bspack | ./bin/bspack.exe
-    flags = ${releaseMode} -bs-MD -module-alias Config=Config_whole_compiler -bs-exclude-I config  -I $OCAML_SRC_UTILS -I $OCAML_SRC_PARSING -I $OCAML_SRC_TYPING -I $OCAML_SRC_BYTECOMP -I $OCAML_SRC_DRIVER   ${includes}
+    flags = ${releaseMode} -D BS_NATIVE=true -bs-MD -module-alias Config=Config_whole_compiler -bs-exclude-I config  -I $OCAML_SRC_UTILS -I $OCAML_SRC_PARSING -I $OCAML_SRC_TYPING -I $OCAML_SRC_BYTECOMP -I $OCAML_SRC_DRIVER   ${includes}
     main = Js_main
     post_process = && node $LTO $SNAP/whole_compiler.ml
 
 
 
 build $SNAP/bsb_helper.ml: bspack | ./bin/bspack.exe
-     flags = -bs-MD ${releaseMode}   -I stubs -I common -I ext -I syntax -I depends -I bsb_helper  -I main 
+     flags = -bs-MD ${releaseMode} -D BS_NATIVE=true  -I stubs -I common -I ext -I syntax -I depends -I bsb_helper  -I main 
      main = Bsb_helper_main 
 
 build $SNAP/bsb.ml: bspack | ./bin/bspack.exe
-     flags =   -D BS_MIN_LEX_DEPS=true -bs-MD ${releaseMode} -I $OCAML_SRC_UTILS -I $OCAML_SRC_PARSING -I stubs -I common -I ext -I syntax -I depends -I bsb -I ext -I main 
+     flags =   -D BS_MIN_LEX_DEPS=true -D BS_NATIVE=true -bs-MD ${releaseMode} -I $OCAML_SRC_UTILS -I $OCAML_SRC_PARSING -I stubs -I common -I ext -I syntax -I depends -I bsb -I ext -I main 
      main = Bsb_main 
 
 

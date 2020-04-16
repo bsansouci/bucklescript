@@ -22,7 +22,6 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *)
 
-#if BS_NATIVE then
 type link_t = LinkBytecode of string | LinkNative of string
 
 val link : link_t ->
@@ -37,5 +36,4 @@ val link : link_t ->
   cwd: string ->
   clibs: string list ->
   unit
-#end
 

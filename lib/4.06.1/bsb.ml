@@ -11003,8 +11003,43 @@ let (|?)  m (key, cb) =
   m  |> Ext_json.test key cb
 
 
- 
-let extract_main_entries (_ :json_map) = []  
+  
+let extract_main_entries (map :json_map) =  
+
+  let extract_entries (field : Ext_json_types.t array) =
+    Ext_array.to_list_map (function
+        | Ext_json_types.Obj {map} ->
+          (* kind defaults to bytecode *)
+          let kind = ref "js" in
+          let main = ref None in
+          let _ = map
+                  |? (Bsb_build_schemas.backend, `Str (fun x -> kind := x))
+                  |? (Bsb_build_schemas.main_module, `Str (fun x -> main := Some x))
+          in
+          let path = begin match !main with
+            (* This is technically optional when compiling to js *)
+            | None when !kind = Literals.js ->
+              "Index"
+            | None -> 
+              failwith "Missing field 'main'. That field is required its value needs to be the main module for the target"
+            | Some path -> path
+          end in
+          if !kind = Literals.native then
+            Some (Bsb_config_types.NativeTarget path)
+          else if !kind = Literals.bytecode then
+            Some (Bsb_config_types.BytecodeTarget path)
+          else if !kind = Literals.js then
+            Some (Bsb_config_types.JsTarget path)
+          else
+            failwith "Missing field 'kind'. That field is required and its value be 'js', 'native' or 'bytecode'"
+        | _ -> failwith "Unrecognized object inside array 'entries' field.") 
+      field in
+  let entries = ref Bsb_default.main_entries in
+  begin match Map_string.find_opt map Bsb_build_schemas.entries with
+    | Some (Arr {content = s}) -> entries := extract_entries s
+    | _ -> ()
+  end; 
+  !entries
 
 
 let package_specs_from_bsconfig () = 
@@ -12261,6 +12296,20 @@ let gentypeconfig = "gentypeconfig"
 let g_dev_incls = "g_dev_incls"
 
 
+let ocamlc = "ocamlc"
+let ocamlopt = "ocamlopt"
+let g_stdlib_incl_ocaml = "g_stdlib_incl_ocaml"
+let ns = "ns"
+let main_module = "main_module"
+let ocaml_flags = "ocaml_flags"
+let ocaml_dependencies = "ocaml_dependencies"
+let bsb_helper_verbose = "bsb_helper_verbose"
+let dev_includes = "dev_includes"
+let maybe_refmt_ppx = "maybe_refmt_ppx"
+let external_deps = "external_deps"
+let root_project_dir = "root_project_dir"
+let all_sources_mlast = "all_sources_mlast"
+
 
 end
 module Bsb_ninja_rule : sig 
@@ -12319,6 +12368,21 @@ type builtin = {
   (** Rules below all need restat *)
   build_bin_deps : t ;
 
+
+  build_package_gen_mlast_simple: t;
+  build_package_build_cmi_bytecode: t;
+  build_package_build_cmi_native: t;
+  
+  build_cmo_cmi_bytecode: t;
+  build_cmi_bytecode: t;
+  build_cmx_cmi_native: t;
+  build_cmi_native: t;
+
+  linking_bytecode: t;
+  linking_native: t;
+
+  build_cma_library: t;
+  build_cmxa_library: t;
 
 
   ml_cmj_js : t;
@@ -12456,6 +12520,21 @@ type builtin = {
   (** Rules below all need restat *)
   build_bin_deps : t ;
 
+
+  build_package_gen_mlast_simple: t;
+  build_package_build_cmi_bytecode: t;
+  build_package_build_cmi_native: t;
+  
+  build_cmo_cmi_bytecode: t;
+  build_cmi_bytecode: t;
+  build_cmx_cmi_native: t;
+  build_cmi_native: t;
+
+  linking_bytecode: t;
+  linking_native: t;
+
+  build_cma_library: t;
+  build_cmxa_library: t;
 
 
   ml_cmj_js : t;
@@ -12599,6 +12678,119 @@ let make_custom_rules
       "build_package"
   in
 
+  let build_package_gen_mlast_simple =
+    define
+      ~command:"$bsc -w -49 -no-alias-deps -bs-simple-binary-ast -bs-cmi-only -c $in"
+      ~restat:()
+      "build_package_gen_mlast_simple"
+  in
+  let mk_build ~compiler ~is_ns_file ~cmi : string =
+    Buffer.clear buf ;
+    begin match compiler with
+      | `bytecode -> Buffer.add_string buf "$ocamlc"
+      | `native -> Buffer.add_string buf "$ocamlopt"
+    end;
+    Buffer.add_string buf " $g_lib_incls $dev_includes $ocaml_flags -I $g_stdlib_incl_ocaml $external_deps -o $out $warnings -no-alias-deps -c -intf-suffix .mliast_simple";
+    if cmi then
+      Buffer.add_string buf " -intf $in"
+    else
+      Buffer.add_string buf " -impl $in";
+
+    if not is_ns_file then
+      Buffer.add_string buf " $ns";
+
+    Buffer.contents buf
+  in  
+  let build_package_build_cmi_bytecode = 
+    define
+       ~command:(mk_build ~compiler:`bytecode ~is_ns_file:true ~cmi:false)
+      ~restat:()
+     "build_package_build_cmi_bytecode"
+  in
+
+  let build_package_build_cmi_native = 
+    define
+      ~command:(mk_build ~compiler:`native ~is_ns_file:true ~cmi:false)
+      ~restat:()
+     "build_package_build_cmi_native"
+  in
+
+  let build_cmo_cmi_bytecode =
+    define
+      ~command:(mk_build ~compiler:`bytecode ~is_ns_file:false ~cmi:false)
+      ~dyndep:"$in_e.d"
+      ~restat:()
+     "build_cmo_cmi_bytecode"
+  in
+
+  let build_cmi_bytecode =
+    define
+      ~command:(mk_build ~compiler:`bytecode ~is_ns_file:false ~cmi:true)
+      ~dyndep:"$in_e.d"
+      ~restat:()
+     "build_cmi_bytecode"
+  in
+
+  let build_cmx_cmi_native =
+    define
+      ~command:(mk_build ~compiler:`native ~is_ns_file:false ~cmi:false)
+      ~dyndep:"$in_e.d"
+      ~restat:()
+     "build_cmx_cmi_native" 
+  in
+
+  let build_cmi_native =
+    define
+      ~command:(mk_build ~compiler:`native ~is_ns_file:false ~cmi:true)
+      ~dyndep:"$in_e.d"
+      ~restat:()
+     "build_cmi_native"
+  in 
+
+  let mk_helper ~action =
+    Buffer.clear buf ; 
+    Buffer.add_string buf "$bsdep $bsb_helper_verbose $ocaml_dependencies $warnings $g_ns $build_library";
+    begin match action with
+      | `link_bytecode ->
+        Buffer.add_string buf " -bs-main $main_module $external_deps $static_libraries $all_sources_mlast $in -link-bytecode $out"
+      | `link_native ->
+        Buffer.add_string buf " -bs-main $main_module $external_deps $static_libraries $all_sources_mlast $in -link-native $out"
+      | `pack_bytecode ->
+        Buffer.add_string buf " $all_sources_mlast $in -pack-bytecode-library"
+      | `pack_native ->
+        Buffer.add_string buf " $all_sources_mlast $in -pack-native-library"
+    end;
+    Buffer.contents buf
+  in
+
+  let linking_bytecode =
+    define
+      ~command:(mk_helper ~action:`link_bytecode)
+      ~restat:()
+      "linking_bytecode"
+  in
+
+  let linking_native =
+    define
+      ~command:(mk_helper ~action:`link_native)
+      ~restat:()
+      "linking_native"
+  in
+
+  let build_cma_library =
+   define
+     ~command:(mk_helper ~action:`pack_bytecode)
+     ~restat:()
+     "build_cma_library"
+  in
+
+  let build_cmxa_library =
+   define
+     ~command:(mk_helper ~action:`pack_native)
+     ~restat:()
+     "build_cmxa_library"
+  in
+
   {
     build_ast ;
     build_ast_from_re  ;
@@ -12608,6 +12800,21 @@ let make_custom_rules
     copy_resources;
     (** Rules below all need restat *)
     build_bin_deps ;
+
+    build_package_gen_mlast_simple;
+    build_package_build_cmi_bytecode;
+    build_package_build_cmi_native;
+
+    build_cmo_cmi_bytecode;
+    build_cmi_bytecode;
+    build_cmx_cmi_native;
+    build_cmi_native;
+
+    linking_bytecode;
+    linking_native;
+
+    build_cma_library;
+    build_cmxa_library;
 
 
     ml_cmj_js ;
@@ -12941,6 +13148,28 @@ module Bsb_ninja_native : sig
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *)
 
+
+
+
+type compile_target_t = Native | Bytecode
+
+val handle_file_groups :
+  out_channel ->
+  package_specs:Bsb_package_specs.t ->
+  bs_suffix:bool ->
+  js_post_build_cmd:string option ->
+  files_to_install:Hash_set_string.t ->
+  rules:Bsb_ninja_rule.builtin ->
+  toplevel:bool ->
+  compile_target:compile_target_t ->
+  backend:Bsb_config_types.compilation_kind_t ->
+  dependency_info:Bsb_dependency_info.t ->
+  root_project_dir:string ->
+  build_library:string option ->
+  config:Bsb_config_types.t ->
+  Bsb_file_groups.file_groups ->
+  string option ->
+  unit
 
 
 
@@ -13385,6 +13614,12 @@ val output_ninja_and_namespace_map :
   per_proj_dir:string ->  
   toplevel:bool -> 
 
+  dependency_info:Bsb_dependency_info.t ->
+  ocaml_dir:string ->
+  root_project_dir:string ->
+  build_library: string option ->
+  bsc_dir: string ->
+
   Bsb_config_types.t -> unit 
 
 end = struct
@@ -13487,6 +13722,12 @@ let output_ninja_and_namespace_map
     ~per_proj_dir 
     ~toplevel           
 
+    ~dependency_info
+    ~ocaml_dir         
+    ~root_project_dir
+    ~build_library
+    ~bsc_dir
+
     ({
       bs_suffix;
       package_name;
@@ -13517,6 +13758,34 @@ let output_ninja_and_namespace_map
   let cwd_lib_bs = per_proj_dir // lib_artifacts_dir in 
   
   
+
+  let backend = !Bsb_global_backend.backend in
+  
+  let has_any_entry = List.exists (function
+    | Bsb_config_types.JsTarget       _ -> false
+    | Bsb_config_types.NativeTarget   _ -> backend = Bsb_config_types.Native
+    | Bsb_config_types.BytecodeTarget _ -> backend = Bsb_config_types.Bytecode
+  ) entries in
+  if not has_any_entry && toplevel then begin
+    Bsb_exception.missing_entry (!Bsb_global_backend.backend_string);
+  end;
+
+  let otherlibs = dependency_info.Bsb_dependency_info.all_otherlibs @ otherlibs in
+  let g_stdlib_incl_ocaml = Bsb_global_paths_native.ocaml_lib_dir in
+  let ocaml_flags = String.concat Ext_string.single_space Bsb_default.ocaml_flags in
+  let ocaml_flags = (List.fold_left (fun acc v ->
+     match v with
+     | "threads"       -> "-thread " ^ acc
+     | "compiler-libs" -> ("-I " ^ (g_stdlib_incl_ocaml // "compiler-libs")) ^ acc
+     | _ -> acc
+   ) ocaml_flags otherlibs) in
+  let ocaml_dependencies =
+    String.concat
+      Ext_string.single_space
+      (List.map (Ext_string.inter2 "-add-ocaml-dependency") otherlibs) in
+  let bsb_helper_verbose = if !Bsb_log.log_level = Bsb_log.Debug then "-verbose" else "" in
+  let ocamlc = "ocamlc" in
+  let ocamlopt = "ocamlopt" in
 
 
   let ppx_flags = Bsb_build_util.ppx_flags ppx_files in
@@ -13570,6 +13839,17 @@ let output_ninja_and_namespace_map
         Bsb_ninja_global_vars.warnings, Bsb_warning.to_bsb_string ~toplevel warning ;
         Bsb_ninja_global_vars.bsc_flags, (get_bsc_flags bsc_flags) ;
         Bsb_ninja_global_vars.ppx_flags, ppx_flags;
+
+        Bsb_ninja_global_vars.ns, if ns <> "" then "-open " ^ ns else "";
+        Bsb_ninja_global_vars.g_stdlib_incl_ocaml, g_stdlib_incl_ocaml;
+        Bsb_ninja_global_vars.ocaml_flags, ocaml_flags;
+        Bsb_ninja_global_vars.ocaml_dependencies, ocaml_dependencies;
+        Bsb_ninja_global_vars.ocamlc, (ocaml_dir // "bin" // ocamlc ^ ".opt.exe");
+        Bsb_ninja_global_vars.ocamlopt, (ocaml_dir // "bin" // ocamlopt ^ ".opt.exe");
+        Bsb_ninja_global_vars.bsb_helper_verbose, bsb_helper_verbose;
+        Bsb_ninja_global_vars.external_deps, Bsb_build_util.flag_concat "-I" dependency_info.Bsb_dependency_info.all_external_deps;
+        Bsb_ninja_global_vars.root_project_dir, root_project_dir;
+        Bsb_ninja_global_vars.all_sources_mlast, String.concat Ext_string.single_space all_sources_mlast;
 
 
         Bsb_ninja_global_vars.g_dpkg_incls, 

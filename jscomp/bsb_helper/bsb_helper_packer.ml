@@ -22,7 +22,6 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *)
 
-#if BS_NATIVE then
 type pack_t = PackBytecode | PackNative
 
 let ( // ) = Ext_path.combine
@@ -115,4 +114,3 @@ let pack pack_byte_or_native ~batch_files ~includes ~namespace ~warnings ~warn_e
         (Array.of_list list_of_args)
   else
     Bsb_exception.no_files_to_pack suffix_object_files
-#end
