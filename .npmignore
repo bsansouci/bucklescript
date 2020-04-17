@@ -42,6 +42,13 @@ native/4.06.1/lib/ocaml/expunge.exe
 native/4.06.1/lib/ocaml/extract_crc
 native/4.06.1/lib/ocaml/extract_crc.exe
 
+lib/4.06.1/*.ml
+!native/4.06.1/lib/ocaml/**/*.a
+!native/4.06.1/lib/ocaml/**/*.o
+!native/4.06.1/lib/ocaml/**/*.c
+!native/4.06.1/lib/ocaml/**/*.cm[oxaj]
+!native/4.06.1/lib/ocaml/**/*.cmx[as]
+
 native/4.06.1/bin/*
 !native/4.06.1/bin/ocamlc.opt.exe
 !native/4.06.1/bin/ocamlopt.opt.exe
@@ -49,4 +56,4 @@ native/4.06.1/bin/*
 !native/4.06.1/bin/ocamlprof.opt.exe
 !native/4.06.1/bin/ocamllex.opt.exe
 !native/4.06.1/bin/ocamldoc.opt.exe
-lib/4.06.1/*.ml
+
