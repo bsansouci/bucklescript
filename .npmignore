@@ -27,9 +27,26 @@ lib/4.06.1/bsdep*
 lib/4.06.1/bspp.ml*
 lib/4.06.1/*.cm*
 .circleci/
-native/
 vendor/cppo
 vendor/rollup.js
 package/
 *.tgz
 darwin/bsc
+
+# Native compilation stuff
+native/4.06.1/man/**/*
+vendor/ocaml.tar.gz
+# What the heck is this
+native/4.06.1/lib/ocaml/expunge
+native/4.06.1/lib/ocaml/expunge.exe
+native/4.06.1/lib/ocaml/extract_crc
+native/4.06.1/lib/ocaml/extract_crc.exe
+
+native/4.06.1/bin/*
+!native/4.06.1/bin/ocamlc.opt.exe
+!native/4.06.1/bin/ocamlopt.opt.exe
+!native/4.06.1/bin/ocamldep.opt.exe
+!native/4.06.1/bin/ocamlprof.opt.exe
+!native/4.06.1/bin/ocamllex.opt.exe
+!native/4.06.1/bin/ocamldoc.opt.exe
+lib/4.06.1/*.ml
