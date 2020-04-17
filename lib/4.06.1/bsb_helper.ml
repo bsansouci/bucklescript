@@ -8225,7 +8225,7 @@ let link link_byte_or_native ~main_module ~batch_files ~includes ~ocaml_dependen
     else
       begin match Map_string.find_opt module_to_filepath module_name with
       | Some file -> 
-        let suffix = if Sys.file_exists (module_name ^ Literals.suffix_mlast)
+        let suffix = if Sys.file_exists (file ^ Literals.suffix_mlast)
           then Literals.suffix_mlast
           else Literals.suffix_reast in
         let new_dependencies = Bsb_helper_extract.read_dependency_graph_from_mlast_file (file ^ suffix) in
