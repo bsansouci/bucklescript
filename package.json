@@ -3,6 +3,9 @@
     "mocha": "^7.1.1",
     "nyc": "^15.0.0"
   },
+  "dependencies": {
+    "bs-platform-native": "^0.0.6"
+  },
   "bin": {
     "bsb": "bsb",
     "bsc": "bsc",
@@ -17,8 +20,8 @@
     "postinstall": "node scripts/install.js",
     "coverage": "nyc --timeout=3000 --reporter=html mocha jscomp/test/*test.js && open ./coverage/index.html"
   },
-  "name": "bs-platform",
-  "version": "7.4.0-dev.1",
+  "name": "bsb-native",
+  "version": "5.0.0",
   "description": "bucklescript compiler, ocaml standard libary by bucklescript and its required runtime support",
   "repository": {
     "type": "git",

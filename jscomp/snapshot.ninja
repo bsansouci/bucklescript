@@ -1,6 +1,6 @@
 releaseMode = -D BS_RELEASE_BUILD=true
 rule bspack    
-    command = ./bin/bspack.exe $releaseMode $flags -bs-main $main -o $out  $post_process
+    command = ./bin/bspack.exe $releaseMode -D BS_NATIVE=true $flags -bs-main $main -o $out  $post_process
     depfile = $out.d
     generator = true
 native_ocaml_path = ../ocaml/
