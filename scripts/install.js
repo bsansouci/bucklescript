@@ -186,7 +186,7 @@ function provideCompiler() {
             "native",
             myVersion,
             "bin",
-            "ocamlopt.opt"
+            "ocamlopt.opt.exe"
           );
     if (!fs.existsSync(ocamlopt)) {
       require("./buildocaml.js").build(true);
