@@ -79,7 +79,7 @@ function buildCompiler() {
   var content = require("./ninjaFactory.js").libNinja({
     ocamlopt: is_windows
       ? `ocamlopt.opt.exe`
-      : `../native/${ocamlVersion}/bin/ocamlopt.opt`,
+      : `../native/${ocamlVersion}/bin/ocamlopt.opt.exe`,
     INCL: ocamlVersion,
     isWin: is_windows
   });

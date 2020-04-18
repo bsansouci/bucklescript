@@ -102,7 +102,7 @@ function generateVisitorPattern() {
  *
  */
 var useEnv = false;
-var BS_NATIVE = false
+var BS_NATIVE = true
 
 /**
  * Note this file is not used in ninja file
