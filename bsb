@@ -171,7 +171,14 @@ if (!root_proj_dir) {
 }
 if (!bsc_dir) {
     delegate_args.push("-bsc-dir");
-    delegate_args.push(path.join(process.cwd(), "node_modules", "bs-platform", process.platform));
+    var fs = require("fs");
+    var bsb_native_path = path.join(process.cwd(), "node_modules", "bsb-native", process.platform);
+    var bs_platform_path = path.join(process.cwd(), "node_modules", "bs-platform", process.platform);
+    if (fs.existsSync(bs_platform_path)) {
+       delegate_args.push(bs_platform_path);
+    } else {
+        delegate_args.push(bsb_native_path);
+    }
 }
 
 
