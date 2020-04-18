@@ -120,7 +120,7 @@ var getOcamldepFile = () => {
       "native",
       require("./buildocaml.js").getVersionPrefix(),
       "bin",
-      "ocamldep.opt"
+      "ocamldep.opt.exe"
     );
   }
 };
@@ -1431,7 +1431,7 @@ build all: phony runtime others $stdlib test
     writeFileAscii(
       path.join(jscompDir, "..", "lib", "build.ninja"),
       `
-ocamlopt = ocamlopt.opt 
+ocamlopt = ocamlopt.opt.exe 
 ext = exe
 INCL= ${version6() ? "4.06.1+BS" : "4.02.3+BS"}
 include body.ninja               
@@ -1489,17 +1489,17 @@ function getVendorConfigNinja() {
   if (process.env.ESY === "true") return getEnnvConfigNinja();
   var prefix = `../native/${require("./buildocaml.js").getVersionPrefix()}/bin`;
   return `
-ocamlopt = ${prefix}/ocamlopt.opt
-ocamllex = ${prefix}/ocamllex.opt
-ocamlmklib = ${prefix}/ocamlmklib
+ocamlopt = ${prefix}/ocamlopt.opt.exe
+ocamllex = ${prefix}/ocamllex.opt.exe
+ocamlmklib = ${prefix}/ocamlmklib.exe
 ocaml = ${prefix}/ocaml
 `;
 }
 function getEnnvConfigNinja() {
   return `
-ocamlopt = ocamlopt.opt    
-ocamllex = ocamllex.opt
-ocamlmklib = ocamlmklib
+ocamlopt = ocamlopt.opt.exe    
+ocamllex = ocamllex.opt.exe
+ocamlmklib = ocamlmklib.exe
 ocaml = ocaml
 `;
 }
