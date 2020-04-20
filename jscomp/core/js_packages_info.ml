@@ -53,7 +53,7 @@ type package_name  =
 
 
 
-let runtime_package_name = "bs-platform"
+let runtime_package_name = "bsb-native"
 
 
 let (//) = Filename.concat    
