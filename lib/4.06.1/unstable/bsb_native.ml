@@ -14292,8 +14292,9 @@ let regenerate_ninja
     end else begin
       let os = Filename.basename Bsb_global_paths.bsc_dir in
       let plugin_path = Bsb_global_paths.cwd // "node_modules" // "bs-platform-native" // os // "bsb.exe" in
-      let _ = Sys.command (Printf.sprintf "%s -project-dir %s -lib-artifacts-dir %s -root-project-dir %s -bsc-dir %s -backend %s" plugin_path per_proj_dir lib_bs_dir Bsb_global_paths.cwd Bsb_global_paths.bsc_dir !Bsb_global_backend.backend_string) in
-      ();
+      let status = Sys.command (Printf.sprintf "%s -project-dir %s -lib-artifacts-dir %s -root-project-dir %s -bsc-dir %s -backend %s" plugin_path per_proj_dir lib_bs_dir Bsb_global_paths.cwd Bsb_global_paths.bsc_dir !Bsb_global_backend.backend_string) in
+      if status <> 0 then
+        exit status;
     end;
 
     
