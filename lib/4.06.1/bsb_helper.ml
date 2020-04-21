@@ -5762,6 +5762,8 @@ val no_implementation : string -> 'a
 
 val not_consistent : string -> 'a
 
+val main_module_not_found : string -> 'a
+
 end = struct
 #1 "bsb_exception.ml"
 (* Copyright (C) 2015-2016 Bloomberg Finance L.P.
@@ -5801,6 +5803,7 @@ type error =
   | Missing_object_file of string
   | Missing_entry of string
   | No_files_to_pack of string
+  | Main_module_not_found of string
 
 exception Error of error
 
@@ -5865,6 +5868,8 @@ let print (fmt : Format.formatter) (x : error) =
     Format.fprintf fmt
     "@{<error>Error:@} No %s to pack into a lib.\n"
     suffix
+  | Main_module_not_found main_module ->
+    Format.fprintf fmt "@{<error>Error:@} Could not find main module '%s' in sources." main_module
 
 let conflict_module modname dir1 dir2 =
   error (Conflict_module (modname,dir1,dir2))
@@ -5878,6 +5883,7 @@ let errorf ~loc fmt =
 let missing_object_file name = error (Missing_object_file name)
 let missing_entry name = error (Missing_entry name)
 let no_files_to_pack suffix = error (No_files_to_pack suffix)
+let main_module_not_found main_module = error (Main_module_not_found main_module)
 
 let config_error config fmt =
   let loc = Ext_json.loc_of config in
@@ -5894,6 +5900,18 @@ let () =
       | Error x ->
         Some (Format.asprintf "%a" print x )
       | _ -> None
+    )
+
+let () =
+  Printexc.set_uncaught_exception_handler (fun e raw_backtrace -> 
+    match e with
+    | Error x ->
+      Printf.eprintf "%s\n" (Format.asprintf "%a" print x);
+      flush stderr
+    | _ -> 
+      Printf.eprintf "Fatal error: exception %s\n" (Printexc.to_string e);
+      Printexc.print_raw_backtrace stderr raw_backtrace;
+      flush stderr
     )
 
 end

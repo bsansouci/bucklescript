@@ -50,3 +50,5 @@ val invalid_json : string -> 'a
 val no_implementation : string -> 'a
 
 val not_consistent : string -> 'a
+
+val main_module_not_found : string -> 'a

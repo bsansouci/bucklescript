@@ -270,7 +270,7 @@ let link oc
       end in
 
     let rec get_main_module_path (groups : Bsb_file_groups.file_group list) = match groups with
-    | [] -> Ext_fmt.failwithf ~loc:__LOC__ "Could not find main module %s in sources." main_module_name
+    | [] ->  Bsb_exception.main_module_not_found main_module_name
     | group :: rest ->
       begin match Map_string.find_opt group.sources main_module_name with 
       | None -> get_main_module_path rest
