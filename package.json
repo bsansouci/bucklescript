@@ -10,7 +10,7 @@
     "postinstall": "node scripts/install.js"
   },
   "name": "bs-platform-native",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "bucklescript plugin to compile to bytecode/native",
   "repository": {
     "type": "git",
