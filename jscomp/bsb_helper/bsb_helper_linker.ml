@@ -82,6 +82,8 @@ let link link_byte_or_native ~main_module ~batch_files ~includes ~ocaml_dependen
   let ocaml_dependencies =
     List.fold_left (fun acc v -> 
       match v with
+      | "compiler-libs" -> 
+          (Bsb_global_paths_native.ocaml_dir // "lib" // "ocaml" // "compiler-libs" // "ocamlcommon" ^ suffix_library_files) :: acc
       | "threads" -> 
       "-thread" :: (Bsb_global_paths_native.ocaml_dir // "lib" // "ocaml" // "threads" // "threads" ^ suffix_library_files) :: acc
       | v -> (Bsb_global_paths_native.ocaml_dir // "lib" // "ocaml" // v ^ suffix_library_files) :: acc

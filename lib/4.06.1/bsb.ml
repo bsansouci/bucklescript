@@ -5864,15 +5864,15 @@ let print (fmt : Format.formatter) (x : error) =
     @{<error>Error: Invalid json format@}" s
   | Missing_object_file name ->
     Format.fprintf fmt
-    "@{<error>Error:@} build.ninja is missing the file '%s' that was used in the project. Try force-regenerating but this shouldn't happen.\n"
+    "@{<error>Error:@} build.ninja is missing the file '%s' that was used in the project. Try force-regenerating but this shouldn't happen."
     name
   | Missing_entry name ->
     Format.fprintf fmt
-    "@{<error>Error:@} Could not find an item in the entries field to compile to '%s'\n"
+    "@{<error>Error:@} Could not find an item in the entries field to compile to '%s'"
     name
   | No_files_to_pack suffix ->
     Format.fprintf fmt
-    "@{<error>Error:@} No %s to pack into a lib.\n"
+    "@{<error>Error:@} No %s to pack into a lib."
     suffix
   | Main_module_not_found main_module ->
     Format.fprintf fmt "@{<error>Error:@} Could not find main module '%s' in sources." main_module
@@ -13794,7 +13794,7 @@ let output_ninja_and_namespace_map
   let ocaml_flags = (List.fold_left (fun acc v ->
      match v with
      | "threads"       -> "-thread " ^ acc
-     | "compiler-libs" -> ("-I " ^ (g_stdlib_incl_ocaml // "compiler-libs")) ^ acc
+     | "compiler-libs" -> ("-I " ^ (g_stdlib_incl_ocaml // "compiler-libs")) ^ " " ^ acc
      | _ -> acc
    ) ocaml_flags otherlibs) in
   let ocaml_dependencies =

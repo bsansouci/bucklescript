@@ -150,7 +150,7 @@ let output_ninja_and_namespace_map
   let ocaml_flags = (List.fold_left (fun acc v ->
      match v with
      | "threads"       -> "-thread " ^ acc
-     | "compiler-libs" -> ("-I " ^ (g_stdlib_incl_ocaml // "compiler-libs")) ^ acc
+     | "compiler-libs" -> ("-I " ^ (g_stdlib_incl_ocaml // "compiler-libs")) ^ " " ^ acc
      | _ -> acc
    ) ocaml_flags otherlibs) in
   let ocaml_dependencies =
